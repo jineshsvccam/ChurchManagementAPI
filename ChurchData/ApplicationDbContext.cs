@@ -17,6 +17,7 @@ namespace ChurchData
         public DbSet<Bank> Banks { get; set; }
         public DbSet<FamilyMember> FamilyMembers { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<FinancialReportsView> FinancialReportsView { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -223,6 +224,29 @@ namespace ChurchData
                                   .WithMany(p => p.Transactions)
                                   .HasForeignKey(t => t.ParishId)
                                   .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // Configure FinancialReportsView as a keyless entity
+            modelBuilder.Entity<FinancialReportsView>(entity =>
+            {
+                entity.ToView("financialreportsview");
+                entity.HasNoKey();
+
+                entity.Property(e => e.TransactionId).HasColumnName("transactionid");
+                entity.Property(e => e.TrDate).HasColumnName("trdate");
+                entity.Property(e => e.VrNo).HasColumnName("vrno");
+                entity.Property(e => e.TransactionType).HasColumnName("transactiontype");
+                entity.Property(e => e.IncomeAmount).HasColumnName("incomeamount");
+                entity.Property(e => e.ExpenseAmount).HasColumnName("expenseamount");
+                entity.Property(e => e.Description).HasColumnName("description");
+                entity.Property(e => e.ParishId).HasColumnName("parishid");
+                entity.Property(e => e.ParishName).HasColumnName("parishname");
+                entity.Property(e => e.FamilyId).HasColumnName("familyid");
+                entity.Property(e => e.FamilyName).HasColumnName("familyname");
+                entity.Property(e => e.HeadId).HasColumnName("headid");
+                entity.Property(e => e.HeadName).HasColumnName("headname");
+                entity.Property(e => e.BankId).HasColumnName("bankid");
+                entity.Property(e => e.BankName).HasColumnName("bankname");
             });
         }
     }

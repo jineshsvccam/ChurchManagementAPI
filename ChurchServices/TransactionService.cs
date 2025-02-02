@@ -15,9 +15,9 @@ namespace ChurchServices
             _transactionRepository = transactionRepository;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId)
+        public async Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate)
         {
-            return await _transactionRepository.GetTransactionsAsync(parishId, familyId, transactionId);
+            return await _transactionRepository.GetTransactionsAsync(parishId, familyId, transactionId,startDate,endDate);
         }
 
         public async Task<Transaction?> GetByIdAsync(int id)

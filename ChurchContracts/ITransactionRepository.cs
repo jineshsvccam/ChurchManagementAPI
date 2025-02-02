@@ -4,7 +4,7 @@ namespace ChurchContracts
 {
     public interface ITransactionRepository
     {
-        Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId);
+        Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate);
         Task<Transaction?> GetByIdAsync(int id);
         Task<Transaction> AddAsync(Transaction transaction);
         Task<Transaction> UpdateAsync(Transaction transaction);

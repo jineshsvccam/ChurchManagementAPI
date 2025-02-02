@@ -18,9 +18,14 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions([FromQuery] int? parishId, [FromQuery] int? familyId, [FromQuery] int? transactionId)
+        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions(
+           [FromQuery] int? parishId,
+           [FromQuery] int? familyId,
+           [FromQuery] int? transactionId,
+           [FromQuery] DateTime? startDate,
+           [FromQuery] DateTime? endDate)
         {
-            var transactions = await _transactionService.GetTransactionsAsync(parishId, familyId, transactionId);
+            var transactions = await _transactionService.GetTransactionsAsync(parishId, familyId, transactionId, startDate, endDate);
             return Ok(transactions);
         }
 

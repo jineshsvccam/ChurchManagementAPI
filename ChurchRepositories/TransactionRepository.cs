@@ -16,7 +16,7 @@ namespace ChurchRepositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId)
+        public async Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate)
         {
             var query = _context.Transactions.AsQueryable();
 
@@ -28,6 +28,16 @@ namespace ChurchRepositories
             if (familyId.HasValue)
             {
                 query = query.Where(t => t.FamilyId == familyId.Value);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(t => t.TrDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(t => t.TrDate <= endDate.Value);
             }
 
             if (transactionId.HasValue)
