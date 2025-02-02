@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChurchManagementAPI", "ChurchManagementAPI\ChurchManagementAPI.csproj", "{FA8509BD-0557-4E03-A00C-2907A196E0F6}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChurchRepositories", "ChurchRepositories\ChurchRepositories.csproj", "{BABFB296-0E06-403B-A326-5630B16E99B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChurchServices", "ChurchServices\ChurchServices.csproj", "{929104DA-0998-421C-8AF9-CB18E6736CB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{31CE4214-38EC-4213-80D1-CAE7828E9EA3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{929104DA-0998-421C-8AF9-CB18E6736CB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{929104DA-0998-421C-8AF9-CB18E6736CB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{929104DA-0998-421C-8AF9-CB18E6736CB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31CE4214-38EC-4213-80D1-CAE7828E9EA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31CE4214-38EC-4213-80D1-CAE7828E9EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31CE4214-38EC-4213-80D1-CAE7828E9EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31CE4214-38EC-4213-80D1-CAE7828E9EA3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -21,6 +21,7 @@ namespace ChurchData
         public int DistrictId { get; set; }
         public District? District { get; set; } // Optional property
         public ICollection<Unit> Units { get; set; } = new List<Unit>();
+        public ICollection<TransactionHead> TransactionHeads { get; set; } = new List<TransactionHead>();
 
     }
 

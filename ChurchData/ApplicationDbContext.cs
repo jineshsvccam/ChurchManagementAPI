@@ -13,6 +13,7 @@ namespace ChurchData
         public DbSet<Parish> Parishes { get; set; }
         public DbSet<Unit> Units { get; set; }
         public DbSet<Family> Families { get; set; }
+        public DbSet<TransactionHead> TransactionHeads { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -93,7 +94,6 @@ namespace ChurchData
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-
             modelBuilder.Entity<Family>(entity =>
             {
                 entity.ToTable("families");
@@ -115,6 +115,29 @@ namespace ChurchData
                       .OnDelete(DeleteBehavior.Cascade);
 
               
+            });
+
+            modelBuilder.Entity<TransactionHead>(entity =>
+            {
+                entity.ToTable("transaction_heads", t =>
+                {
+                    t.HasCheckConstraint("transaction_head_type_check", "type IN ('Income', 'Expense', 'Both')");
+                });
+                entity.HasKey(t => t.HeadId);
+                entity.Property(t => t.HeadId).HasColumnName("head_id");
+                entity.Property(t => t.HeadName).HasColumnName("head_name").IsRequired().HasMaxLength(100);
+                entity.Property(t => t.Type).HasColumnName("type").HasMaxLength(10);
+                entity.Property(t => t.IsMandatory).HasColumnName("is_mandatory").HasDefaultValue(false);
+                entity.Property(t => t.Description).HasColumnName("description");
+                entity.Property(t => t.ParishId).HasColumnName("parish_id").IsRequired();
+                entity.Property(t => t.Aramanapct).HasColumnName("aramanapct").HasColumnType("double precision");
+                entity.Property(t => t.Ordr).HasColumnName("ordr").HasMaxLength(10);
+                entity.Property(t => t.HeadNameMl).HasColumnName("head_name_ml").HasMaxLength(100);
+
+                entity.HasOne(t => t.Parish)
+                      .WithMany(p => p.TransactionHeads)
+                      .HasForeignKey(t => t.ParishId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

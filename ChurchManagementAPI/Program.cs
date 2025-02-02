@@ -28,6 +28,8 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 builder.Services.AddScoped<IFamilyService, FamilyService>(); 
 builder.Services.AddScoped<IFamilyRepository, FamilyRepository>();
+builder.Services.AddScoped<ITransactionHeadRepository, TransactionHeadRepository>();
+builder.Services.AddScoped<ITransactionHeadService, TransactionHeadService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
