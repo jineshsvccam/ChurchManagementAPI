@@ -11,6 +11,8 @@ namespace ChurchData
         public DbSet<Diocese> Dioceses { get; set; }
         public DbSet<District> Districts { get; set; }
         public DbSet<Parish> Parishes { get; set; }
+        public DbSet<Unit> Units { get; set; }
+        public DbSet<Family> Families { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -75,6 +77,45 @@ namespace ChurchData
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<Unit>(entity =>
+            {
+                entity.ToTable("units");
+                entity.Property(u => u.UnitId).HasColumnName("unit_id");
+                entity.Property(u => u.ParishId).HasColumnName("parish_id");
+                entity.Property(u => u.UnitName).HasColumnName("unit_name").IsRequired().HasMaxLength(100);
+                entity.Property(u => u.Description).HasColumnName("description");
+                entity.Property(u => u.UnitPresident).HasColumnName("unit_president").HasMaxLength(100);
+                entity.Property(u => u.UnitSecretary).HasColumnName("unit_secretary").HasMaxLength(100);
+
+                entity.HasOne(u => u.Parish)
+                      .WithMany(p => p.Units) 
+                      .HasForeignKey(u => u.ParishId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            modelBuilder.Entity<Family>(entity =>
+            {
+                entity.ToTable("families");
+                entity.Property(f => f.FamilyId).HasColumnName("family_id");
+                entity.Property(f => f.UnitId).HasColumnName("unit_id");
+                entity.Property(f => f.FamilyName).HasColumnName("family_name").IsRequired().HasMaxLength(100);
+                entity.Property(f => f.Address).HasColumnName("address");
+                entity.Property(f => f.ContactInfo).HasColumnName("contact_info").HasMaxLength(100);
+                entity.Property(f => f.Category).HasColumnName("category").HasMaxLength(10);
+                entity.Property(f => f.FamilyNumber).HasColumnName("family_number");
+                entity.Property(f => f.Status).HasColumnName("status").HasMaxLength(10);
+                entity.Property(f => f.HeadName).HasColumnName("head_name").IsRequired().HasMaxLength(50);
+                entity.Property(f => f.ParishId).HasColumnName("parish_id").IsRequired();
+                entity.Property(f => f.JoinDate).HasColumnName("join_date").HasColumnType("date"); 
+
+                entity.HasOne(f => f.Unit)
+                      .WithMany(u => u.Families) // Assuming Unit has a collection of Families
+                      .HasForeignKey(f => f.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+              
+            });
         }
     }
 

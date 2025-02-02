@@ -24,6 +24,10 @@ builder.Services.AddScoped<IDioceseRepository, DioceseRepository>();
 builder.Services.AddScoped<IDistrictRepository, DistrictRepository>();
 builder.Services.AddScoped<IDioceseService, DioceseService>();
 builder.Services.AddScoped<IDistrictService, DistrictService>();
+builder.Services.AddScoped<IUnitService, UnitService>(); 
+builder.Services.AddScoped<IUnitRepository, UnitRepository>();
+builder.Services.AddScoped<IFamilyService, FamilyService>(); 
+builder.Services.AddScoped<IFamilyRepository, FamilyRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
