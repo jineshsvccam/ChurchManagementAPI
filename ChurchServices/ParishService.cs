@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchData;
+using ChurchData.DTOs;
 
 namespace ChurchServices
 {
@@ -40,6 +41,10 @@ namespace ChurchServices
         public async Task DeleteAsync(int id)
         {
             await _parishRepository.DeleteAsync(id);
+        }
+        public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeTransactions = false, bool includeFamilyMembers = false)
+        {
+            return await _parishRepository.GetParishDetailsAsync(parishId, includeTransactions, includeFamilyMembers);
         }
     }
 

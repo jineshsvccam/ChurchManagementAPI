@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchData.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -57,6 +58,18 @@ namespace ChurchManagementAPI.Controllers
         {
             await _parishService.DeleteAsync(id);
             return NoContent();
+        }
+        [HttpGet("{parishId}/details")]
+        public async Task<ActionResult<ParishDetailsDto>> GetParishDetails(int parishId, [FromQuery] bool includeTransactions = false, [FromQuery] bool includeFamilyMembers = false)
+        {
+            var parishDetails = await _parishService.GetParishDetailsAsync(parishId, includeTransactions, includeFamilyMembers);
+
+            if (parishDetails == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(parishDetails);
         }
     }
 

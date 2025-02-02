@@ -14,6 +14,9 @@ namespace ChurchData
         public DbSet<Unit> Units { get; set; }
         public DbSet<Family> Families { get; set; }
         public DbSet<TransactionHead> TransactionHeads { get; set; }
+        public DbSet<Bank> Banks { get; set; }
+        public DbSet<FamilyMember> FamilyMembers { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,7 +54,7 @@ namespace ChurchData
                       .HasForeignKey(d => d.DioceseId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(d => d.Parishes) 
+                entity.HasMany(d => d.Parishes)
                       .WithOne(p => p.District)
                       .HasForeignKey(p => p.DistrictId)
                       .OnDelete(DeleteBehavior.Cascade);
@@ -73,7 +76,7 @@ namespace ChurchData
                 entity.Property(p => p.DistrictId).HasColumnName("district_id");
 
                 entity.HasOne(p => p.District)
-                      .WithMany(d => d.Parishes) 
+                      .WithMany(d => d.Parishes)
                       .HasForeignKey(p => p.DistrictId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
@@ -89,7 +92,7 @@ namespace ChurchData
                 entity.Property(u => u.UnitSecretary).HasColumnName("unit_secretary").HasMaxLength(100);
 
                 entity.HasOne(u => u.Parish)
-                      .WithMany(p => p.Units) 
+                      .WithMany(p => p.Units)
                       .HasForeignKey(u => u.ParishId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
@@ -107,14 +110,14 @@ namespace ChurchData
                 entity.Property(f => f.Status).HasColumnName("status").HasMaxLength(10);
                 entity.Property(f => f.HeadName).HasColumnName("head_name").IsRequired().HasMaxLength(50);
                 entity.Property(f => f.ParishId).HasColumnName("parish_id").IsRequired();
-                entity.Property(f => f.JoinDate).HasColumnName("join_date").HasColumnType("date"); 
+                entity.Property(f => f.JoinDate).HasColumnName("join_date").HasColumnType("date");
 
                 entity.HasOne(f => f.Unit)
                       .WithMany(u => u.Families) // Assuming Unit has a collection of Families
                       .HasForeignKey(f => f.UnitId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-              
+
             });
 
             modelBuilder.Entity<TransactionHead>(entity =>
@@ -138,6 +141,88 @@ namespace ChurchData
                       .WithMany(p => p.TransactionHeads)
                       .HasForeignKey(t => t.ParishId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Bank>(entity =>
+            {
+                entity.ToTable("banks");
+                entity.HasKey(b => b.BankId);
+                entity.Property(b => b.BankId).HasColumnName("bank_id");
+                entity.Property(b => b.BankName).HasColumnName("bank_name").IsRequired().HasMaxLength(100);
+                entity.Property(b => b.AccountNumber).HasColumnName("account_number").HasMaxLength(50);
+                entity.Property(b => b.OpeningBalance).HasColumnName("opening_balance").HasColumnType("numeric(15,2)").IsRequired();
+                entity.Property(b => b.CurrentBalance).HasColumnName("current_balance").HasColumnType("numeric(15,2)").IsRequired();
+                entity.Property(b => b.ParishId).HasColumnName("parish_id");
+
+                entity.HasOne(b => b.Parish)
+                      .WithMany(p => p.Banks)
+                      .HasForeignKey(b => b.ParishId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<FamilyMember>(entity =>
+            {
+                entity.ToTable("family_members", t =>
+                {
+                    t.HasCheckConstraint("family_member_gender_check", "gender IN ('Male', 'Female', 'Other')");
+                    t.HasCheckConstraint("family_member_role_check", "role IN ('Head', 'Member')");
+                });
+                entity.HasKey(fm => fm.MemberId);
+                entity.Property(fm => fm.MemberId).HasColumnName("member_id");
+                entity.Property(fm => fm.FamilyId).HasColumnName("family_id");
+                entity.Property(fm => fm.FirstName).HasColumnName("first_name").IsRequired().HasMaxLength(100);
+                entity.Property(fm => fm.LastName).HasColumnName("last_name").IsRequired().HasMaxLength(100);
+                entity.Property(fm => fm.DateOfBirth).HasColumnName("date_of_birth").HasColumnType("date");
+                entity.Property(fm => fm.Gender).HasColumnName("gender").HasMaxLength(10);
+                entity.Property(fm => fm.ContactInfo).HasColumnName("contact_info").HasMaxLength(100);
+                entity.Property(fm => fm.Role).HasColumnName("role").HasMaxLength(10);
+
+                entity.HasOne(fm => fm.Family)
+                      .WithMany(f => f.FamilyMembers)
+                      .HasForeignKey(fm => fm.FamilyId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Transaction>(entity =>
+            {
+                entity.ToTable("transactions", t =>
+                {
+                    t.HasCheckConstraint("transaction_expense_amount_check", "expense_amount >= 0");
+                    t.HasCheckConstraint("transaction_income_amount_check", "income_amount >= 0");
+                    t.HasCheckConstraint("transaction_type_check", "transaction_type IN ('Income', 'Expense')");
+                });
+                entity.HasKey(t => t.TransactionId);
+                entity.Property(t => t.TransactionId).HasColumnName("transaction_id");
+                entity.Property(t => t.TrDate).HasColumnName("tr_date").IsRequired().HasColumnType("date");
+                entity.Property(t => t.VrNo).HasColumnName("vr_no").IsRequired().HasMaxLength(50);
+                entity.Property(t => t.TransactionType).HasColumnName("transaction_type").HasMaxLength(10);
+                entity.Property(t => t.HeadId).HasColumnName("head_id");
+                entity.Property(t => t.FamilyId).HasColumnName("family_id");
+                entity.Property(t => t.BankId).HasColumnName("bank_id");
+                entity.Property(t => t.IncomeAmount).HasColumnName("income_amount").HasColumnType("numeric(15,2)").HasDefaultValue(0);
+                entity.Property(t => t.ExpenseAmount).HasColumnName("expense_amount").HasColumnType("numeric(15,2)").HasDefaultValue(0);
+                entity.Property(t => t.Description).HasColumnName("description").HasColumnType("text");
+                entity.Property(t => t.ParishId).HasColumnName("parish_id").IsRequired();
+
+                entity.HasOne(t => t.TransactionHead)
+                                  .WithMany(th => th.Transactions)
+                                  .HasForeignKey(t => t.HeadId)
+                                  .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Family)
+                                  .WithMany(f => f.Transactions)
+                                  .HasForeignKey(t => t.FamilyId)
+                                  .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Bank)
+                                  .WithMany(b => b.Transactions)
+                                  .HasForeignKey(t => t.BankId)
+                                  .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(t => t.Parish)
+                                  .WithMany(p => p.Transactions)
+                                  .HasForeignKey(t => t.ParishId)
+                                  .OnDelete(DeleteBehavior.NoAction);
             });
         }
     }
