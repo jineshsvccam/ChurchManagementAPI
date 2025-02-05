@@ -30,10 +30,11 @@ public class AccessDataExporter
                         Description = reader["Remarks"].ToString(),
                         Aramanapct = reader.IsDBNull(reader.GetOrdinal("Aramana")) || string.IsNullOrEmpty(reader["Aramana"].ToString()) ? 0 : Convert.ToDouble(reader["Aramana"]),
                         Ordr = reader["Odr"].ToString(),
-                        HeadNameMl = reader["HdNameL"].ToString(),
+                        HeadNameMl = "",
                         Action = "INSERT",
                         ParishId = ParishId
                     };
+                    ////reader["HdNameL"].ToString()""
                     transactionHeads.Add(transactionHead);
                 }
             }
@@ -147,13 +148,17 @@ public class AccessDataExporter
 
     public List<Transaction> ExportTransactions(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
     {
+        // Create case-insensitive dictionaries
+        var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
+        var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
+        var bankNameLookupInsensitive = new Dictionary<string, int>(bankNameLookup, StringComparer.OrdinalIgnoreCase);
+
         string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
         var transactions = new List<Transaction>();
 
         using (OleDbConnection conn = new OleDbConnection(connString))
         {
             conn.Open();
-           // using (OleDbCommand cmd = new OleDbCommand($"SELECT TOP 10 * FROM {tableName}", conn))
             using (OleDbCommand cmd = new OleDbCommand($"SELECT {tableName}.* FROM {tableName} where CB<>\"JE\"", conn))
             using (OleDbDataReader reader = cmd.ExecuteReader())
             {
@@ -165,13 +170,13 @@ public class AccessDataExporter
                     var transaction = new Transaction
                     {
                         Action = "INSERT",
-                       // TransactionId = Convert.ToInt32(reader["ID"]),
+                        TransactionId = Convert.ToInt32(reader["ID"]),
                         TrDate = Convert.ToDateTime(reader["VRDate"]),
                         VrNo = reader["VRNo"].ToString(),
                         TransactionType = transactionType,
-                        HeadId = headNameLookup.ContainsKey(reader["Head"].ToString()) ? headNameLookup[reader["Head"].ToString()] : 0,
-                        FamilyId = familyNameLookup.ContainsKey(reader["Hno"].ToString()) ? familyNameLookup[reader["Hno"].ToString()] : 0,
-                        BankId = bankNameLookup.ContainsKey(reader["CB"].ToString()) ? bankNameLookup[reader["CB"].ToString()] : 0,
+                        HeadId = headNameLookupInsensitive.TryGetValue(reader["Head"].ToString(), out int headId) ? headId : 0,
+                        FamilyId = familyNameLookupInsensitive.TryGetValue(reader["Hno"].ToString(), out int familyId) ? familyId : 0,
+                        BankId = bankNameLookupInsensitive.TryGetValue(reader["CB"].ToString(), out int bankId) ? bankId : 0,
                         IncomeAmount = Convert.ToDecimal(reader["Credit"]),
                         ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
                         Description = reader["Remarks"].ToString(),
@@ -208,5 +213,13 @@ public class AccessDataExporter
             }
         }
     }
-
+    public List<List<T>> SplitList<T>(List<T> source, int batchSize)
+    {
+        var batches = new List<List<T>>();
+        for (int i = 0; i < source.Count; i += batchSize)
+        {
+            batches.Add(source.GetRange(i, Math.Min(batchSize, source.Count - i)));
+        }
+        return batches;
+    }
 }
