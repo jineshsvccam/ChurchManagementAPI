@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ChurchData.DTOs;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 
@@ -18,6 +19,7 @@ namespace ChurchData
         public DbSet<FamilyMember> FamilyMembers { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<FinancialReportsView> FinancialReportsView { get; set; }
+        public DbSet<BankDTO> BankBalances { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -247,6 +249,15 @@ namespace ChurchData
                 entity.Property(e => e.HeadName).HasColumnName("headname");
                 entity.Property(e => e.BankId).HasColumnName("bankid");
                 entity.Property(e => e.BankName).HasColumnName("bankname");
+            });
+
+            modelBuilder.Entity<BankDTO>(entity =>
+            {
+                entity.HasNoKey();
+                entity.Property(b => b.BankName).HasColumnName("bank_name");
+                entity.Property(b => b.OpeningBalance).HasColumnName("opening_balance");
+                entity.Property(b => b.ClosingBalance).HasColumnName("closing_balance");
+                entity.Property(b => b.Balance).HasColumnName("balance");
             });
         }
     }

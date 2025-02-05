@@ -49,7 +49,7 @@ namespace ChurchRepositories
             var report = new LedgerReportDTO
             {
                 Heads = groupedTransactions,
-                Transactions = includeTransactions ? transactions : null
+                Transactions = includeTransactions ? transactions : new List<FinancialReportsView>()
             };
 
             return new List<LedgerReportDTO> { report };

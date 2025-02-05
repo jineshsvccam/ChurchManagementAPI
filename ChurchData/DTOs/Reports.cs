@@ -11,7 +11,6 @@ namespace ChurchData.DTOs
         public List<HeadDTO> Heads { get; set; }
         public List<FinancialReportsView> Transactions { get; set; }
     }
-
     public class HeadDTO
     {
         public string HeadName { get; set; }
@@ -22,11 +21,16 @@ namespace ChurchData.DTOs
 
     public class BankStatementConsolidatedDTO
     {
+        public List<BankDTO> Banks { get; set; } = new List<BankDTO>();
+        public List<FinancialReportsView> Transactions { get; set; } = new List<FinancialReportsView>();
+    }
+
+    public class BankDTO
+    {
         public string BankName { get; set; }
         public decimal OpeningBalance { get; set; }
         public decimal ClosingBalance { get; set; }
         public decimal Balance { get; set; }
-        public List<FinancialReportsView> Transactions { get; set; }
     }
 
     public class TrialBalanceDTO

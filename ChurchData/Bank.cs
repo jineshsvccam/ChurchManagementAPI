@@ -14,6 +14,6 @@ namespace ChurchData
         public int ParishId { get; set; }
 
         public Parish? Parish { get; set; }
-        public ICollection<Transaction> Transactions { get; set; }
+        public ICollection<Transaction> Transactions { get; set; }=new List<Transaction>();
     }
 }

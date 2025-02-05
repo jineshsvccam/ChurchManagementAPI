@@ -1,0 +1,46 @@
+﻿using ChurchContracts;
+using ChurchData.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
+
+namespace ChurchManagementAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ReportsController : ControllerBase
+    {
+        private readonly ILedgerService _ledgerService;
+        private readonly IBankConsolidatedStatementService _bankService;
+
+        public ReportsController(ILedgerService ledgerService, IBankConsolidatedStatementService bankService)
+        {
+            _ledgerService = ledgerService;
+            _bankService = bankService;
+        }
+
+        [HttpGet("ledger")]
+        public async Task<ActionResult<LedgerReportDTO>> GetLedger(
+            [FromQuery] int parishId,
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate,
+            [FromQuery] bool includeTransactions = false)
+        {
+            var ledger = await _ledgerService.GetLedgerAsync(parishId, startDate, endDate, includeTransactions);
+            return Ok(ledger);
+        }
+
+        [HttpGet("bank-statement")]
+        public async Task<ActionResult<BankStatementConsolidatedDTO>> GetBankStatement(
+            [FromQuery] int parishId,
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate,
+            [FromQuery] bool includeTransactions = false)
+        {
+            var bankStatement = await _bankService.GetBankStatementAsync(parishId, startDate, endDate, includeTransactions);
+            return Ok(bankStatement);
+        }
+
+        // Add more report endpoints here...
+    }
+}

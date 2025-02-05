@@ -18,11 +18,11 @@ namespace ChurchData
         public bool IsMandatory { get; set; }
         public string Description { get; set; }
         public int ParishId { get; set; }
-        public double Aramanapct { get; set; }
+        public double? Aramanapct { get; set; }
         public string Ordr { get; set; }
         public string HeadNameMl { get; set; }
         [JsonIgnore]
         public Parish? Parish { get; set; }
-        public ICollection<Transaction> Transactions { get; set; }
+        public ICollection<Transaction> Transactions { get; set; }=new List<Transaction>();
     }
 }
