@@ -17,7 +17,9 @@ class Program
             string unitApiUrl = "http://localhost:8080/api/Unit";
             string transactionHeadsUrl = "http://localhost:8080/api/TransactionHead";
             string familyApiUrl = "http://localhost:8080/api/Family";
-            string bankApiUrl = "http://localhost:8080/api/Bank/create-or-update";
+            string bankApiGetUrl = "http://localhost:8080/api/Bank";
+            string bankApiUrl = "http://localhost:8080/api/Bank/create-or-update"; 
+            string transactionApiUrl = "http://localhost:8080/api/Transaction/create-or-update";
 
             Console.WriteLine("API URLs set...");
 
@@ -25,12 +27,15 @@ class Program
             bool processUnits = false;
             bool processTransactionHeads = false;
             bool processFamilies = false;
-            bool processBanks = true;
+            bool processBanks = false;
+            bool processTransactions = true;
 
             Console.WriteLine("Boolean flags set...");
 
             var dataExporter = new AccessDataExporter();
             var apiService = new ApiService();
+
+            dataExporter.ParishId = 2;
 
             Console.WriteLine("Instances created...");
 
@@ -65,6 +70,18 @@ class Program
                 Console.WriteLine("Processing Banks...");
                 var banks = dataExporter.ExportBanks(accessDbPath, "Bank");
                 await apiService.ImportDataAsync(banks, bankApiUrl);
+            }
+
+            // Export and Import Transactions
+            if (processTransactions)
+            {
+                Console.WriteLine("Processing Transactions...");
+                var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsUrl); 
+                var familyNames = await apiService.GetFamiliesAsync(familyApiUrl); 
+                var bankNames = await apiService.GetBanksAsync(bankApiGetUrl); 
+
+                var transactions = dataExporter.ExportTransactions(accessDbPath, "DailyData", headNames, familyNames, bankNames);
+                await apiService.ImportDataAsync(transactions, transactionApiUrl);
             }
 
             Console.WriteLine("Data imported successfully!");

@@ -81,4 +81,68 @@ public class ApiService
 
         return unitNames;
     }
+    public async Task<Dictionary<string, int>> GetFamiliesAsync(string apiUrl)
+    {
+        var response = await _httpClient.GetAsync(apiUrl);
+        response.EnsureSuccessStatusCode();
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var families = JsonSerializer.Deserialize<List<Family>>(jsonResponse, options);
+
+        var familyNames = new Dictionary<string, int>();
+        foreach (var family in families)
+        {
+            familyNames[family.FamilyNumber.ToString()] = family.FamilyId;
+        }
+
+        return familyNames;
+    }
+    public async Task<Dictionary<string, int>> GetBanksAsync(string apiUrl)
+    {
+        var response = await _httpClient.GetAsync(apiUrl);
+        response.EnsureSuccessStatusCode();
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var banks = JsonSerializer.Deserialize<List<Bank>>(jsonResponse, options);
+
+        var bankNames = new Dictionary<string, int>();
+        foreach (var bank in banks)
+        {
+            bankNames[bank.BankName] = bank.BankId;
+        }
+
+        return bankNames;
+    }
+    public async Task<Dictionary<string, int>> GetHeadsNamesAsync(string apiUrl)
+    {
+        var response = await _httpClient.GetAsync(apiUrl);
+        response.EnsureSuccessStatusCode();
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var heads = JsonSerializer.Deserialize<List<TransactionHead>>(jsonResponse, options);
+
+        var headNames = new Dictionary<string, int>();
+        foreach (var head in heads)
+        {
+            headNames[head.HeadName] = head.HeadId;
+        }
+
+        return headNames;
+    }
+
 }
