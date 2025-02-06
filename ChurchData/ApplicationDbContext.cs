@@ -21,6 +21,10 @@ namespace ChurchData
         public DbSet<FinancialReportsView> FinancialReportsView { get; set; }
         public DbSet<BankDTO> BankBalances { get; set; }
         public DbSet<GenericLog> GenericLogs { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<FinancialYear> FinancialYears { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -278,6 +282,73 @@ namespace ChurchData
                 entity.Property(e => e.OldValues).HasColumnName("old_values"); 
                 entity.Property(e => e.NewValues).HasColumnName("new_values"); 
                 entity.ToTable("generic_logs"); 
+            });
+
+            // Configure the User entity
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("users");
+                entity.HasKey(u => u.UserId);
+                entity.Property(u => u.Username).IsRequired().HasMaxLength(255);
+                entity.Property(u => u.PasswordHash).IsRequired().HasMaxLength(255);
+                entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+               // entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            // Configure the User entity
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("users");
+                entity.HasKey(u => u.UserId);
+                entity.Property(u => u.UserId).HasColumnName("user_id");
+                entity.Property(u => u.Username).HasColumnName("username").IsRequired().HasMaxLength(255);
+                entity.Property(u => u.PasswordHash).HasColumnName("password_hash").IsRequired().HasMaxLength(255);
+                entity.Property(u => u.Email).HasColumnName("email").IsRequired().HasMaxLength(255);
+                entity.Property(u => u.ParishId).HasColumnName("parish_id"); // Explicitly map ParishId
+            //  entity.Property(u => u.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            // Configure the Role entity
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.ToTable("roles");
+                entity.HasKey(r => r.RoleId);
+                entity.Property(r => r.RoleId).HasColumnName("role_id");
+                entity.Property(r => r.RoleName).HasColumnName("role_name").IsRequired().HasMaxLength(50);
+            });
+
+            // Configure the UserRole entity
+            modelBuilder.Entity<UserRole>(entity =>
+            {
+                entity.ToTable("user_roles");
+                entity.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                entity.Property(ur => ur.UserId).HasColumnName("user_id");
+                entity.Property(ur => ur.RoleId).HasColumnName("role_id");
+
+                entity.HasOne(ur => ur.User)
+                    .WithMany(u => u.UserRoles)
+                    .HasForeignKey(ur => ur.UserId);
+
+                entity.HasOne(ur => ur.Role)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(ur => ur.RoleId);
+            });
+            modelBuilder.Entity<FinancialYear>(entity =>
+            {
+                entity.ToTable("financial_years");
+                entity.HasKey(fy => fy.FinancialYearId);
+                entity.Property(fy => fy.FinancialYearId).HasColumnName("financial_year_id");
+                entity.Property(fy => fy.ParishId).HasColumnName("parish_id").IsRequired();
+                entity.Property(fy => fy.StartDate).HasColumnName("start_date").IsRequired();
+                entity.Property(fy => fy.EndDate).HasColumnName("end_date").IsRequired();
+                entity.Property(fy => fy.IsLocked).HasColumnName("is_locked").IsRequired().HasDefaultValue(false);
+                entity.Property(fy => fy.LockDate).HasColumnName("lock_date");
+                entity.Property(fy => fy.Description).HasColumnName("description");
+
+                entity.HasOne(fy => fy.Parish)
+                    .WithMany(p => p.FinancialYears)
+                    .HasForeignKey(fy => fy.ParishId);
             });
         }
     }

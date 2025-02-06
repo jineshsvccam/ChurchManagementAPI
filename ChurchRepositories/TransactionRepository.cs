@@ -3,49 +3,74 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchData;
+using ChurchData.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ChurchRepositories
 {
     public class TransactionRepository : ITransactionRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public TransactionRepository(ApplicationDbContext context)
+        public TransactionRepository(ApplicationDbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate)
+        public async Task<PagedResult<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize)
         {
-            var query = _context.Transactions.AsQueryable();
+            var cacheKey = $"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}";
 
-            if (parishId.HasValue)
+            if (!_cache.TryGetValue(cacheKey, out PagedResult<Transaction> transactions))
             {
-                query = query.Where(t => t.ParishId == parishId.Value);
+                var query = _context.Transactions.AsQueryable();
+
+                if (parishId.HasValue)
+                {
+                    query = query.Where(t => t.ParishId == parishId.Value);
+                }
+
+                if (familyId.HasValue)
+                {
+                    query = query.Where(t => t.FamilyId == familyId.Value);
+                }
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(t => t.TrDate >= startDate.Value);
+                }
+
+                if (endDate.HasValue)
+                {
+                    query = query.Where(t => t.TrDate <= endDate.Value);
+                }
+
+                if (transactionId.HasValue)
+                {
+                    query = query.Where(t => t.TransactionId == transactionId.Value);
+                }
+
+                var totalCount = await query.CountAsync();
+                var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+
+                transactions = new PagedResult<Transaction>
+                {
+                    Items = items,
+                    TotalCount = totalCount,
+                    PageSize = pageSize,
+                    PageNumber = pageNumber
+                };
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(10));
+
+                _cache.Set(cacheKey, transactions, cacheEntryOptions);
             }
 
-            if (familyId.HasValue)
-            {
-                query = query.Where(t => t.FamilyId == familyId.Value);
-            }
-
-            if (startDate.HasValue)
-            {
-                query = query.Where(t => t.TrDate >= startDate.Value);
-            }
-
-            if (endDate.HasValue)
-            {
-                query = query.Where(t => t.TrDate <= endDate.Value);
-            }
-
-            if (transactionId.HasValue)
-            {
-                query = query.Where(t => t.TransactionId == transactionId.Value);
-            }
-
-            return await query.ToListAsync();
+            return transactions;
         }
 
         public async Task<Transaction?> GetByIdAsync(int id)

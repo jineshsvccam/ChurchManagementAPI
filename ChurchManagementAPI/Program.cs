@@ -1,13 +1,17 @@
+using System.Text;
 using System.Text.Json;
 using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
 using ChurchData.DTOs;
+using ChurchManagementAPI.Middleware;
 using ChurchRepositories;
 using ChurchServices;
 using ChurchServices.ChurchServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,19 +52,59 @@ builder.Services.AddScoped<ILedgerRepository, LedgerRepository>();
 builder.Services.AddScoped<ILedgerService, LedgerService>();
 builder.Services.AddScoped<IBankConsolidatedStatementRepository, BankConsolidatedStatementRepository>();
 builder.Services.AddScoped<IBankConsolidatedStatementService, BankConsolidatedStatementService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IUserRoleService, UserRoleService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IFinancialYearRepository, FinancialYearRepository>();
+builder.Services.AddScoped<IFinancialYearService, FinancialYearService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
 
+// Configure JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer(); // Add Endpoints API Explorer
+
+builder.Services.AddMemoryCache(); // Add this line to enable MemoryCache
 
 // Swagger configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ChurchManagementAPI", Version = "v1" });
 
-    // Add the User-ID header parameter globally
+    // Add the JWT authorization header to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+
     c.AddSecurityDefinition("User-ID", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -77,12 +121,21 @@ builder.Services.AddSwaggerGen(c =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "User-ID"
-                },
-                Name = "User-ID",
-                In = ParameterLocation.Header
+                    Id = "Bearer"
+                }
             },
-            new List<string>()
+            new string[] {}
+        },
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "User-ID"
+                }
+            },
+            new string[] {}
         }
     };
     c.AddSecurityRequirement(securityRequirement);
@@ -98,7 +151,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChurchManagementAPI v1"));
 }
 
+// Add the custom middleware
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 app.UseHttpsRedirection();
+app.UseAuthentication(); // Add this line to enable authentication middleware
 app.UseAuthorization();
 
 app.MapControllers();

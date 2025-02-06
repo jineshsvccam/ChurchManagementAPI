@@ -25,6 +25,7 @@ namespace ChurchData
         public ICollection<TransactionHead> TransactionHeads { get; set; } = new List<TransactionHead>();
         public ICollection<Bank> Banks { get; set; } = new List<Bank>();
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+        public ICollection<FinancialYear> FinancialYears { get; set; } = new List<FinancialYear>(); 
     }
 
 }

@@ -1,6 +1,8 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchData.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -18,14 +20,16 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions(
+        public async Task<ActionResult<PagedResult<Transaction>>> GetTransactions(
            [FromQuery] int? parishId,
            [FromQuery] int? familyId,
            [FromQuery] int? transactionId,
            [FromQuery] DateTime? startDate,
-           [FromQuery] DateTime? endDate)
+           [FromQuery] DateTime? endDate,
+           [FromQuery] int pageNumber = 1,
+           [FromQuery] int pageSize = 50)
         {
-            var transactions = await _transactionService.GetTransactionsAsync(parishId, familyId, transactionId, startDate, endDate);
+            var transactions = await _transactionService.GetTransactionsAsync(parishId, familyId, transactionId, startDate, endDate, pageNumber, pageSize);
             return Ok(transactions);
         }
 

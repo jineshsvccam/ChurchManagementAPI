@@ -1,10 +1,14 @@
 ﻿using ChurchData;
+using ChurchData.DTOs;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ChurchContracts
 {
     public interface ITransactionService
     {
-        Task<IEnumerable<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate);
+        Task<PagedResult<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize);
         Task<Transaction?> GetByIdAsync(int id);
         Task<IEnumerable<Transaction>> AddOrUpdateAsync(IEnumerable<Transaction> requests);
         Task<Transaction> UpdateAsync(Transaction transaction);

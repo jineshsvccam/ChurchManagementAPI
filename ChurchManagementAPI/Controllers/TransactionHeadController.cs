@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace ChurchManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // Protect all actions within this controller
     public class TransactionHeadController : ControllerBase
     {
         private readonly ITransactionHeadService _transactionHeadService;
@@ -34,8 +36,9 @@ namespace ChurchManagementAPI.Controllers
             }
             return Ok(transactionHead);
         }
-
+               
         [HttpPost]
+        [Authorize(Roles = "Admin")] // Only Admin role can access this action
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHead> requests)
         {
             try
@@ -68,6 +71,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
