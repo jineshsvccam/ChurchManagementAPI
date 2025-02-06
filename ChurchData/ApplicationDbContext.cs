@@ -20,6 +20,7 @@ namespace ChurchData
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<FinancialReportsView> FinancialReportsView { get; set; }
         public DbSet<BankDTO> BankBalances { get; set; }
+        public DbSet<GenericLog> GenericLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -258,6 +259,25 @@ namespace ChurchData
                 entity.Property(b => b.OpeningBalance).HasColumnName("opening_balance");
                 entity.Property(b => b.ClosingBalance).HasColumnName("closing_balance");
                 entity.Property(b => b.Balance).HasColumnName("balance");
+            });
+
+            modelBuilder.Entity<GenericLog>(entity =>
+            {
+                entity.HasKey(e => e.LogId);
+                entity.Property(e => e.LogId).HasColumnName("log_id"); 
+                entity.Property(e => e.TableName).HasColumnName("table_name"); 
+                entity.Property(e => e.RecordId).HasColumnName("record_id"); 
+                entity.Property(e => e.ChangeType).HasColumnName("change_type"); 
+                entity.Property(e => e.ChangedBy).HasColumnName("changed_by"); 
+                entity.Property(e => e.ChangeTimestamp)
+                      .HasColumnName("change_timestamp") 
+                      .HasConversion(
+                          v => v.ToUniversalTime(), // Ensure UTC when saving
+                          v => DateTime.SpecifyKind(v, DateTimeKind.Utc) // Ensure UTC when reading
+                      );
+                entity.Property(e => e.OldValues).HasColumnName("old_values"); 
+                entity.Property(e => e.NewValues).HasColumnName("new_values"); 
+                entity.ToTable("generic_logs"); 
             });
         }
     }

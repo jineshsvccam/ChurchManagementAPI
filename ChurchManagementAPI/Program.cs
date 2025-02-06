@@ -2,10 +2,13 @@ using System.Text.Json;
 using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
+using ChurchData.DTOs;
 using ChurchRepositories;
 using ChurchServices;
 using ChurchServices.ChurchServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,11 +20,9 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-
         options.JsonSerializerOptions.WriteIndented = true;
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-
     });
 
 // Register Services and Repositories
@@ -48,10 +49,44 @@ builder.Services.AddScoped<ILedgerService, LedgerService>();
 builder.Services.AddScoped<IBankConsolidatedStatementRepository, BankConsolidatedStatementRepository>();
 builder.Services.AddScoped<IBankConsolidatedStatementService, BankConsolidatedStatementService>();
 
+// Register configuration settings
+builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
+
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer(); // Add Endpoints API Explorer
+
+// Swagger configuration
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ChurchManagementAPI", Version = "v1" });
+
+    // Add the User-ID header parameter globally
+    c.AddSecurityDefinition("User-ID", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Name = "User-ID",
+        Type = SecuritySchemeType.ApiKey,
+        Description = "User ID for logging"
+    });
+
+    var securityRequirement = new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "User-ID"
+                },
+                Name = "User-ID",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    };
+    c.AddSecurityRequirement(securityRequirement);
+});
 
 var app = builder.Build();
 
@@ -60,11 +95,10 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"));
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChurchManagementAPI v1"));
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();

@@ -40,7 +40,8 @@ namespace ChurchManagementAPI.Controllers
         {
             try
             {
-                var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
+                var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
+                var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests, userId);
                 if (createdTransactionHeads.Any())
                 {
                     return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
@@ -54,21 +55,23 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, TransactionHead transactionHead)
+        public async Task<IActionResult> Update(int id, [FromBody] TransactionHead transactionHead)
         {
             if (id != transactionHead.HeadId)
             {
                 return BadRequest();
             }
 
-            await _transactionHeadService.UpdateAsync(transactionHead);
+            var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
+            await _transactionHeadService.UpdateAsync(transactionHead, userId);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _transactionHeadService.DeleteAsync(id);
+            var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
+            await _transactionHeadService.DeleteAsync(id, userId);
             return NoContent();
         }
     }
