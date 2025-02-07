@@ -43,11 +43,13 @@ namespace ChurchRepositories
         public async Task DeleteAsync(int id)
         {
             var district = await _context.Districts.FindAsync(id);
-            if (district != null)
+            if (district == null)
             {
-                _context.Districts.Remove(district);
-                await _context.SaveChangesAsync();
+                throw new KeyNotFoundException("District not found");
             }
+
+            _context.Districts.Remove(district);
+            await _context.SaveChangesAsync();
         }
     }
 

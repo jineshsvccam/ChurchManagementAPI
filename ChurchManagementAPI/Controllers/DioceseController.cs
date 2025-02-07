@@ -1,11 +1,13 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DioceseController : ControllerBase
     {
         private readonly IDioceseService _dioceseService;
@@ -16,6 +18,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Diocese>>> GetAll()
         {
             var dioceses = await _dioceseService.GetAllAsync();
@@ -23,6 +26,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Diocese>> GetById(int id)
         {
             var diocese = await _dioceseService.GetByIdAsync(id);
@@ -34,6 +38,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create(Diocese diocese)
         {
             if (!ModelState.IsValid)
@@ -45,6 +50,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Diocese>> Update(int id, Diocese diocese)
         {
             if (id != diocese.DioceseId)
@@ -68,6 +74,7 @@ namespace ChurchManagementAPI.Controllers
 
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int id)
         {
             await _dioceseService.DeleteAsync(id);
