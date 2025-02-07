@@ -45,7 +45,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, Diocese diocese)
+        public async Task<ActionResult<Diocese>> Update(int id, Diocese diocese)
         {
             if (id != diocese.DioceseId)
             {
@@ -53,8 +53,18 @@ namespace ChurchManagementAPI.Controllers
             }
 
             await _dioceseService.UpdateAsync(diocese);
-            return NoContent();
+
+            // Get the updated diocese from the service
+            var updatedDiocese = await _dioceseService.GetByIdAsync(id);
+
+            if (updatedDiocese == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(updatedDiocese);
         }
+
 
 
         [HttpDelete("{id}")]

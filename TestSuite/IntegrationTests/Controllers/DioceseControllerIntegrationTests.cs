@@ -97,20 +97,31 @@ public class DioceseControllerIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Update_ShouldReturnNoContent_WhenDioceseIsValid()
+    public async Task Update_ShouldReturnOkResult_WithUpdatedDiocese()
     {
         // Arrange
-        var diocese = new Diocese { DioceseId = 1, DioceseName = "Diocese A", Address = "Address A", ContactInfo = "Contact A", Territory = "Territory A" };
+        var dioceseId = 1;
+        var diocese = new Diocese { DioceseId = dioceseId, DioceseName = "Diocese A", Address = "Address A", ContactInfo = "Contact A", Territory = "Territory A" };
         _dbContext.Dioceses.Add(diocese);
         await _dbContext.SaveChangesAsync();
+
         diocese.DioceseName = "Updated Diocese A";
+        diocese.Address = "Updated Address";
+        diocese.ContactInfo = "Updated Contact";
+        diocese.Territory = "Updated Territory";
 
         // Act
-        var result = await _dioceseController.Update(diocese.DioceseId, diocese);
+        var result = await _dioceseController.Update(dioceseId, diocese);
 
         // Assert
-        Assert.IsType<NoContentResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var returnValue = Assert.IsType<Diocese>(okResult.Value);
+        Assert.Equal("Updated Diocese A", returnValue.DioceseName);
+        Assert.Equal("Updated Address", returnValue.Address);
+        Assert.Equal("Updated Contact", returnValue.ContactInfo);
+        Assert.Equal("Updated Territory", returnValue.Territory);
     }
+
 
     [Fact]
     public async Task Delete_ShouldReturnNoContent_WhenDioceseIsDeleted()

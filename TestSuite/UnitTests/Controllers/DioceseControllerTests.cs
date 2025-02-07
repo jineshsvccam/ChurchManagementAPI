@@ -97,33 +97,42 @@ public class DioceseControllerTests
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+ 
     [Fact]
-    public async Task Update_ShouldReturnNoContent_WhenDioceseIsValid()
+    public async Task Update_ShouldReturnOkResult_WithUpdatedDiocese()
     {
         // Arrange
         var dioceseId = 1;
-        var diocese = new Diocese { DioceseId = dioceseId, DioceseName = "Updated Diocese A" };
+        var diocese = new Diocese { DioceseId = dioceseId, DioceseName = "Diocese A", Address = "Address A", ContactInfo = "Contact A", Territory = "Territory A" };
+        var updatedDiocese = new Diocese { DioceseId = dioceseId, DioceseName = "Updated Diocese A", Address = "Updated Address", ContactInfo = "Updated Contact", Territory = "Updated Territory" };
+
+        _dioceseServiceMock.Setup(service => service.UpdateAsync(diocese)).Returns(Task.CompletedTask);
+        _dioceseServiceMock.Setup(service => service.GetByIdAsync(dioceseId)).ReturnsAsync(updatedDiocese);
 
         // Act
         var result = await _dioceseController.Update(dioceseId, diocese);
 
         // Assert
-        Assert.IsType<NoContentResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var returnValue = Assert.IsType<Diocese>(okResult.Value);
+        Assert.Equal(updatedDiocese.DioceseName, returnValue.DioceseName);
     }
 
+    
     [Fact]
     public async Task Update_ShouldReturnBadRequest_WhenDioceseIdMismatch()
     {
         // Arrange
         var dioceseId = 1;
-        var diocese = new Diocese { DioceseId = 2, DioceseName = "Diocese A" };
+        var diocese = new Diocese { DioceseId = 2, DioceseName = "Diocese A", Address = "Address A", ContactInfo = "Contact A", Territory = "Territory A" };
 
         // Act
         var result = await _dioceseController.Update(dioceseId, diocese);
 
         // Assert
-        Assert.IsType<BadRequestResult>(result);
+        var badRequestResult = Assert.IsType<BadRequestResult>(result.Result);
     }
+
 
     [Fact]
     public async Task Delete_ShouldReturnNoContent_WhenDioceseIsDeleted()
