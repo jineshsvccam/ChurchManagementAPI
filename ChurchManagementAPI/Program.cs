@@ -9,8 +9,9 @@ using ChurchRepositories;
 using ChurchServices;
 using ChurchServices.ChurchServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -19,6 +20,26 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add Identity services
+builder.Services.AddIdentity<User, Role>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Explicitly register IRoleStore<Role>
+builder.Services.AddScoped<IRoleStore<Role>, RoleStore<Role, ApplicationDbContext, int>>();
+
+// Explicitly register RoleManager<Role>
+builder.Services.AddScoped<RoleManager<Role>>();
+
+// Explicitly register UserManager<User>
+builder.Services.AddScoped<UserManager<User>>();
+
+// Explicitly register SignInManager<User>
+builder.Services.AddScoped<SignInManager<User>>();
+
+// Explicitly register AuthService
+builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -57,7 +78,7 @@ builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFinancialYearRepository, FinancialYearRepository>();
 builder.Services.AddScoped<IFinancialYearService, FinancialYearService>();
 

@@ -24,6 +24,7 @@ namespace ChurchData.DTOs
         public ICollection<BankDto>? Banks { get; set; }
         public ICollection<TransactionDto>? Transactions { get; set; }
         public ICollection<FamilyMemberDto>? FamilyMembers { get; set; }
+        public ICollection<FinancialYearDto>? FinancialYears { get; set; }
     }
 
     // UnitDto class
@@ -99,5 +100,14 @@ namespace ChurchData.DTOs
         public string? ContactInfo { get; set; }
         public string Role { get; set; } = null!;
 
+    }
+    public class FinancialYearDto
+    {
+        public int FinancialYearId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsLocked { get; set; }
+        public DateTime? LockDate { get; set; }
+        public string? Description { get; set; }
     }
 }

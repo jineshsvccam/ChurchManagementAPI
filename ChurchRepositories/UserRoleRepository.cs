@@ -17,17 +17,51 @@ namespace ChurchRepositories
 
         public async Task<UserRole> GetUserRoleByIdAsync(int userId, int roleId)
         {
-            return await _context.UserRoles
+            var identityUserRole = await _context.UserRoles
                 .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+
+            if (identityUserRole == null)
+            {
+                return null;
+            }
+
+            var user = await _context.Users.FindAsync(identityUserRole.UserId);
+            var role = await _context.Roles.FindAsync(identityUserRole.RoleId);
+
+            return new UserRole
+            {
+                UserId = identityUserRole.UserId,
+                RoleId = identityUserRole.RoleId,
+                User = user,
+                Role = role
+            };
         }
+
+
 
         public async Task<IEnumerable<UserRole>> GetUserRolesByUserIdAsync(int userId)
         {
-            return await _context.UserRoles
-                .Include(ur => ur.Role)
+            var userRoles = await _context.UserRoles
                 .Where(ur => ur.UserId == userId)
                 .ToListAsync();
+
+            var roles = await _context.Roles
+                .Where(r => userRoles.Select(ur => ur.RoleId).Contains(r.Id))
+                .ToListAsync();
+
+            // Use async lambda expressions here
+            var result = await Task.WhenAll(userRoles.Select(async ur => new UserRole
+            {
+                UserId = ur.UserId,
+                RoleId = ur.RoleId,
+                User = await _context.Users.FindAsync(ur.UserId), // Load User entity
+                Role = roles.FirstOrDefault(r => r.Id == ur.RoleId) // Load Role entity
+            }));
+
+            return result;
         }
+
+
 
         public async Task<UserRole> AddUserRoleAsync(UserRole userRole)
         {

@@ -24,9 +24,9 @@ namespace ChurchServices
             return await _userRepository.GetAllUsersAsync();
         }
 
-        public async Task<User> AddUserAsync(User user)
+        public async Task<User> AddUserAsync(User user, string password, List<int> roleIds)
         {
-            return await _userRepository.AddUserAsync(user);
+            return await _userRepository.AddUserAsync(user, password, roleIds);
         }
 
         public async Task<User> UpdateUserAsync(User user)

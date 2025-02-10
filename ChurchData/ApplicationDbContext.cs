@@ -1,11 +1,12 @@
 ﻿using ChurchData.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace ChurchData
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<User, Role, int, IdentityUserClaim<int>, UserRole, IdentityUserLogin<int>, IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -21,11 +22,7 @@ namespace ChurchData
         public DbSet<FinancialReportsView> FinancialReportsView { get; set; }
         public DbSet<BankDTO> BankBalances { get; set; }
         public DbSet<GenericLog> GenericLogs { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<FinancialYear> FinancialYears { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -268,56 +265,71 @@ namespace ChurchData
             modelBuilder.Entity<GenericLog>(entity =>
             {
                 entity.HasKey(e => e.LogId);
-                entity.Property(e => e.LogId).HasColumnName("log_id"); 
-                entity.Property(e => e.TableName).HasColumnName("table_name"); 
-                entity.Property(e => e.RecordId).HasColumnName("record_id"); 
-                entity.Property(e => e.ChangeType).HasColumnName("change_type"); 
-                entity.Property(e => e.ChangedBy).HasColumnName("changed_by"); 
+                entity.Property(e => e.LogId).HasColumnName("log_id");
+                entity.Property(e => e.TableName).HasColumnName("table_name");
+                entity.Property(e => e.RecordId).HasColumnName("record_id");
+                entity.Property(e => e.ChangeType).HasColumnName("change_type");
+                entity.Property(e => e.ChangedBy).HasColumnName("changed_by");
                 entity.Property(e => e.ChangeTimestamp)
-                      .HasColumnName("change_timestamp") 
+                      .HasColumnName("change_timestamp")
                       .HasConversion(
                           v => v.ToUniversalTime(), // Ensure UTC when saving
                           v => DateTime.SpecifyKind(v, DateTimeKind.Utc) // Ensure UTC when reading
                       );
-                entity.Property(e => e.OldValues).HasColumnName("old_values"); 
-                entity.Property(e => e.NewValues).HasColumnName("new_values"); 
-                entity.ToTable("generic_logs"); 
+                entity.Property(e => e.OldValues).HasColumnName("old_values");
+                entity.Property(e => e.NewValues).HasColumnName("new_values");
+                entity.ToTable("generic_logs");
             });
 
-            // Configure the User entity
+            // Configure Identity entities (User, Role, UserRole)
+           
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("users");
-                entity.HasKey(u => u.UserId);
-                entity.Property(u => u.Username).IsRequired().HasMaxLength(255);
-                entity.Property(u => u.PasswordHash).IsRequired().HasMaxLength(255);
-                entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
-               // entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(u => u.Id).HasColumnName("user_id").UseIdentityAlwaysColumn();
+                entity.Property(u => u.UserName).HasColumnName("username").HasMaxLength(100).IsRequired();
+                entity.Property(u => u.NormalizedUserName).HasColumnName("normalizedusername").HasMaxLength(255);
+                entity.Property(u => u.Email).HasColumnName("email").HasMaxLength(100).IsRequired();
+                entity.Property(u => u.NormalizedEmail).HasColumnName("normalizedemail").HasMaxLength(255);
+                entity.Property(u => u.EmailConfirmed).HasColumnName("email_confirmed").IsRequired();
+                entity.Property(u => u.PasswordHash).HasColumnName("password_hash").HasMaxLength(255);
+                entity.Property(u => u.SecurityStamp).HasColumnName("securitystamp");
+                entity.Property(u => u.ConcurrencyStamp).HasColumnName("concurrencystamp");
+                entity.Property(u => u.PhoneNumber).HasColumnName("phonenumber").HasMaxLength(255);
+                entity.Property(u => u.PhoneNumberConfirmed).HasColumnName("phonenumberconfirmed").IsRequired();
+                entity.Property(u => u.TwoFactorEnabled).HasColumnName("twofactorenabled").IsRequired();
+                entity.Property(u => u.AccessFailedCount).HasColumnName("accessfailedcount").IsRequired();
+                entity.Property(u => u.LockoutEnabled).HasColumnName("lockoutenabled").IsRequired();
+                entity.Property(u => u.LockoutEnd).HasColumnName("lockoutend");
+
+                // Foreign Keys
+                entity.Property(u => u.FamilyId).HasColumnName("family_id");
+                entity.Property(u => u.ParishId).HasColumnName("parish_id");
+
+                entity.HasOne(u => u.Family)
+                      .WithMany(f => f.Users)
+                      .HasForeignKey(u => u.FamilyId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(u => u.Parish)
+                      .WithMany(p => p.Users)
+                      .HasForeignKey(u => u.ParishId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Configure the User entity
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.ToTable("users");
-                entity.HasKey(u => u.UserId);
-                entity.Property(u => u.UserId).HasColumnName("user_id");
-                entity.Property(u => u.Username).HasColumnName("username").IsRequired().HasMaxLength(255);
-                entity.Property(u => u.PasswordHash).HasColumnName("password_hash").IsRequired().HasMaxLength(255);
-                entity.Property(u => u.Email).HasColumnName("email").IsRequired().HasMaxLength(255);
-                entity.Property(u => u.ParishId).HasColumnName("parish_id"); // Explicitly map ParishId
-            //  entity.Property(u => u.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
-            });
-
-            // Configure the Role entity
+            // Configure Role Table
             modelBuilder.Entity<Role>(entity =>
             {
-                entity.ToTable("roles");
-                entity.HasKey(r => r.RoleId);
-                entity.Property(r => r.RoleId).HasColumnName("role_id");
-                entity.Property(r => r.RoleName).HasColumnName("role_name").IsRequired().HasMaxLength(50);
+                entity.ToTable("roles"); // Table name mapping
+                entity.Property(r => r.Id).HasColumnName("role_id").UseIdentityAlwaysColumn();
+                entity.Property(r => r.Name).HasColumnName("role_name").IsRequired().HasMaxLength(50);
+
+                // Add required Identity fields
+                entity.Property(r => r.NormalizedName).HasColumnName("normalized_name").HasMaxLength(50).IsRequired();
+                entity.Property(r => r.ConcurrencyStamp).HasColumnName("concurrencystamp").IsConcurrencyToken();
             });
 
-            // Configure the UserRole entity
+            // Configure UserRole Table
             modelBuilder.Entity<UserRole>(entity =>
             {
                 entity.ToTable("user_roles");
@@ -327,13 +339,14 @@ namespace ChurchData
                 entity.Property(ur => ur.RoleId).HasColumnName("role_id");
 
                 entity.HasOne(ur => ur.User)
-                    .WithMany(u => u.UserRoles)
-                    .HasForeignKey(ur => ur.UserId);
+                      .WithMany(u => u.UserRoles)
+                      .HasForeignKey(ur => ur.UserId);
 
                 entity.HasOne(ur => ur.Role)
-                    .WithMany(r => r.UserRoles)
-                    .HasForeignKey(ur => ur.RoleId);
+                      .WithMany(r => r.UserRoles)
+                      .HasForeignKey(ur => ur.RoleId);
             });
+
             modelBuilder.Entity<FinancialYear>(entity =>
             {
                 entity.ToTable("financial_years");
@@ -347,12 +360,9 @@ namespace ChurchData
                 entity.Property(fy => fy.Description).HasColumnName("description");
 
                 entity.HasOne(fy => fy.Parish)
-                    .WithMany(p => p.FinancialYears)
-                    .HasForeignKey(fy => fy.ParishId);
+                      .WithMany(p => p.FinancialYears)
+                      .HasForeignKey(fy => fy.ParishId);
             });
         }
     }
-
 }
-
-

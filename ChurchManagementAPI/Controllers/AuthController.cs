@@ -1,6 +1,8 @@
 ﻿using ChurchData;
+using ChurchData.DTOs;
 using ChurchServices;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
@@ -27,11 +29,19 @@ namespace ChurchManagementAPI.Controllers
 
             return Ok(new { Token = token });
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+        {
+            var user = await _authService.RegisterUserAsync(registerDto.Username, registerDto.Email, registerDto.Password, registerDto.RoleIds);
+            if (user == null)
+            {
+                return BadRequest("User registration failed.");
+            }
+
+            return Ok(new { Message = "User registered successfully.", UserId = user.Id });
+        }
     }
 
-    public class LoginDto
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
-    }
+ 
 }

@@ -42,9 +42,9 @@ namespace ChurchServices
         {
             await _parishRepository.DeleteAsync(id);
         }
-        public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeTransactions = false, bool includeFamilyMembers = false)
+        public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
         {
-            return await _parishRepository.GetParishDetailsAsync(parishId, includeTransactions, includeFamilyMembers);
+            return await _parishRepository.GetParishDetailsAsync(parishId, includeFamilyMembers);
         }
     }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ChurchData
@@ -25,7 +26,9 @@ namespace ChurchData
         public ICollection<TransactionHead> TransactionHeads { get; set; } = new List<TransactionHead>();
         public ICollection<Bank> Banks { get; set; } = new List<Bank>();
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
-        public ICollection<FinancialYear> FinancialYears { get; set; } = new List<FinancialYear>(); 
+        public ICollection<FinancialYear> FinancialYears { get; set; } = new List<FinancialYear>();
+        [JsonIgnore]
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 
 }

@@ -30,6 +30,7 @@ namespace ChurchData
         public Parish? Parish { get; set; }
         public ICollection<FamilyMember> FamilyMembers { get; set; } = new List<FamilyMember>();
         public ICollection<Transaction> Transactions { get; set; }=new List<Transaction>();
+        public ICollection<User> Users { get; set; }= new List<User>();
     }   
 
 }

@@ -41,13 +41,13 @@ namespace ChurchManagementAPI.Controllers
         public async Task<IActionResult> AddRole([FromBody] Role role)
         {
             var createdRole = await _roleService.AddRoleAsync(role);
-            return CreatedAtAction(nameof(GetRoleById), new { id = createdRole.RoleId }, createdRole);
+            return CreatedAtAction(nameof(GetRoleById), new { id = createdRole.Id }, createdRole);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] Role role)
         {
-            if (id != role.RoleId)
+            if (id != role.Id)
             {
                 return BadRequest();
             }

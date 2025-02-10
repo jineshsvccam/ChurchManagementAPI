@@ -60,9 +60,9 @@ namespace ChurchManagementAPI.Controllers
             return NoContent();
         }
         [HttpGet("{parishId}/details")]
-        public async Task<ActionResult<ParishDetailsDto>> GetParishDetails(int parishId, [FromQuery] bool includeTransactions = false, [FromQuery] bool includeFamilyMembers = false)
+        public async Task<ActionResult<ParishDetailsDto>> GetParishDetails(int parishId, [FromQuery] bool includeFamilyMembers = false)
         {
-            var parishDetails = await _parishService.GetParishDetailsAsync(parishId, includeTransactions, includeFamilyMembers);
+            var parishDetails = await _parishService.GetParishDetailsAsync(parishId, includeFamilyMembers);
 
             if (parishDetails == null)
             {

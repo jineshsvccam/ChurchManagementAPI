@@ -1,41 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 
 namespace ChurchData
 {
-    public class User
+    public class User : IdentityUser<int>
     {
-        public int UserId { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
         public int? ParishId { get; set; }
+        public int? FamilyId { get; set; }
 
         // Navigation properties
-        public ICollection<UserRole> UserRoles { get; set; }
+        public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
+        public virtual Family Family { get; set; }
+        public virtual Parish Parish { get; set; }
     }
 
-    public class UserRole
+    // Custom UserRole: Inherits from IdentityUserRole<int>
+    public class UserRole : IdentityUserRole<int>
     {
-        //public int UserRoleId { get; set; }
-        public int UserId { get; set; }
-        public int RoleId { get; set; }
-
+        // No need to redeclare UserId and RoleId unless additional behavior is needed.
         // Navigation properties
-        public User User { get; set; }
-        public Role Role { get; set; }
+        public virtual User User { get; set; }
+        public virtual Role Role { get; set; }
     }
 
-    public class Role
+    // Custom Role: Inherits from IdentityRole<int> (which already contains Id and Name)
+    public class Role : IdentityRole<int>
     {
-        public int RoleId { get; set; }
-        public string RoleName { get; set; }
-
-        // Navigation properties
-        public ICollection<UserRole> UserRoles { get; set; }
-
+        // Remove duplicate properties: Use Id (for role_id) and Name (for role_name)
+        // Navigation property
+        public string ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
+        public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
     }
 }
