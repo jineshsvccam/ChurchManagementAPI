@@ -16,6 +16,12 @@ namespace ChurchData.DTOs
 
         [Required]
         public List<int> RoleIds { get; set; } // Allow assigning multiple roles
+
+        [Required]
+        public int ParishId { get; set; }
+
+        [Required]
+        public int FamilyId { get; set; }
     }
     public class LoginDto
     {

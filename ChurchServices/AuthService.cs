@@ -34,13 +34,15 @@ public class AuthService
         return GenerateJwtToken(user);
     }
 
-    public async Task<User?> RegisterUserAsync(string username, string email, string password, List<int> roleIds)
+    public async Task<User?> RegisterUserAsync(string username, string email, string password,int parishId,int familyId, List<int> roleIds)
     {
         var user = new User
         {
             UserName = username,
             Email = email,
-            EmailConfirmed = true
+            EmailConfirmed = true,
+            ParishId = parishId,
+            FamilyId = familyId
         };
 
         var result = await _userManager.CreateAsync(user, password);
