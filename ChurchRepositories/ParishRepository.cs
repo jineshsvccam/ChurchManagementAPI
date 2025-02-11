@@ -36,17 +36,16 @@ namespace ChurchRepositories
 
         public async Task<IEnumerable<Parish>> GetAllAsync()
         {
-            var user = await GetCurrentUserAsync();
-            return await _context.Parishes.Where(p => p.ParishId == user.ParishId).ToListAsync();
+            return await _context.Parishes.ToListAsync();           
         }
 
         public async Task<Parish?> GetByIdAsync(int id)
         {
-            var user = await GetCurrentUserAsync();
+           // var user = await GetCurrentUserAsync();
             var parish = await _context.Parishes.FindAsync(id);
 
-            if (parish?.ParishId != user.ParishId)
-                throw new UnauthorizedAccessException("You are not authorized to access this parish data.");
+            //if (parish?.ParishId != user.ParishId)
+            //    throw new UnauthorizedAccessException("You are not authorized to access this parish data.");
 
             return parish;
         }

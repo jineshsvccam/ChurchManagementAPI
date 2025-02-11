@@ -1,6 +1,7 @@
 ﻿using ChurchContracts;
 using ChurchData;
 using ChurchData.DTOs;
+using ChurchServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -50,6 +51,16 @@ namespace ChurchManagementAPI.Controllers
             }
 
             await _parishService.UpdateAsync(parish);
+
+            // Get the updated Parish from the service
+            var updatedParish = await _parishService.GetByIdAsync(id);
+
+            if (updatedParish == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(updatedParish);
             return NoContent();
         }
 
