@@ -6,6 +6,8 @@ using ChurchServices;
 using ChurchContracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace DistrictsTest
 {
@@ -14,15 +16,17 @@ namespace DistrictsTest
         private readonly ApplicationDbContext _dbContext;
         private readonly DistrictRepository _districtRepository;
         private readonly DistrictService _districtService;
+        private readonly Mock<ILogger<DistrictService>> _mockLogger; // Mock the logger
 
         public DistrictServiceIntegrationTests()
         {
+            _mockLogger = new Mock<ILogger<DistrictService>>(); // Initialize the mock logger
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "ChurchDb")
                 .Options;
             _dbContext = new ApplicationDbContext(options);
             _districtRepository = new DistrictRepository(_dbContext);
-            _districtService = new DistrictService(_districtRepository);
+            _districtService = new DistrictService(_districtRepository, _mockLogger.Object);
         }
 
         public async Task InitializeAsync()
@@ -129,6 +133,7 @@ namespace DistrictsTest
         public async Task DeleteAsync_ShouldRemoveDistrict()
         {
             // Arrange
+            await ClearDatabase(); // Ensure the database is cleared before adding a new district
             var district = new District { DistrictId = 1, DistrictName = "District A", Description = "Description A" };
             _dbContext.Districts.Add(district);
             await _dbContext.SaveChangesAsync();

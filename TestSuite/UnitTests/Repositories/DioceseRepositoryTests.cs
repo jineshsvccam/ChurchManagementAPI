@@ -5,6 +5,8 @@ using ChurchRepositories;
 using ChurchContracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 
 namespace DiocesesTest
@@ -13,14 +15,16 @@ namespace DiocesesTest
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly DioceseRepository _dioceseRepository;
+        private readonly Mock<ILogger<DioceseRepository>> _loggerrepository;
 
         public DioceseRepositoryTests()
         {
+            _loggerrepository = new Mock<ILogger<DioceseRepository>>();
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Use a unique database name for each test run
                 .Options;
             _dbContext = new ApplicationDbContext(options);
-            _dioceseRepository = new DioceseRepository(_dbContext);
+            _dioceseRepository = new DioceseRepository(_dbContext,_loggerrepository.Object);
         }
 
         public Task InitializeAsync()

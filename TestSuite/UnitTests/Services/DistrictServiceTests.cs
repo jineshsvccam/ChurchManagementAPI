@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchData;
 using ChurchServices;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -11,12 +12,14 @@ namespace DistrictsTest
     public class DistrictServiceTests
     {
         private readonly Mock<IDistrictRepository> _mockDistrictRepository;
+        private readonly Mock<ILogger<DistrictService>> _mockLogger; // Mock the logger
         private readonly DistrictService _districtService;
 
         public DistrictServiceTests()
         {
             _mockDistrictRepository = new Mock<IDistrictRepository>();
-            _districtService = new DistrictService(_mockDistrictRepository.Object);
+            _mockLogger = new Mock<ILogger<DistrictService>>(); // Initialize the mock logger
+            _districtService = new DistrictService(_mockDistrictRepository.Object, _mockLogger.Object); // Pass it to the service
         }
 
         [Fact]
@@ -63,6 +66,15 @@ namespace DistrictsTest
 
             // Assert
             _mockDistrictRepository.Verify(repo => repo.AddAsync(district), Times.Once);
+            _mockLogger.Verify( // Ensure logging was called
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Added district")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()
+                ),
+                Times.Once);
         }
 
         [Fact]

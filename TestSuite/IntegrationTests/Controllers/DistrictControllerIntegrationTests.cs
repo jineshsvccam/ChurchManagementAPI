@@ -8,6 +8,8 @@ using ChurchContracts;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace DistrictsTest
 {
@@ -17,6 +19,7 @@ namespace DistrictsTest
         private readonly DistrictRepository _districtRepository;
         private readonly DistrictService _districtService;
         private readonly DistrictController _districtController;
+        private readonly Mock<ILogger<DistrictService>> _logger;
 
         public DistrictControllerIntegrationTests()
         {
@@ -24,8 +27,9 @@ namespace DistrictsTest
                 .UseInMemoryDatabase(databaseName: "ChurchDb")
                 .Options;
             _dbContext = new ApplicationDbContext(options);
+            _logger = new Mock<ILogger<DistrictService>>();
             _districtRepository = new DistrictRepository(_dbContext);
-            _districtService = new DistrictService(_districtRepository);
+            _districtService = new DistrictService(_districtRepository, _logger.Object);
             _districtController = new DistrictController(_districtService);
         }
 
@@ -124,6 +128,7 @@ namespace DistrictsTest
         public async Task Delete_ShouldReturnNoContent_WhenDistrictIsDeleted()
         {
             // Arrange
+           // await ClearDatabase(); // Ensure the database is cleared before adding a new district
             var district = new District { DistrictId = 1, DistrictName = "District A", Description = "Description A" };
             _dbContext.Districts.Add(district);
             await _dbContext.SaveChangesAsync();

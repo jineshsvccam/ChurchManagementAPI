@@ -8,6 +8,8 @@ using ChurchContracts;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace DiocesesTest
 {
@@ -17,16 +19,21 @@ namespace DiocesesTest
         private readonly DioceseRepository _dioceseRepository;
         private readonly DioceseService _dioceseService;
         private readonly DioceseController _dioceseController;
+       
 
         public DioceseControllerIntegrationTests()
         {
+            var mockLoggerRepository = new Mock<ILogger<DioceseRepository>>();
+            var mockLoggerService = new Mock<ILogger<DioceseService>>();
+            var mockLoggerController = new Mock<ILogger<DioceseController>>();
+
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "ChurchDb")
                 .Options;
             _dbContext = new ApplicationDbContext(options);
-            _dioceseRepository = new DioceseRepository(_dbContext);
-            _dioceseService = new DioceseService(_dioceseRepository);
-            _dioceseController = new DioceseController(_dioceseService);
+            _dioceseRepository = new DioceseRepository(_dbContext, mockLoggerRepository.Object);
+            _dioceseService = new DioceseService(_dioceseRepository, mockLoggerService.Object);
+            _dioceseController = new DioceseController(_dioceseService, mockLoggerController.Object);
         }
 
         public async Task InitializeAsync()

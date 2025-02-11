@@ -5,6 +5,9 @@ using ChurchServices;
 using ChurchData;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ChurchManagementAPI.Controllers;
+using ChurchRepositories;
+using Microsoft.Extensions.Logging;
 
 namespace DiocesesTest
 {
@@ -13,10 +16,14 @@ namespace DiocesesTest
         private readonly Mock<IDioceseRepository> _dioceseRepositoryMock;
         private readonly DioceseService _dioceseService;
 
+        private readonly Mock<ILogger<DioceseService>> _loggerservice;
+
+
         public DioceseServiceTests()
         {
+            _loggerservice = new Mock<ILogger<DioceseService>>();
             _dioceseRepositoryMock = new Mock<IDioceseRepository>();
-            _dioceseService = new DioceseService(_dioceseRepositoryMock.Object);
+            _dioceseService = new DioceseService(_dioceseRepositoryMock.Object,_loggerservice.Object);
         }
 
         [Fact]
