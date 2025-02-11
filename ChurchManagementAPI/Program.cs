@@ -1,3 +1,4 @@
+﻿using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using ChurchContracts;
@@ -14,33 +15,42 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Read Serilog Enabled flag from appsettings.json
+var isLoggingEnabled = builder.Configuration.GetValue<bool>("Serilog:Enabled");
+
+if (isLoggingEnabled)
+{
+    Log.Logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(builder.Configuration)
+        .CreateLogger();
+
+    builder.Host.UseSerilog();
+}
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Identity services
-builder.Services.AddIdentity<User, Role>()
+builder.Services.AddIdentity<User, Role>(options =>
+{
+    options.User.RequireUniqueEmail = false;
+})
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 // Explicitly register IRoleStore<Role>
 builder.Services.AddScoped<IRoleStore<Role>, RoleStore<Role, ApplicationDbContext, int>>();
-
-// Explicitly register RoleManager<Role>
 builder.Services.AddScoped<RoleManager<Role>>();
-
-// Explicitly register UserManager<User>
 builder.Services.AddScoped<UserManager<User>>();
-
-// Explicitly register SignInManager<User>
 builder.Services.AddScoped<SignInManager<User>>();
-
-// Explicitly register AuthService
 builder.Services.AddScoped<AuthService>();
 
+// JSON serialization settings
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -86,6 +96,15 @@ builder.Services.AddScoped<IFinancialYearService, FinancialYearService>();
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
 
 // Configure JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+{
+    throw new InvalidOperationException("JWT configuration is missing in appsettings.json.");
+}
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -93,22 +112,25 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        NameClaimType = ClaimTypes.NameIdentifier,  //  Ensure NameClaimType is set
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer(); // Add Endpoints API Explorer
-
-builder.Services.AddMemoryCache(); // Add this line to enable MemoryCache
+builder.Services.AddMemoryCache(); // Enable MemoryCache
 
 // Swagger configuration
 builder.Services.AddSwaggerGen(c =>
@@ -162,6 +184,8 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(securityRequirement);
 });
 
+builder.Services.AddLogging();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -172,13 +196,32 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChurchManagementAPI v1"));
 }
 
-// Add the custom middleware
-app.UseMiddleware<GlobalExceptionMiddleware>();
-
+// ✅ Ensure authentication runs before middleware
 app.UseHttpsRedirection();
-app.UseAuthentication(); // Add this line to enable authentication middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// ✅ Modify middleware to extract NameIdentifier manually
+app.Use(async (context, next) =>
+{
+    var user = context.User;
+    var userName = user.Identity?.Name
+                   ?? user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
+    Log.Information("Middleware Logging - User: {User}", userName);
+
+    await next();
+});
+
+// ✅ Register Middleware after Authentication
+app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
+
+// Enable Serilog request logging if enabled
+if (isLoggingEnabled)
+{
+    app.UseSerilogRequestLogging();
+}
+
+app.MapControllers();
 app.Run();

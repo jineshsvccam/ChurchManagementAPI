@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 
-
 namespace ChurchManagementAPI.Middleware
 {
     public class GlobalExceptionMiddleware
@@ -28,26 +27,48 @@ namespace ChurchManagementAPI.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred.");
                 await HandleExceptionAsync(context, ex);
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var code = HttpStatusCode.InternalServerError; // 500 if unexpected
+            HttpStatusCode statusCode = HttpStatusCode.InternalServerError; // Default 500
+            string errorMessage = "An unexpected error occurred. Please try again later.";
 
-            var errorResponse = new ErrorResponse
+            switch (exception)
             {
-                StatusCode = (int)code,
-                Message = "An unexpected error occurred. Please try again later.",
-                Detailed = _env.IsDevelopment() ? exception.Message : null // Include detailed message only in development mode
+                case KeyNotFoundException:
+                    statusCode = HttpStatusCode.NotFound;
+                    errorMessage = "Resource not found.";
+                    break;
+
+                case UnauthorizedAccessException:
+                    statusCode = HttpStatusCode.Unauthorized;
+                    errorMessage = "Unauthorized access.";
+                    break;
+                                   
+                case ArgumentNullException:
+                    statusCode = HttpStatusCode.BadRequest;
+                    errorMessage = "Invalid request parameters.";
+                    break;
+
+                    // Add more custom exception handlers if needed.
+            }
+
+            _logger.LogError(exception, "Exception: {ExceptionType} | Path: {RequestPath} | Message: {ErrorMessage}",
+                exception.GetType().Name, context.Request.Path, exception.Message);
+
+            var errorResponse = new
+            {
+                StatusCode = (int)statusCode,
+                Message = errorMessage,
+                Detailed = _env.IsDevelopment() ? exception.Message : null // Show detailed message only in development
             };
 
-            var result = JsonSerializer.Serialize(errorResponse);
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)code;
-            return context.Response.WriteAsync(result);
+            context.Response.StatusCode = (int)statusCode;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
         }
     }
 }
