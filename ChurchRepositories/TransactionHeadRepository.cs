@@ -21,25 +21,27 @@ namespace ChurchRepositories
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<User> _userManager;
         private readonly ILogger<TransactionHeadRepository> _logger;
+        private readonly LogsHelper _logsHelper;
 
         public TransactionHeadRepository(
             ApplicationDbContext context,
             IOptions<LoggingSettings> loggingSettings,
             UserManager<User> userManager,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<TransactionHeadRepository> logger)
+            ILogger<TransactionHeadRepository> logger,
+            LogsHelper logsHelper)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _loggingSettings = loggingSettings ?? throw new ArgumentNullException(nameof(loggingSettings));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logsHelper = logsHelper;
         }
 
         public async Task<IEnumerable<TransactionHead>> GetTransactionHeadsAsync(int? parishId, int? headId)
         {
-            try
-            {
+           
                 _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
 
                 var query = _context.TransactionHeads.AsQueryable();
@@ -52,12 +54,7 @@ namespace ChurchRepositories
                 _logger.LogInformation("Fetched {Count} transaction heads.", result.Count);
 
                 return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
-                throw;
-            }
+           
         }
 
         public async Task<TransactionHead?> GetByIdAsync(int id)
@@ -88,7 +85,7 @@ namespace ChurchRepositories
                 await _context.TransactionHeads.AddAsync(transactionHead);
                 await _context.SaveChangesAsync();
 
-                await LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, transactionHead);
+                await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, SerializeTransactionHead(transactionHead));
 
                 _logger.LogInformation("Successfully added transaction head Id: {Id}", transactionHead.HeadId);
                 return transactionHead;
@@ -122,7 +119,7 @@ namespace ChurchRepositories
                 _context.TransactionHeads.Update(transactionHead);
                 await _context.SaveChangesAsync();
 
-                await LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, oldValues, transactionHead);
+                await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, SerializeTransactionHead(oldValues), SerializeTransactionHead(transactionHead));
 
                 _logger.LogInformation("Successfully updated transaction head Id: {Id}", transactionHead.HeadId);
                 return transactionHead;
@@ -151,7 +148,7 @@ namespace ChurchRepositories
                 _context.TransactionHeads.Remove(transactionHead);
                 await _context.SaveChangesAsync();
 
-                await LogChangeAsync("transaction_heads", id, "DELETE", userId, transactionHead, null);
+                await _logsHelper.LogChangeAsync("transaction_heads", id, "DELETE", userId, SerializeTransactionHead(transactionHead), null);
 
                 _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
             }
@@ -162,38 +159,6 @@ namespace ChurchRepositories
             }
         }
 
-        private async Task LogChangeAsync(string tableName, int recordId, string changeType, int userId, TransactionHead? oldValues, TransactionHead? newValues)
-        {
-            try
-            {
-                if (!_loggingSettings.Value.EnableChangeLogging ||
-                    !_loggingSettings.Value.TableLogging.ContainsKey(tableName) ||
-                    !_loggingSettings.Value.TableLogging[tableName])
-                {
-                    return;
-                }
-
-                var log = new GenericLog
-                {
-                    TableName = tableName,
-                    RecordId = recordId,
-                    ChangeType = changeType,
-                    ChangedBy = userId,
-                    ChangeTimestamp = DateTime.UtcNow,
-                    OldValues = oldValues != null ? SerializeTransactionHead(oldValues) : null,
-                    NewValues = newValues != null ? SerializeTransactionHead(newValues) : null
-                };
-
-                await _context.GenericLogs.AddAsync(log);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Logged change for table: {TableName}, RecordId: {RecordId}, ChangeType: {ChangeType}", tableName, recordId, changeType);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error logging change for table: {TableName}, RecordId: {RecordId}, ChangeType: {ChangeType}", tableName, recordId, changeType);
-            }
-        }
 
         private string SerializeTransactionHead(TransactionHead transactionHead)
         {

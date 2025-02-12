@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -28,17 +29,10 @@ namespace ChurchManagementAPI.Controllers
         [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<IEnumerable<TransactionHead>>> GetTransactionHeads([FromQuery] int? parishId, [FromQuery] int? headId)
         {
-            try
-            {
-                _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
-                var transactionHeads = await _transactionHeadService.GetTransactionHeadsAsync(parishId, headId);
-                return Ok(transactionHeads);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
-                return StatusCode(500, "Internal server error.");
-            }
+            _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
+            var transactionHeads = await _transactionHeadService.GetTransactionHeadsAsync(parishId, headId);
+            return Ok(transactionHeads);
+
         }
 
         [HttpGet("{id}")]
@@ -103,9 +97,15 @@ namespace ChurchManagementAPI.Controllers
             try
             {
                 _logger.LogInformation("Updating transaction head Id: {Id}", id);
-                await _transactionHeadService.UpdateAsync(transactionHead);
+                var updatedhead = await _transactionHeadService.UpdateAsync(transactionHead);
+                if (updatedhead == null)
+                {
+                    return NotFound();
+                }
+
                 _logger.LogInformation("Successfully updated transaction head Id: {Id}", id);
-                return NoContent();
+                return Ok(updatedhead);
+
             }
             catch (Exception ex)
             {

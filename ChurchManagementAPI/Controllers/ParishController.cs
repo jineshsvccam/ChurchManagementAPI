@@ -61,7 +61,7 @@ namespace ChurchManagementAPI.Controllers
             }
 
             return Ok(updatedParish);
-            return NoContent();
+           
         }
 
         [HttpDelete("{id}")]
