@@ -11,9 +11,9 @@ namespace ChurchContracts
     {
         Task<IEnumerable<TransactionHead>> GetTransactionHeadsAsync(int? parishId, int? headId);
         Task<TransactionHead?> GetByIdAsync(int id);
-        Task<IEnumerable<TransactionHead>> AddOrUpdateAsync(IEnumerable<TransactionHead> requests, int userId); // Updated method
-        Task<TransactionHead> UpdateAsync(TransactionHead transactionHead, int userId); 
-        Task DeleteAsync(int id, int userId); 
-        Task<TransactionHead> AddAsync(TransactionHead transactionHead, int userId); 
+        Task<IEnumerable<TransactionHead>> AddOrUpdateAsync(IEnumerable<TransactionHead> requests); 
+        Task<TransactionHead> UpdateAsync(TransactionHead transactionHead); 
+        Task DeleteAsync(int id); 
+        Task<TransactionHead> AddAsync(TransactionHead transactionHead); 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace ChurchData
 {
@@ -12,7 +13,7 @@ namespace ChurchData
         public DateTime? LockDate { get; set; }
         public string Description { get; set; }
 
-        // Navigation properties
+       [JsonIgnore]
         public Parish? Parish { get; set; }
     }
 }

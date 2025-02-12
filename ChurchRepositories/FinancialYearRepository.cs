@@ -33,6 +33,10 @@ namespace ChurchRepositories
 
         public async Task<FinancialYear> AddAsync(FinancialYear financialYear)
         {
+            // Ensure DateTime values are stored as UTC
+            financialYear.StartDate = DateTime.SpecifyKind(financialYear.StartDate, DateTimeKind.Utc);
+            financialYear.EndDate = DateTime.SpecifyKind(financialYear.EndDate, DateTimeKind.Utc);
+
             await _context.FinancialYears.AddAsync(financialYear);
             await _context.SaveChangesAsync();
             return financialYear;

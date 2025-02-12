@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ChurchData
 {
@@ -13,6 +14,7 @@ namespace ChurchData
         public decimal CurrentBalance { get; set; }
         public int ParishId { get; set; }
 
+        [JsonIgnore]
         public Parish? Parish { get; set; }
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }

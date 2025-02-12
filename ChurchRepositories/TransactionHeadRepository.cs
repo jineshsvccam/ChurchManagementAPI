@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchData;
 using ChurchData.DTOs;
+using ChurchRepositories.Utils;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -14,11 +17,15 @@ namespace ChurchRepositories
     {
         private readonly ApplicationDbContext _context;
         private readonly IOptions<LoggingSettings> _loggingSettings;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UserManager<User> _userManager;
 
-        public TransactionHeadRepository(ApplicationDbContext context, IOptions<LoggingSettings> loggingSettings)
+        public TransactionHeadRepository(ApplicationDbContext context, IOptions<LoggingSettings> loggingSettings, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _loggingSettings = loggingSettings;
+            _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<TransactionHead>> GetTransactionHeadsAsync(int? parishId, int? headId)
@@ -43,8 +50,10 @@ namespace ChurchRepositories
             return await _context.TransactionHeads.FindAsync(id);
         }
 
-        public async Task<TransactionHead> AddAsync(TransactionHead transactionHead, int userId)
+        public async Task<TransactionHead> AddAsync(TransactionHead transactionHead)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor); 
+
             await _context.TransactionHeads.AddAsync(transactionHead);
             await _context.SaveChangesAsync();
 
@@ -54,8 +63,9 @@ namespace ChurchRepositories
             return transactionHead;
         }
 
-        public async Task<TransactionHead> UpdateAsync(TransactionHead transactionHead, int userId)
+        public async Task<TransactionHead> UpdateAsync(TransactionHead transactionHead)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var existingTransactionHead = await _context.TransactionHeads
                 .AsNoTracking() // Ensure no tracking to capture the old values correctly
                 .FirstOrDefaultAsync(th => th.HeadId == transactionHead.HeadId);
@@ -78,8 +88,9 @@ namespace ChurchRepositories
             }
         }
 
-        public async Task DeleteAsync(int id, int userId)
+        public async Task DeleteAsync(int id)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var transactionHead = await _context.TransactionHeads.FindAsync(id);
             if (transactionHead != null)
             {
@@ -101,8 +112,7 @@ namespace ChurchRepositories
                 !_loggingSettings.Value.TableLogging.ContainsKey(tableName) ||
                 !_loggingSettings.Value.TableLogging[tableName])
             {
-                // Logging is disabled globally or for this specific table, so exit early
-                return;
+                return; // Logging is disabled for this table
             }
 
             var log = new GenericLog
@@ -112,12 +122,27 @@ namespace ChurchRepositories
                 ChangeType = changeType,
                 ChangedBy = userId,
                 ChangeTimestamp = DateTime.UtcNow, // Ensure UTC
-                OldValues = oldValues != null ? Newtonsoft.Json.JsonConvert.SerializeObject(oldValues) : null,
-                NewValues = newValues != null ? Newtonsoft.Json.JsonConvert.SerializeObject(newValues) : null
+                OldValues = oldValues != null ? SerializeTransactionHead(oldValues) : null,
+                NewValues = newValues != null ? SerializeTransactionHead(newValues) : null
             };
 
             await _context.GenericLogs.AddAsync(log);
             await _context.SaveChangesAsync();
+        }
+
+        // Serialize without navigation properties
+        private string SerializeTransactionHead(TransactionHead transactionHead)
+        {
+            var transactionHeadDto = new
+            {
+                transactionHead.HeadId,
+                transactionHead.ParishId,
+                transactionHead.HeadName,
+                transactionHead.Type,
+                transactionHead.Description
+            };
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(transactionHeadDto);
         }
 
         private TransactionHead CloneTransactionHead(TransactionHead source)

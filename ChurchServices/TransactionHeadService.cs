@@ -25,7 +25,7 @@ namespace ChurchServices
             return await _transactionHeadRepository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<TransactionHead>> AddOrUpdateAsync(IEnumerable<TransactionHead> requests, int userId)
+        public async Task<IEnumerable<TransactionHead>> AddOrUpdateAsync(IEnumerable<TransactionHead> requests)
         {
             var createdTransactionHeads = new List<TransactionHead>();
 
@@ -33,12 +33,12 @@ namespace ChurchServices
             {
                 if (request.Action == "INSERT")
                 {
-                    var createdTransactionHead = await AddAsync(request, userId);
+                    var createdTransactionHead = await AddAsync(request);
                     createdTransactionHeads.Add(createdTransactionHead);
                 }
                 else if (request.Action == "UPDATE")
                 {
-                    var createdTransactionHead = await UpdateAsync(request, userId);
+                    var createdTransactionHead = await UpdateAsync(request);
                     createdTransactionHeads.Add(createdTransactionHead);
                 }
                 else
@@ -49,21 +49,21 @@ namespace ChurchServices
             return createdTransactionHeads;
         }
 
-        public async Task<TransactionHead> AddAsync(TransactionHead transactionHead, int userId)
+        public async Task<TransactionHead> AddAsync(TransactionHead transactionHead)
         {
-            var addedTransactionHead = await _transactionHeadRepository.AddAsync(transactionHead, userId);
+            var addedTransactionHead = await _transactionHeadRepository.AddAsync(transactionHead);
             return addedTransactionHead;
         }
 
-        public async Task<TransactionHead> UpdateAsync(TransactionHead transactionHead, int userId)
+        public async Task<TransactionHead> UpdateAsync(TransactionHead transactionHead)
         {
-            var updatedTransactionHead = await _transactionHeadRepository.UpdateAsync(transactionHead, userId);
+            var updatedTransactionHead = await _transactionHeadRepository.UpdateAsync(transactionHead);
             return updatedTransactionHead;
         }
 
-        public async Task DeleteAsync(int id, int userId)
+        public async Task DeleteAsync(int id)
         {
-            await _transactionHeadRepository.DeleteAsync(id, userId);
+            await _transactionHeadRepository.DeleteAsync(id);
         }
     }
 }

@@ -1,0 +1,93 @@
+{
+  "parishId": 2,
+  "parishName": "New Parish",
+  "parishLocation": "Some Location",
+  "photo": "Some Photo",
+  "address": "Some Address",
+  "phone": "1234567890",
+  "email": "email@example.com",
+  "place": "Some Place",
+  "pincode": "123456",
+  "vicarName": "Vicar Name",
+  "districtId": 3,
+  "units": [
+    {
+      "unitName": "Others",
+      "description": "",
+      "unitPresident": "",
+      "unitSecretary": ""
+    }
+  ],
+  "families": [
+    {
+        "unitId": 1,
+        "familyName": "NoName",
+        "category": "Low",
+        "familyNumber": 0,
+        "status": "Live",
+        "headName": "NoName",
+        "joinDate": "0001-01-01T00:00:00"
+    }
+  ],
+  "transactionHeads": [
+    {
+      "headName": "Aramana",
+      "type": "Both",
+      "description": ""
+    },
+    {
+      "headName": "Athiphalam",
+      "type": "Both",
+      "description": ""
+    },
+    {
+      "headName": "Attakuttapani",
+      "type": "Expense",
+      "description": ""
+    },
+    {
+      "headName": "Baktha Samkadanakal",
+      "type": "Both",
+      "description": ""
+    },
+    {
+      "headName": "Bank Charges",
+      "type": "Expense",
+      "description": ""
+    },
+    {
+      "headName": "Bulding Deposit",
+      "type": "Both",
+      "description": ""
+    }
+  ],
+  "banks": [
+    {
+      "bankName": "Cash",
+      "accountNumber": "",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "bankName": "Fd",
+      "accountNumber": "",
+      "openingBalance": 0,
+      "currentBalance": 0
+    },
+    {
+      "bankName": "JE",
+      "accountNumber": "",
+      "openingBalance": 0,
+      "currentBalance": 0
+    }
+  ],
+  "familyMembers": [],
+  "financialYears": [
+    {
+      "startDate": "2024-04-01T00:00:00",
+      "endDate": "2025-03-31T00:00:00",
+      "isLocked": false,
+      "description": "Financial year for Parish"
+    }
+  ]
+}

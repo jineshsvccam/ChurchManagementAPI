@@ -9,7 +9,7 @@ namespace ChurchManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Protect all actions within this controller
+    [Authorize] 
     public class TransactionHeadController : ControllerBase
     {
         private readonly ITransactionHeadService _transactionHeadService;
@@ -20,6 +20,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<IEnumerable<TransactionHead>>> GetTransactionHeads([FromQuery] int? parishId, [FromQuery] int? headId)
         {
             var transactionHeads = await _transactionHeadService.GetTransactionHeadsAsync(parishId, headId);
@@ -27,6 +28,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<TransactionHead>> GetById(int id)
         {
             var transactionHead = await _transactionHeadService.GetByIdAsync(id);
@@ -38,13 +40,12 @@ namespace ChurchManagementAPI.Controllers
         }
                
         [HttpPost]
-        [Authorize(Roles = "Admin")] // Only Admin role can access this action
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHead> requests)
         {
             try
-            {
-                var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
-                var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests, userId);
+            {             
+                var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
                 if (createdTransactionHeads.Any())
                 {
                     return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
@@ -58,24 +59,23 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> Update(int id, [FromBody] TransactionHead transactionHead)
         {
             if (id != transactionHead.HeadId)
             {
                 return BadRequest();
             }
-
-            var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
-            await _transactionHeadService.UpdateAsync(transactionHead, userId);
+            
+            await _transactionHeadService.UpdateAsync(transactionHead);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> Delete(int id)
-        {
-            var userId = int.Parse(HttpContext.Request.Headers["User-ID"]); // Example to get user ID from headers
-            await _transactionHeadService.DeleteAsync(id, userId);
+        {           
+            await _transactionHeadService.DeleteAsync(id);
             return NoContent();
         }
     }
