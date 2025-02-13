@@ -25,14 +25,22 @@ public class AuthService
         _configuration = configuration;
     }
 
-    public async Task<string> AuthenticateUserAsync(string username, string password)
+    public async Task<(bool IsSuccess, string Token, string Message)> AuthenticateUserAsync(string username, string password)
     {
         var user = await _userManager.FindByNameAsync(username);
-        if (user == null || !await _userManager.CheckPasswordAsync(user, password))
-            return null;
 
-        return GenerateJwtToken(user);
+        if (user == null)
+            return (false, null, "User not found.");
+
+        if (!await _userManager.CheckPasswordAsync(user, password))
+            return (false, null, "Invalid password.");
+
+        if (user.Status != UserStatus.Active)  // Assuming 'Active' is your enum value
+            return (false, null, "Your account is not approved.");
+
+        return (true, GenerateJwtToken(user), "Login successful.");
     }
+
 
     public async Task<User?> RegisterUserAsync(string username, string email, string password,int parishId,int familyId, List<int> roleIds)
     {

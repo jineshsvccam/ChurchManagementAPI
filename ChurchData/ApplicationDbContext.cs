@@ -306,6 +306,12 @@ namespace ChurchData
                 entity.Property(u => u.FamilyId).HasColumnName("family_id");
                 entity.Property(u => u.ParishId).HasColumnName("parish_id");
 
+                // User Status (Active, Inactive, Suspended)
+                entity.Property(u => u.Status)
+                      .HasColumnName("status")
+                      .HasConversion<string>() // Enum stored as string
+                      .HasDefaultValue(UserStatus.Pending);
+
                 entity.HasOne(u => u.Family)
                       .WithMany(f => f.Users)
                       .HasForeignKey(u => u.FamilyId)
@@ -330,6 +336,7 @@ namespace ChurchData
             });
 
             // Configure UserRole Table
+            // Configure UserRole Table
             modelBuilder.Entity<UserRole>(entity =>
             {
                 entity.ToTable("user_roles");
@@ -338,14 +345,46 @@ namespace ChurchData
                 entity.Property(ur => ur.UserId).HasColumnName("user_id");
                 entity.Property(ur => ur.RoleId).HasColumnName("role_id");
 
+                // Enum-based column for Role Status
+                entity.Property(ur => ur.Status)
+                      .HasColumnName("status")
+                      .HasConversion<string>() // Store as string in DB
+                      .HasDefaultValue(RoleStatus.Pending);
+
+                // Track who approved the role assignment
+                entity.Property(ur => ur.ApprovedBy)
+                      .HasColumnName("approved_by")
+                      .IsRequired(false);
+
+                // Timestamp fields
+                entity.Property(ur => ur.RequestedAt)
+                      .HasColumnName("requested_at")
+                      .HasColumnType("timestamp")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(ur => ur.ApprovedAt)
+                      .HasColumnName("approved_at")
+                      .HasColumnType("timestamp")
+                      .IsRequired(false);
+
+                // Relationships
                 entity.HasOne(ur => ur.User)
                       .WithMany(u => u.UserRoles)
-                      .HasForeignKey(ur => ur.UserId);
+                      .HasForeignKey(ur => ur.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(ur => ur.Role)
                       .WithMany(r => r.UserRoles)
-                      .HasForeignKey(ur => ur.RoleId);
+                      .HasForeignKey(ur => ur.RoleId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Relationship with ApprovedBy (Admin)
+                entity.HasOne(ur => ur.ApprovedByUser)
+                      .WithMany()
+                      .HasForeignKey(ur => ur.ApprovedBy)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
+
 
             modelBuilder.Entity<FinancialYear>(entity =>
             {

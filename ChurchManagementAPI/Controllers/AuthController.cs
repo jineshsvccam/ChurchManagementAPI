@@ -21,13 +21,14 @@ namespace ChurchManagementAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            var token = await _authService.AuthenticateUserAsync(loginDto.Username, loginDto.Password);
-            if (token == null)
+            var (isSuccess, token, message) = await _authService.AuthenticateUserAsync(loginDto.Username, loginDto.Password);
+
+            if (!isSuccess)
             {
-                return Unauthorized("Invalid username or password.");
+                return Unauthorized(new { Message = message });
             }
 
-            return Ok(new { Token = token });
+            return Ok(new { Token = token, Message = message });
         }
 
         [HttpPost("register")]
