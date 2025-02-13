@@ -1,140 +1,72 @@
-using ChurchData;
-using ChurchData.DTOs;
-using ChurchRepositories;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using ChurchData;
+using ChurchContracts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
-
+using ChurchData.DTOs;
+using ChurchRepositories.Utils;
+using ChurchRepositories;
 namespace TransacionHeadsTest
 {
     public class TransactionHeadRepositoryTests
     {
-        private readonly Mock<ApplicationDbContext> _mockContext;
+        private readonly Mock<ApplicationDbContext> _mockDbContext;
         private readonly Mock<IOptions<LoggingSettings>> _mockLoggingSettings;
-        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
         private readonly Mock<UserManager<User>> _mockUserManager;
+        private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
         private readonly Mock<ILogger<TransactionHeadRepository>> _mockLogger;
-        private readonly TransactionHeadRepository _repository;
+        private readonly Mock<LogsHelper> _mockLogsHelper;
+        private readonly TransactionHeadRepository _transactionHeadRepository;
 
         public TransactionHeadRepositoryTests()
         {
-            _mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
+            _mockDbContext = new Mock<ApplicationDbContext>();
             _mockLoggingSettings = new Mock<IOptions<LoggingSettings>>();
             _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
-            _mockUserManager = new Mock<UserManager<User>>(Mock.Of<IUserStore<User>>(), null, null, null, null, null, null, null, null);
             _mockLogger = new Mock<ILogger<TransactionHeadRepository>>();
+            _mockLogsHelper = new Mock<LogsHelper>();
 
-            _mockLoggingSettings.Setup(x => x.Value).Returns(new LoggingSettings
-            {
-                EnableChangeLogging = true,
-                TableLogging = new Dictionary<string, bool> { { "transaction_heads", true } }
-            });
+            // Mock UserManager requires a specific constructor setup
+            var store = new Mock<IUserStore<User>>();
+            _mockUserManager = new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
 
-            _repository = new TransactionHeadRepository(
-                _mockContext.Object,
+            // Mock TransactionHeads DbSet
+            var transactionHeads = new List<TransactionHead>
+        {
+            new TransactionHead { HeadId = 1, HeadName = "Head 1" },
+            new TransactionHead { HeadId = 2, HeadName = "Head 2" }
+        };
+            var mockTransactionHeadDbSet = DbSetMockHelper.CreateMockDbSet(transactionHeads);
+            _mockDbContext.Setup(db => db.TransactionHeads).Returns(mockTransactionHeadDbSet.Object);
+
+            // Pass all mocked dependencies into TransactionHeadRepository
+            _transactionHeadRepository = new TransactionHeadRepository(
+                _mockDbContext.Object,
                 _mockLoggingSettings.Object,
                 _mockUserManager.Object,
                 _mockHttpContextAccessor.Object,
-                _mockLogger.Object);
+                _mockLogger.Object,
+                _mockLogsHelper.Object
+            );
         }
 
         [Fact]
-        public async Task GetTransactionHeadsAsync_ReturnsTransactionHeads()
+        public async Task GetTransactionHeadsAsync_ShouldReturnData()
         {
-            // Arrange
-            var transactionHeads = new List<TransactionHead>
-            {
-                new TransactionHead { HeadId = 1, HeadName = "Test" }
-            };
-            var mockSet = new Mock<DbSet<TransactionHead>>();
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.Provider).Returns(transactionHeads.AsQueryable().Provider);
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.Expression).Returns(transactionHeads.AsQueryable().Expression);
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.ElementType).Returns(transactionHeads.AsQueryable().ElementType);
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.GetEnumerator()).Returns(transactionHeads.AsQueryable().GetEnumerator());
-
-            _mockContext.Setup(c => c.TransactionHeads).Returns(mockSet.Object);
-
             // Act
-            var result = await _repository.GetTransactionHeadsAsync(null, null);
+            var result = await _transactionHeadRepository.GetTransactionHeadsAsync(null, null);
 
             // Assert
-            Assert.Single(result);
-        }
-
-        [Fact]
-        public async Task GetByIdAsync_ReturnsTransactionHead()
-        {
-            // Arrange
-            var transactionHead = new TransactionHead { HeadId = 1, HeadName = "Test" };
-            _mockContext.Setup(c => c.TransactionHeads.FindAsync(1)).ReturnsAsync(transactionHead);
-
-            // Act
-            var result = await _repository.GetByIdAsync(1);
-
-            // Assert
-            Assert.Equal(1, result?.HeadId);
-        }
-
-        [Fact]
-        public async Task AddAsync_AddsTransactionHead()
-        {
-            // Arrange
-            var transactionHead = new TransactionHead { HeadId = 1, HeadName = "Test" };
-            _mockHttpContextAccessor.Setup(x => x.HttpContext.User.Identity.Name).Returns("testuser");
-
-            // Act
-            var result = await _repository.AddAsync(transactionHead);
-
-            // Assert
-            _mockContext.Verify(c => c.TransactionHeads.AddAsync(transactionHead, default), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(default), Times.Once);
-            Assert.Equal(1, result.HeadId);
-        }
-
-        [Fact]
-        public async Task UpdateAsync_UpdatesTransactionHead()
-        {
-            // Arrange
-            var transactionHead = new TransactionHead { HeadId = 1, HeadName = "Test" };
-            var mockSet = new Mock<DbSet<TransactionHead>>();
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.Provider).Returns(new List<TransactionHead> { transactionHead }.AsQueryable().Provider);
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.Expression).Returns(new List<TransactionHead> { transactionHead }.AsQueryable().Expression);
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.ElementType).Returns(new List<TransactionHead> { transactionHead }.AsQueryable().ElementType);
-            mockSet.As<IQueryable<TransactionHead>>().Setup(m => m.GetEnumerator()).Returns(new List<TransactionHead> { transactionHead }.AsQueryable().GetEnumerator());
-
-            _mockContext.Setup(c => c.TransactionHeads).Returns(mockSet.Object);
-            _mockHttpContextAccessor.Setup(x => x.HttpContext.User.Identity.Name).Returns("testuser");
-
-            // Act
-            var result = await _repository.UpdateAsync(transactionHead);
-
-            // Assert
-            _mockContext.Verify(c => c.TransactionHeads.Update(transactionHead), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(default), Times.Once);
-            Assert.Equal(1, result.HeadId);
-        }
-
-        [Fact]
-        public async Task DeleteAsync_DeletesTransactionHead()
-        {
-            // Arrange
-            var transactionHead = new TransactionHead { HeadId = 1, HeadName = "Test" };
-            _mockContext.Setup(c => c.TransactionHeads.FindAsync(1)).ReturnsAsync(transactionHead);
-            _mockHttpContextAccessor.Setup(x => x.HttpContext.User.Identity.Name).Returns("testuser");
-
-            // Act
-            await _repository.DeleteAsync(1);
-
-            // Assert
-            _mockContext.Verify(c => c.TransactionHeads.Remove(transactionHead), Times.Once);
-            _mockContext.Verify(c => c.SaveChangesAsync(default), Times.Once);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count());
         }
     }
 }

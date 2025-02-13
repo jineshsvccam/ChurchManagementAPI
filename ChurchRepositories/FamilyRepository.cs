@@ -19,7 +19,7 @@ namespace ChurchRepositories
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public FamilyRepository(ApplicationDbContext context,
-            ILogger<FamilyRepository> logger,LogsHelper logsHelper,
+            ILogger<FamilyRepository> logger, LogsHelper logsHelper,
             IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
@@ -30,139 +30,89 @@ namespace ChurchRepositories
 
         public async Task<IEnumerable<Family>> GetFamiliesAsync(int? parishId, int? unitId, int? familyId)
         {
-            try
+            _logger.LogInformation("Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}", parishId, unitId, familyId);
+
+            var query = _context.Families.AsQueryable();
+
+            if (parishId.HasValue)
             {
-                _logger.LogInformation("Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}", parishId, unitId, familyId);
-
-                var query = _context.Families.AsQueryable();
-
-                if (parishId.HasValue)
-                {
-                    query = query.Where(f => f.ParishId == parishId.Value);
-                }
-                if (unitId.HasValue)
-                {
-                    query = query.Where(f => f.UnitId == unitId.Value);
-                }
-                if (familyId.HasValue)
-                {
-                    query = query.Where(f => f.FamilyId == familyId.Value);
-                }
-
-                var result = await query.ToListAsync();
-                _logger.LogInformation("Fetched {Count} families", result.Count);
-                return result;
+                query = query.Where(f => f.ParishId == parishId.Value);
             }
-            catch (Exception ex)
+            if (unitId.HasValue)
             {
-                _logger.LogError(ex, "Error fetching families");
-                throw;
+                query = query.Where(f => f.UnitId == unitId.Value);
             }
+            if (familyId.HasValue)
+            {
+                query = query.Where(f => f.FamilyId == familyId.Value);
+            }
+
+            var result = await query.ToListAsync();
+            _logger.LogInformation("Fetched {Count} families", result.Count);
+            return result;
         }
 
         public async Task<Family?> GetByIdAsync(int id)
         {
-            try
-            {
-                _logger.LogInformation("Fetching family with Id: {Id}", id);
-                var family = await _context.Families.FindAsync(id);
+            _logger.LogInformation("Fetching family with Id: {Id}", id);
+            var family = await _context.Families.FindAsync(id);
 
-                if (family == null)
-                {
-                    _logger.LogWarning("Family with Id: {Id} not found", id);
-                }
-
-                return family;
-            }
-            catch (Exception ex)
+            if (family == null)
             {
-                _logger.LogError(ex, "Error fetching family with Id: {Id}", id);
-                throw;
+                _logger.LogWarning("Family with Id: {Id} not found", id);
             }
+
+            return family;
         }
 
         public async Task<Family> AddAsync(Family family)
         {
-            try
-            {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _logger.LogInformation("Adding new family: {@Family}", family);
-                await _context.Families.AddAsync(family);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Family added successfully with Id: {Id}", family.FamilyId);
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+            _logger.LogInformation("Adding new family: {@Family}", family);
+            await _context.Families.AddAsync(family);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Family added successfully with Id: {Id}", family.FamilyId);
 
-                await _logsHelper.LogChangeAsync("families", family.FamilyId, "INSERT", userId, null, SerializeFamilies(family));
-                return family;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error adding family: {@Family}", family);
-                throw;
-            }
+            await _logsHelper.LogChangeAsync("families", family.FamilyId, "INSERT", userId, null, SerializeFamilies(family));
+            return family;
         }
 
         public async Task<Family> UpdateAsync(Family family)
         {
-            try
-            {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _logger.LogInformation("Updating family with Id: {Id}", family.FamilyId);
-                var existingFamily = await _context.Families.FindAsync(family.FamilyId);
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+            _logger.LogInformation("Updating family with Id: {Id}", family.FamilyId);
+            var existingFamily = await _context.Families.FindAsync(family.FamilyId);
 
-                if (existingFamily == null)
-                {
-                    _logger.LogWarning("Family with Id: {Id} not found", family.FamilyId);
-                    throw new KeyNotFoundException("Family not found");
-                }
-                var oldValues = CloneFamily(existingFamily);
+            if (existingFamily == null)
+            {
+                _logger.LogWarning("Family with Id: {Id} not found", family.FamilyId);
+                throw new KeyNotFoundException("Family not found");
+            }
+            var oldValues = CloneFamily(existingFamily);
 
-                _context.Entry(existingFamily).CurrentValues.SetValues(family);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Family updated successfully with Id: {Id}", family.FamilyId);
-                await _logsHelper.LogChangeAsync("families", family.FamilyId, "UPDATE", userId, SerializeFamilies(oldValues), SerializeFamilies(family));
-                return family;
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Update failed: Family with Id: {Id} not found", family.FamilyId);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating family with Id: {Id}", family.FamilyId);
-                throw;
-            }
+            _context.Entry(existingFamily).CurrentValues.SetValues(family);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Family updated successfully with Id: {Id}", family.FamilyId);
+            await _logsHelper.LogChangeAsync("families", family.FamilyId, "UPDATE", userId, SerializeFamilies(oldValues), SerializeFamilies(family));
+            return family;
         }
 
         public async Task DeleteAsync(int id)
         {
-            try
-            {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _logger.LogInformation("Deleting family with Id: {Id}", id);
-                var family = await _context.Families.FindAsync(id);
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+            _logger.LogInformation("Deleting family with Id: {Id}", id);
+            var family = await _context.Families.FindAsync(id);
 
-                if (family == null)
-                {
-                    _logger.LogWarning("Delete failed: Family with Id: {Id} not found", id);
-                    throw new KeyNotFoundException("Family not found");
-                }
+            if (family == null)
+            {
+                _logger.LogWarning("Delete failed: Family with Id: {Id} not found", id);
+                throw new KeyNotFoundException("Family not found");
+            }
 
-                _context.Families.Remove(family);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Family deleted successfully with Id: {Id}", id);
-                await _logsHelper.LogChangeAsync("families", family.FamilyId, "DELETE", userId, SerializeFamilies(family),null);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Delete failed: Family with Id: {Id} not found", id);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting family with Id: {Id}", id);
-                throw;
-            }
+            _context.Families.Remove(family);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Family deleted successfully with Id: {Id}", id);
+            await _logsHelper.LogChangeAsync("families", family.FamilyId, "DELETE", userId, SerializeFamilies(family), null);
         }
 
         private string SerializeFamilies(Family family)

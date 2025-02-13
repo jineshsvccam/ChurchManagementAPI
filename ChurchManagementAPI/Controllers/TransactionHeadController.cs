@@ -32,56 +32,34 @@ namespace ChurchManagementAPI.Controllers
             _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
             var transactionHeads = await _transactionHeadService.GetTransactionHeadsAsync(parishId, headId);
             return Ok(transactionHeads);
-
         }
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<TransactionHead>> GetById(int id)
         {
-            try
+            _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
+            var transactionHead = await _transactionHeadService.GetByIdAsync(id);
+            if (transactionHead == null)
             {
-                _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
-                var transactionHead = await _transactionHeadService.GetByIdAsync(id);
-                if (transactionHead == null)
-                {
-                    _logger.LogWarning("Transaction head not found with Id: {Id}", id);
-                    return NotFound();
-                }
-                return Ok(transactionHead);
+                _logger.LogWarning("Transaction head not found with Id: {Id}", id);
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching transaction head by Id: {Id}", id);
-                return StatusCode(500, "Internal server error.");
-            }
+            return Ok(transactionHead);
         }
 
         [HttpPost("create-or-update")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHead> requests)
         {
-            try
+            _logger.LogInformation("Creating or updating transaction heads.");
+            var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
+            if (createdTransactionHeads.Any())
             {
-                _logger.LogInformation("Creating or updating transaction heads.");
-                var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
-                if (createdTransactionHeads.Any())
-                {
-                    _logger.LogInformation("Successfully created or updated transaction heads.");
-                    return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
-                }
-                return Ok();
+                _logger.LogInformation("Successfully created or updated transaction heads.");
+                return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
             }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning(ex, "Invalid input provided.");
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating or updating transaction heads.");
-                return StatusCode(500, "Internal server error.");
-            }
+            return Ok();
         }
 
         [HttpPut("{id}")]
@@ -94,42 +72,26 @@ namespace ChurchManagementAPI.Controllers
                 return BadRequest("ID mismatch");
             }
 
-            try
+            _logger.LogInformation("Updating transaction head Id: {Id}", id);
+            var updatedHead = await _transactionHeadService.UpdateAsync(transactionHead);
+            if (updatedHead == null)
             {
-                _logger.LogInformation("Updating transaction head Id: {Id}", id);
-                var updatedhead = await _transactionHeadService.UpdateAsync(transactionHead);
-                if (updatedhead == null)
-                {
-                    return NotFound();
-                }
-
-                _logger.LogInformation("Successfully updated transaction head Id: {Id}", id);
-                return Ok(updatedhead);
-
+                _logger.LogWarning("Transaction head not found for update with Id: {Id}", id);
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating transaction head Id: {Id}", id);
-                return StatusCode(500, "Internal server error.");
-            }
+
+            _logger.LogInformation("Successfully updated transaction head Id: {Id}", id);
+            return Ok(updatedHead);
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                _logger.LogInformation("Deleting transaction head Id: {Id}", id);
-                await _transactionHeadService.DeleteAsync(id);
-                _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting transaction head Id: {Id}", id);
-                return StatusCode(500, "Internal server error.");
-            }
+            _logger.LogInformation("Deleting transaction head Id: {Id}", id);
+            await _transactionHeadService.DeleteAsync(id);
+            _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
+            return NoContent();
         }
     }
 }

@@ -41,124 +41,90 @@ namespace ChurchRepositories
 
         public async Task<IEnumerable<TransactionHead>> GetTransactionHeadsAsync(int? parishId, int? headId)
         {
-           
-                _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
+            _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
 
-                var query = _context.TransactionHeads.AsQueryable();
-                if (parishId.HasValue)
-                    query = query.Where(th => th.ParishId == parishId.Value);
-                if (headId.HasValue)
-                    query = query.Where(th => th.HeadId == headId.Value);
+            var query = _context.TransactionHeads.AsQueryable();
+            if (parishId.HasValue)
+                query = query.Where(th => th.ParishId == parishId.Value);
+            if (headId.HasValue)
+                query = query.Where(th => th.HeadId == headId.Value);
 
-                var result = await query.ToListAsync();
-                _logger.LogInformation("Fetched {Count} transaction heads.", result.Count);
+            var result = await query.ToListAsync();
+            _logger.LogInformation("Fetched {Count} transaction heads.", result.Count);
 
-                return result;
-           
+            return result;
         }
 
         public async Task<TransactionHead?> GetByIdAsync(int id)
         {
-            try
-            {
-                _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
-                var result = await _context.TransactionHeads.FindAsync(id);
-                if (result == null)
-                    _logger.LogWarning("Transaction head not found with Id: {Id}", id);
+            _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
+            var result = await _context.TransactionHeads.FindAsync(id);
 
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching transaction head by Id: {Id}", id);
-                throw;
-            }
+            if (result == null)
+                _logger.LogWarning("Transaction head not found with Id: {Id}", id);
+
+            return result;
         }
 
         public async Task<TransactionHead> AddAsync(TransactionHead transactionHead)
         {
-            try
-            {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _logger.LogInformation("Adding transaction head: {HeadName}", transactionHead.HeadName);
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+            _logger.LogInformation("Adding transaction head: {HeadName}", transactionHead.HeadName);
 
-                await _context.TransactionHeads.AddAsync(transactionHead);
-                await _context.SaveChangesAsync();
+            await _context.TransactionHeads.AddAsync(transactionHead);
+            await _context.SaveChangesAsync();
 
-                await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, SerializeTransactionHead(transactionHead));
+            await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, SerializeTransactionHead(transactionHead));
 
-                _logger.LogInformation("Successfully added transaction head Id: {Id}", transactionHead.HeadId);
-                return transactionHead;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error adding transaction head: {HeadName}", transactionHead.HeadName);
-                throw;
-            }
+            _logger.LogInformation("Successfully added transaction head Id: {Id}", transactionHead.HeadId);
+            return transactionHead;
         }
 
         public async Task<TransactionHead> UpdateAsync(TransactionHead transactionHead)
         {
-            try
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+            _logger.LogInformation("Updating transaction head Id: {Id}", transactionHead.HeadId);
+
+            var existingTransactionHead = await _context.TransactionHeads
+                .AsNoTracking()
+                .FirstOrDefaultAsync(th => th.HeadId == transactionHead.HeadId);
+
+            if (existingTransactionHead == null)
             {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _logger.LogInformation("Updating transaction head Id: {Id}", transactionHead.HeadId);
-
-                var existingTransactionHead = await _context.TransactionHeads
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(th => th.HeadId == transactionHead.HeadId);
-
-                if (existingTransactionHead == null)
-                {
-                    _logger.LogWarning("Transaction head not found for update with Id: {Id}", transactionHead.HeadId);
-                    throw new KeyNotFoundException("TransactionHead not found");
-                }
-
-                var oldValues = CloneTransactionHead(existingTransactionHead);
-
-                _context.TransactionHeads.Update(transactionHead);
-                await _context.SaveChangesAsync();
-
-                await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, SerializeTransactionHead(oldValues), SerializeTransactionHead(transactionHead));
-
-                _logger.LogInformation("Successfully updated transaction head Id: {Id}", transactionHead.HeadId);
-                return transactionHead;
+                _logger.LogWarning("Transaction head not found for update with Id: {Id}", transactionHead.HeadId);
+                throw new KeyNotFoundException("TransactionHead not found");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating transaction head Id: {Id}", transactionHead.HeadId);
-                throw;
-            }
+
+            var oldValues = CloneTransactionHead(existingTransactionHead);
+
+            _context.TransactionHeads.Update(transactionHead);
+            await _context.SaveChangesAsync();
+
+            await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, SerializeTransactionHead(oldValues), SerializeTransactionHead(transactionHead));
+
+            _logger.LogInformation("Successfully updated transaction head Id: {Id}", transactionHead.HeadId);
+            return transactionHead;
         }
 
         public async Task DeleteAsync(int id)
         {
-            try
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+            _logger.LogInformation("Deleting transaction head Id: {Id}", id);
+
+            var transactionHead = await _context.TransactionHeads.FindAsync(id);
+            if (transactionHead == null)
             {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _logger.LogInformation("Deleting transaction head Id: {Id}", id);
-
-                var transactionHead = await _context.TransactionHeads.FindAsync(id);
-                if (transactionHead == null)
-                {
-                    _logger.LogWarning("Transaction head not found for deletion with Id: {Id}", id);
-                    throw new KeyNotFoundException("TransactionHead not found");
-                }
-
-                _context.TransactionHeads.Remove(transactionHead);
-                await _context.SaveChangesAsync();
-
-                await _logsHelper.LogChangeAsync("transaction_heads", id, "DELETE", userId, SerializeTransactionHead(transactionHead), null);
-
-                _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
+                _logger.LogWarning("Transaction head not found for deletion with Id: {Id}", id);
+                throw new KeyNotFoundException("TransactionHead not found");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting transaction head Id: {Id}", id);
-                throw;
-            }
+
+            _context.TransactionHeads.Remove(transactionHead);
+            await _context.SaveChangesAsync();
+
+            await _logsHelper.LogChangeAsync("transaction_heads", id, "DELETE", userId, SerializeTransactionHead(transactionHead), null);
+
+            _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
         }
-
 
         private string SerializeTransactionHead(TransactionHead transactionHead)
         {
