@@ -47,19 +47,12 @@ namespace ChurchManagementAPI.Controllers
             }
             return Ok(family);
         }
-
-        [HttpPost("create-or-update")]
+        [HttpPost]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Family> requests)
+        public async Task<ActionResult<Family>> Create(Family family)
         {
-            _logger.LogInformation("Creating or updating {FamilyCount} families.", requests.Count());
-            var createdFamilies = await _familyService.AddOrUpdateAsync(requests);
-            if (createdFamilies.Any())
-            {
-                _logger.LogInformation("Successfully created/updated {FamilyCount} families.", createdFamilies.Count());
-                return CreatedAtAction(nameof(GetFamilies), createdFamilies);
-            }
-            return Ok();
+            var createdFamily = await _familyService.AddAsync(family);
+            return CreatedAtAction(nameof(GetById), createdFamily);
         }
 
         [HttpPut("{id}")]
@@ -93,6 +86,20 @@ namespace ChurchManagementAPI.Controllers
             await _familyService.DeleteAsync(id);
             _logger.LogInformation("Successfully deleted family with Id {FamilyId}", id);
             return NoContent();
+        }
+
+        [HttpPost("create-or-update")]
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Family> requests)
+        {
+            _logger.LogInformation("Creating or updating {FamilyCount} families.", requests.Count());
+            var createdFamilies = await _familyService.AddOrUpdateAsync(requests);
+            if (createdFamilies.Any())
+            {
+                _logger.LogInformation("Successfully created/updated {FamilyCount} families.", createdFamilies.Count());
+                return CreatedAtAction(nameof(GetFamilies), createdFamilies);
+            }
+            return Ok();
         }
     }
 }

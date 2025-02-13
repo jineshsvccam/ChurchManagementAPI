@@ -48,20 +48,13 @@ namespace ChurchManagementAPI.Controllers
             return Ok(transactionHead);
         }
 
-        [HttpPost("create-or-update")]
+        [HttpPost]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHead> requests)
+        public async Task<ActionResult<TransactionHead>> Create(TransactionHead transactionHead)
         {
-            _logger.LogInformation("Creating or updating transaction heads.");
-            var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
-            if (createdTransactionHeads.Any())
-            {
-                _logger.LogInformation("Successfully created or updated transaction heads.");
-                return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
-            }
-            return Ok();
+            var createdHead = await _transactionHeadService.AddAsync(transactionHead);
+            return CreatedAtAction(nameof(GetById), new { id = createdHead.HeadId }, createdHead);
         }
-
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> Update(int id, [FromBody] TransactionHead transactionHead)
@@ -93,5 +86,20 @@ namespace ChurchManagementAPI.Controllers
             _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
             return NoContent();
         }
+
+        [HttpPost("create-or-update")]
+        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHead> requests)
+        {
+            _logger.LogInformation("Creating or updating transaction heads.");
+            var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
+            if (createdTransactionHeads.Any())
+            {
+                _logger.LogInformation("Successfully created or updated transaction heads.");
+                return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
+            }
+            return Ok();
+        }
+
     }
 }

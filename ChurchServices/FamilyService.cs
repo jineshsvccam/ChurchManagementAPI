@@ -47,13 +47,13 @@ namespace ChurchServices
                 if (request.Action == "INSERT")
                 {
                     _logger.LogInformation("Adding new family: {FamilyName}", request.FamilyName);
-                    var createdFamily = await AddAsync(request);
+                    var createdFamily = await _familyRepository.AddAsync(request);
                     createdFamilies.Add(createdFamily);
                 }
                 else if (request.Action == "UPDATE")
                 {
                     _logger.LogInformation("Updating family with Id: {Id}", request.FamilyId);
-                    var createdFamily = await UpdateAsync(request);
+                    var createdFamily = await _familyRepository.UpdateAsync(request);
                     createdFamilies.Add(createdFamily);
                 }
                 else

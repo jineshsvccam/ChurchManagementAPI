@@ -17,9 +17,9 @@ namespace ChurchServices
             _unitRepository = unitRepository;
         }
 
-        public async Task<IEnumerable<Unit>> GetAllAsync()
+        public async Task<IEnumerable<Unit>> GetAllAsync(int? parishId)
         {
-            return await _unitRepository.GetAllAsync();
+            return await _unitRepository.GetAllAsync(parishId);
         }
 
         public async Task<Unit?> GetByIdAsync(int id)
@@ -32,15 +32,37 @@ namespace ChurchServices
             return await _unitRepository.AddAsync(unit);
         }
 
-        public async Task UpdateAsync(Unit unit)
+        public async Task<Unit> UpdateAsync(Unit unit)
         {
             await _unitRepository.UpdateAsync(unit);
+            return unit;
         }
 
         public async Task DeleteAsync(int id)
         {
             await _unitRepository.DeleteAsync(id);
         }
+        public async Task<IEnumerable<Unit>> AddOrUpdateAsync(IEnumerable<Unit> requests)
+        {
+            var createdUnits = new List<Unit>();
+            foreach (var request in requests)
+            {
+                if (request.Action == "INSERT")
+                {
+                    var createdUnit = await _unitRepository.AddAsync(request);
+                    createdUnits.Add(createdUnit);
+                }
+                else if (request.Action == "UPDATE")
+                {
+                    var createdUnit = await _unitRepository.UpdateAsync(request);
+                    createdUnits.Add(createdUnit);
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid action specified");
+                }
+            }
+            return createdUnits;
+        }
     }
-
 }

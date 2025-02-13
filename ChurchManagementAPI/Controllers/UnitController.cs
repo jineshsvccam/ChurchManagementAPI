@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -16,9 +17,9 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Unit>>> GetAll()
+        public async Task<ActionResult<IEnumerable<Unit>>> GetUnits([FromQuery] int? parishId)
         {
-            var units = await _unitService.GetAllAsync();
+            var units = await _unitService.GetAllAsync(parishId);
             return Ok(units);
         }
 
@@ -49,7 +50,8 @@ namespace ChurchManagementAPI.Controllers
             }
 
             await _unitService.UpdateAsync(unit);
-            return NoContent();
+
+            return Ok(unit);
         }
 
         [HttpDelete("{id}")]
@@ -57,6 +59,17 @@ namespace ChurchManagementAPI.Controllers
         {
             await _unitService.DeleteAsync(id);
             return NoContent();
+        }
+
+        [HttpPost("create-or-update")]
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Unit> units)
+        {
+            var createdUnits = await _unitService.AddOrUpdateAsync(units);
+            if (units.Any())
+            {
+                return CreatedAtAction(nameof(GetUnits), createdUnits);
+            }
+            return Ok();
         }
     }
 

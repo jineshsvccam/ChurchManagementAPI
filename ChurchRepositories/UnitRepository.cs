@@ -18,9 +18,13 @@ namespace ChurchRepositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Unit>> GetAllAsync()
+        public async Task<IEnumerable<Unit>> GetAllAsync(int? parishId)
         {
-            return await _context.Units.ToListAsync();
+            var query = _context.Units.AsQueryable();
+            if (parishId.HasValue)
+                query = query.Where(u => u.ParishId == parishId.Value);
+            var result = await query.ToListAsync();
+            return result;
         }
 
         public async Task<Unit?> GetByIdAsync(int id)
@@ -35,13 +39,14 @@ namespace ChurchRepositories
             return unit;
         }
 
-        public async Task UpdateAsync(Unit unit)
+        public async Task<Unit> UpdateAsync(Unit unit)
         {
             var existingUnit = await _context.Units.FindAsync(unit.UnitId);
             if (existingUnit != null)
             {
                 _context.Entry(existingUnit).CurrentValues.SetValues(unit);
                 await _context.SaveChangesAsync();
+                return unit;
             }
             else
             {

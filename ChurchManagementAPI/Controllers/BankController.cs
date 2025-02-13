@@ -36,6 +36,25 @@ namespace ChurchManagementAPI.Controllers
             return Ok(bank);
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, Bank bank)
+        {
+            if (id != bank.BankId)
+            {
+                return BadRequest();
+            }
+
+            await _bankService.UpdateAsync(bank);
+            return Ok(bank);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _bankService.DeleteAsync(id);
+            return NoContent();
+        }
+
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Bank> requests)
         {
@@ -52,25 +71,6 @@ namespace ChurchManagementAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Bank bank)
-        {
-            if (id != bank.BankId)
-            {
-                return BadRequest();
-            }
-
-            await _bankService.UpdateAsync(bank);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _bankService.DeleteAsync(id);
-            return NoContent();
         }
     }
 }

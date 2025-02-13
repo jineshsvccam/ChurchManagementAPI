@@ -9,11 +9,12 @@ namespace ChurchContracts
 {
     public interface IUnitService
     {
-        Task<IEnumerable<Unit>> GetAllAsync();
+        Task<IEnumerable<Unit>> GetAllAsync(int? parishId);
         Task<Unit?> GetByIdAsync(int id);
         Task<Unit> AddAsync(Unit unit);
-        Task UpdateAsync(Unit unit);
+        Task<Unit> UpdateAsync(Unit unit);
         Task DeleteAsync(int id);
+        Task<IEnumerable<Unit>> AddOrUpdateAsync(IEnumerable<Unit> units);
     }
 
 }
