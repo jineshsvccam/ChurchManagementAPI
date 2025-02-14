@@ -23,6 +23,7 @@ namespace ChurchData
         public DbSet<BankDTO> BankBalances { get; set; }
         public DbSet<GenericLog> GenericLogs { get; set; }
         public DbSet<FinancialYear> FinancialYears { get; set; }
+        public DbSet<PendingFamilyMemberAction> PendingFamilyMemberActions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -165,28 +166,6 @@ namespace ChurchData
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<FamilyMember>(entity =>
-            {
-                entity.ToTable("family_members", t =>
-                {
-                    t.HasCheckConstraint("family_member_gender_check", "gender IN ('Male', 'Female', 'Other')");
-                    t.HasCheckConstraint("family_member_role_check", "role IN ('Head', 'Member')");
-                });
-                entity.HasKey(fm => fm.MemberId);
-                entity.Property(fm => fm.MemberId).HasColumnName("member_id");
-                entity.Property(fm => fm.FamilyId).HasColumnName("family_id");
-                entity.Property(fm => fm.FirstName).HasColumnName("first_name").IsRequired().HasMaxLength(100);
-                entity.Property(fm => fm.LastName).HasColumnName("last_name").IsRequired().HasMaxLength(100);
-                entity.Property(fm => fm.DateOfBirth).HasColumnName("date_of_birth").HasColumnType("date");
-                entity.Property(fm => fm.Gender).HasColumnName("gender").HasMaxLength(10);
-                entity.Property(fm => fm.ContactInfo).HasColumnName("contact_info").HasMaxLength(100);
-                entity.Property(fm => fm.Role).HasColumnName("role").HasMaxLength(10);
-
-                entity.HasOne(fm => fm.Family)
-                      .WithMany(f => f.FamilyMembers)
-                      .HasForeignKey(fm => fm.FamilyId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
 
             modelBuilder.Entity<Transaction>(entity =>
             {
@@ -402,6 +381,29 @@ namespace ChurchData
                       .WithMany(p => p.FinancialYears)
                       .HasForeignKey(fy => fy.ParishId);
             });
+
+            modelBuilder.Entity<PendingFamilyMemberAction>(entity =>
+            {
+                entity.ToTable("pending_family_member_actions");
+                entity.HasKey(e => e.ActionId).HasName("pending_family_member_actions_pkey");
+                entity.Property(e => e.ActionId).HasColumnName("action_id").UseIdentityAlwaysColumn();
+                entity.Property(e => e.FamilyId).HasColumnName("family_id");
+                entity.Property(e => e.ParishId).HasColumnName("parish_id");               
+                entity.Property(e => e.MemberId).HasColumnName("member_id");
+                entity.Property(e => e.SubmittedData).HasColumnName("submitted_data").HasColumnType("jsonb").IsRequired();
+                entity.Property(e => e.ActionType).HasColumnName("action_type").HasMaxLength(10).IsRequired();
+                entity.Property(e => e.SubmittedBy).HasColumnName("submitted_by").IsRequired();
+                entity.Property(e => e.SubmittedAt).HasColumnName("submitted_at").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.ApprovalStatus).HasColumnName("approval_status").HasMaxLength(20).HasDefaultValue("Pending");
+                entity.Property(e => e.ApprovedBy).HasColumnName("approved_by");
+                entity.Property(e => e.ApprovedAt).HasColumnName("approved_at");
+
+                entity.HasOne<User>().WithMany().HasForeignKey(e => e.ApprovedBy).OnDelete(DeleteBehavior.SetNull).HasConstraintName("pending_family_member_actions_approved_by_fkey");
+                entity.HasOne<Family>().WithMany().HasForeignKey(e => e.FamilyId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("pending_family_member_actions_family_id_fkey");
+                entity.HasOne<Parish>().WithMany().HasForeignKey(e => e.ParishId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("pending_family_member_actions_parish_id_fkey");
+                entity.HasOne<User>().WithMany().HasForeignKey(e => e.SubmittedBy).OnDelete(DeleteBehavior.Cascade).HasConstraintName("pending_family_member_actions_submitted_by_fkey");
+            });
+
         }
     }
 }

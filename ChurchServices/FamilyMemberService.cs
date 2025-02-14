@@ -1,69 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using ChurchContracts;
 using ChurchData;
+using ChurchData.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChurchServices
 {
     public class FamilyMemberService : IFamilyMemberService
     {
         private readonly IFamilyMemberRepository _familyMemberRepository;
+        private readonly ApplicationDbContext _context;
 
-        public FamilyMemberService(IFamilyMemberRepository familyMemberRepository)
+        public FamilyMemberService(IFamilyMemberRepository familyMemberRepository, ApplicationDbContext context)
         {
+
             _familyMemberRepository = familyMemberRepository;
+            _context = context;
         }
 
-        public async Task<IEnumerable<FamilyMember>> GetFamilyMembersAsync(int? parishId, int? familyId, int? memberId)
+        public async Task<ServiceResponse> SubmitFamilyMemberAsync(PendingFamilyMemberRequestDto requestDto)
         {
-            return await _familyMemberRepository.GetFamilyMembersAsync(parishId, familyId, memberId);
-        }
-
-        public async Task<FamilyMember?> GetByIdAsync(int id)
-        {
-            return await _familyMemberRepository.GetByIdAsync(id);
-        }
-
-        public async Task<IEnumerable<FamilyMember>> AddOrUpdateAsync(IEnumerable<FamilyMember> requests)
-        {
-            var createdFamilyMembers = new List<FamilyMember>();
-
-            foreach (var request in requests)
+            var pendingAction = new PendingFamilyMemberAction
             {
-                if (request.Action == "INSERT")
-                {
-                    var createdFamilyMember = await AddAsync(request);
-                    createdFamilyMembers.Add(createdFamilyMember);
-                }
-                else if (request.Action == "UPDATE")
-                {
-                    var updatedFamilyMember = await UpdateAsync(request);
-                    createdFamilyMembers.Add(updatedFamilyMember);
-                }
-                else
-                {
-                    throw new ArgumentException("Invalid action specified");
-                }
-            }
-            return createdFamilyMembers;
+                FamilyId = requestDto.FamilyId,
+                ParishId = requestDto.ParishId,               
+                SubmittedBy = requestDto.SubmittedBy,
+                ActionType = "INSERT",
+                SubmittedData = requestDto.Payload,
+                ApprovalStatus = "Pending",
+                SubmittedAt = DateTime.UtcNow
+            };
+
+            await _familyMemberRepository.AddPendingActionAsync(pendingAction);
+
+            return new ServiceResponse
+            {
+                Success = true,
+                Message = "Family member submitted for approval."
+            };
         }
 
-        public async Task<FamilyMember> AddAsync(FamilyMember familyMember)
+        public async Task<ServiceResponse> ApproveFamilyMemberAsync(FamilyMemberApprovalDto approvalDto)
         {
-            var addedFamilyMember = await _familyMemberRepository.AddAsync(familyMember);
-            return addedFamilyMember;
-        }
+            // Call the stored procedure to approve the pending action.
+            var result = await _context.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT ApprovePendingFamilyMember({approvalDto.ActionId}, {approvalDto.ApprovedBy});"
+            );
 
-        public async Task<FamilyMember> UpdateAsync(FamilyMember familyMember)
-        {
-            var updatedFamilyMember = await _familyMemberRepository.UpdateAsync(familyMember);
-            return updatedFamilyMember;
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            await _familyMemberRepository.DeleteAsync(id);
+            return new ServiceResponse
+            {
+                Success = true,
+                Message = $"Family member approved and inserted via stored procedure. Rows affected: {result}"
+            };
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using ChurchContracts;
-using ChurchData;
+using ChurchData.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
@@ -17,59 +16,26 @@ namespace ChurchManagementAPI.Controllers
             _familyMemberService = familyMemberService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<FamilyMember>>> GetFamilyMembers([FromQuery] int? parishId, [FromQuery] int? familyId, [FromQuery] int? memberId)
+        [HttpPost("submit")]
+        public async Task<IActionResult> SubmitFamilyMember([FromBody] PendingFamilyMemberRequestDto requestDto)
         {
-            var familyMembers = await _familyMemberService.GetFamilyMembersAsync(parishId, familyId, memberId);
-            return Ok(familyMembers);
+            var response = await _familyMemberService.SubmitFamilyMemberAsync(requestDto);
+            if (!response.Success)
+            {
+                return BadRequest(response.Message);
+            }
+            return Ok(response);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<FamilyMember>> GetById(int id)
+        [HttpPost("approval")]
+        public async Task<IActionResult> ApproveFamilyMember([FromBody] FamilyMemberApprovalDto approvalDto)
         {
-            var familyMember = await _familyMemberService.GetByIdAsync(id);
-            if (familyMember == null)
+            var response = await _familyMemberService.ApproveFamilyMemberAsync(approvalDto);
+            if (!response.Success)
             {
-                return NotFound();
+                return BadRequest(response.Message);
             }
-            return Ok(familyMember);
-        }
-
-        [HttpPost("create-or-update")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<FamilyMember> requests)
-        {
-            try
-            {
-                var createdFamilyMembers = await _familyMemberService.AddOrUpdateAsync(requests);
-                if (createdFamilyMembers.Any())
-                {
-                    return CreatedAtAction(nameof(GetFamilyMembers), createdFamilyMembers);
-                }
-                return Ok();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, FamilyMember familyMember)
-        {
-            if (id != familyMember.MemberId)
-            {
-                return BadRequest();
-            }
-
-            await _familyMemberService.UpdateAsync(familyMember);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _familyMemberService.DeleteAsync(id);
-            return NoContent();
+            return Ok(response);
         }
     }
 }

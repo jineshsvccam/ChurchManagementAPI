@@ -15,68 +15,29 @@ namespace ChurchRepositories
         {
             _context = context;
         }
-
-        public async Task<IEnumerable<FamilyMember>> GetFamilyMembersAsync(int? parishId, int? familyId, int? memberId)
+        public async Task<PendingFamilyMemberAction> AddPendingActionAsync(PendingFamilyMemberAction action)
         {
-            var query = _context.FamilyMembers.AsQueryable();
-
-            if (parishId.HasValue)
-            {
-                query = query.Where(fm => fm.Family.ParishId == parishId.Value);
-            }
-
-            if (familyId.HasValue)
-            {
-                query = query.Where(fm => fm.FamilyId == familyId.Value);
-            }
-
-            if (memberId.HasValue)
-            {
-                query = query.Where(fm => fm.MemberId == memberId.Value);
-            }
-
-            return await query.ToListAsync();
+            _context.PendingFamilyMemberActions.Add(action);
+            await _context.SaveChangesAsync();
+            return action;
         }
 
-        public async Task<FamilyMember?> GetByIdAsync(int id)
+        public async Task<PendingFamilyMemberAction> GetPendingActionByIdAsync(int actionId)
         {
-            return await _context.FamilyMembers.FindAsync(id);
+            return await _context.PendingFamilyMemberActions
+                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.ApprovalStatus == "Pending");
         }
 
-        public async Task<FamilyMember> AddAsync(FamilyMember familyMember)
+        public async Task UpdatePendingActionAsync(PendingFamilyMemberAction action)
         {
-            await _context.FamilyMembers.AddAsync(familyMember);
+            _context.PendingFamilyMemberActions.Update(action);
+            await _context.SaveChangesAsync();
+        }
+        public async Task<FamilyMember> InsertApprovedFamilyMemberAsync(FamilyMember familyMember)
+        {
+            _context.FamilyMembers.Add(familyMember);
             await _context.SaveChangesAsync();
             return familyMember;
-        }
-
-        public async Task<FamilyMember> UpdateAsync(FamilyMember familyMember)
-        {
-            var existingFamilyMember = await _context.FamilyMembers.FindAsync(familyMember.MemberId);
-            if (existingFamilyMember != null)
-            {
-                _context.Entry(existingFamilyMember).CurrentValues.SetValues(familyMember);
-                await _context.SaveChangesAsync();
-                return familyMember;
-            }
-            else
-            {
-                throw new KeyNotFoundException("FamilyMember not found");
-            }
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var familyMember = await _context.FamilyMembers.FindAsync(id);
-            if (familyMember != null)
-            {
-                _context.FamilyMembers.Remove(familyMember);
-                await _context.SaveChangesAsync();
-            }
-            else
-            {
-                throw new KeyNotFoundException("FamilyMember not found");
-            }
         }
     }
 }
