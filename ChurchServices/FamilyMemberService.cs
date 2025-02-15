@@ -45,17 +45,29 @@ namespace ChurchServices
 
         public async Task<ServiceResponse> ApproveFamilyMemberAsync(FamilyMemberApprovalDto approvalDto)
         {
-            // Call the stored procedure to approve the pending action.
-            var result = await _context.Database.ExecuteSqlInterpolatedAsync(
-                $"SELECT ApprovePendingFamilyMember({approvalDto.ActionId}, {approvalDto.ApprovedBy});"
-            );
-
-            return new ServiceResponse
+            try
             {
-                Success = true,
-                Message = $"Family member approved and inserted via stored procedure. Rows affected: {result}"
-            };
+                // Call the stored procedure, no need to pass action
+                int result = await _context.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT ManageFamilyMemberApproval({approvalDto.ActionId}, {approvalDto.ApprovedBy});"
+                );
+
+                return new ServiceResponse
+                {
+                    Success = true,
+                    Message = $"Approval process completed successfully. Rows affected: {result}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResponse
+                {
+                    Success = false,
+                    Message = $"An error occurred: {ex.Message}"
+                };
+            }
         }
+
 
         public async Task<ServiceResponse<FamilyMemberDto>> GetFamilyMemberByIdAsync(int memberId)
         {
