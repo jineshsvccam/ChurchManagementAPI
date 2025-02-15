@@ -145,14 +145,12 @@ namespace ChurchRepositories
                 FamilyMembers = includeFamilyMembers ? await _context.FamilyMembers.Where(fm => _context.Families.Where(f => f.ParishId == parishId).Select(f => f.FamilyId).Contains(fm.FamilyId)).Select(fm => new FamilyMemberDto
                 {
                     FamilyId = fm.FamilyId,
-                    UnitId = fm.Family.UnitId,
+                    UnitId = (int)fm.UnitId,
                     MemberId = fm.MemberId,
                     FirstName = fm.FirstName,
                     LastName = fm.LastName,
                     DateOfBirth = fm.DateOfBirth,
-                    Gender = fm.Gender,
-                    ContactInfo = fm.ContactInfo,
-                    Role = fm.Role
+                    Gender = fm.Gender.ToString()                   
                 }).ToListAsync() : new List<FamilyMemberDto>()
             };
 

@@ -37,5 +37,41 @@ namespace ChurchManagementAPI.Controllers
             }
             return Ok(response);
         }
+
+        // GET by id: returns complete family member JSON
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetFamilyMemberById(int id)
+        {
+            var response = await _familyMemberService.GetFamilyMemberByIdAsync(id);
+            if (!response.Success)
+            {
+                return NotFound(response.Message);
+            }
+            return Ok(response);
+        }
+
+        // POST filter: returns filtered list of family members with selected columns
+        [HttpPost("filter")]
+        public async Task<IActionResult> GetFamilyMembersFiltered([FromBody] FamilyMemberFilterRequest filterRequest)
+        {
+            var response = await _familyMemberService.GetFamilyMembersFilteredAsync(filterRequest);
+            if (!response.Success)
+            {
+                return BadRequest(response.Message);
+            }
+            return Ok(response);
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllFamilyMembers([FromQuery] int? parishId, [FromQuery] int? familyId)
+        {
+            var response = await _familyMemberService.GetAllFamilyMembersAsync(parishId, familyId);
+            if (!response.Success)
+            {
+                return BadRequest(response.Message);
+            }
+            return Ok(response);
+        }
+
     }
 }

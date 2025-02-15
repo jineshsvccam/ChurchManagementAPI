@@ -88,19 +88,6 @@ namespace ChurchData.DTOs
         //public string? FamilyName { get; set; }
     }
     // FamilyMemberDto class
-    public class FamilyMemberDto
-    {
-        public int FamilyId { get; set; }
-        public int UnitId { get; set; }
-        public int MemberId { get; set; }
-        public string FirstName { get; set; } = null!;
-        public string LastName { get; set; } = null!;
-        public DateTime? DateOfBirth { get; set; }
-        public string Gender { get; set; } = null!;
-        public string? ContactInfo { get; set; }
-        public string Role { get; set; } = null!;
-
-    }
     public class FinancialYearDto
     {
         public int FinancialYearId { get; set; }

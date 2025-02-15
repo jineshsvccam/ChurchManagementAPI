@@ -37,5 +37,21 @@ namespace ChurchData.DTOs
         public bool Success { get; set; }
         public string Message { get; set; }
     }
+    public class FamilyMemberFilterRequest
+    {
+        // List of columns/properties to include in the result.
+        public List<string> Fields { get; set; } = new List<string>();
+
+        // Filter criteria, e.g., {"ActiveMember": "true", "Occupation.StudentOrEmployee": "Student"}
+        public Dictionary<string, string> Filters { get; set; } = new Dictionary<string, string>();
+
+        // Optional: Additional properties for sorting/pagination can be added here in the future.
+    }
+    public class ServiceResponse<T>
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public T Data { get; set; }
+    }
 
 }

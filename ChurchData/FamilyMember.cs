@@ -4,27 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace ChurchData
-{
-    public class FamilyMember
-    {
-        [NotMapped] // Ensure this field is not mapped to the database
-        public string Action { get; set; } // INSERT or UPDATE
-        [Key]
-        public int MemberId { get; set; }
-        public int FamilyId { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public string Gender { get; set; }
-        public string ContactInfo { get; set; }
-        public string Role { get; set; }
-
-        [JsonIgnore]
-        public Family? Family { get; set; }
-    }
-
+{    
   
-    public class FamilyMemberN
+    public class FamilyMember
     {
         [Key]
         public int MemberId { get; set; }
@@ -67,16 +49,16 @@ namespace ChurchData
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // One-to-Many: A Family Member can have multiple contacts
-        public virtual ICollection<FamilyMemberContacts> Contacts { get; set; } = new List<FamilyMemberContacts>();
+        //// One-to-Many: A Family Member can have multiple contacts
+         public virtual ICollection<FamilyMemberContacts> Contacts { get; set; } = new List<FamilyMemberContacts>();
 
-        // One-to-Many: A Family Member can have multiple relationships
+        //// One-to-Many: A Family Member can have multiple relationships
         public virtual ICollection<FamilyMemberRelations> Relations { get; set; } = new List<FamilyMemberRelations>();
 
-        // One-to-One Relationships
-        public virtual FamilyMemberIdentity Identity { get; set; }
-        public virtual FamilyMemberOccupation Occupation { get; set; }
-        public virtual FamilyMemberSacraments Sacraments { get; set; }
+        //// One-to-One Relationships
+         public virtual FamilyMemberIdentity Identity { get; set; }
+         public virtual FamilyMemberOccupation Occupation { get; set; }
+         public virtual FamilyMemberSacraments Sacraments { get; set; }
         public virtual FamilyMemberFiles Files { get; set; }
         public virtual FamilyMemberLifecycle Lifecycle { get; set; }
     }
@@ -140,12 +122,15 @@ namespace ChurchData
         public int? ParentId { get; set; }
 
         [ForeignKey("MemberId")]
+        [InverseProperty("Relations")]
         public virtual FamilyMember Member { get; set; }
 
         [ForeignKey("SpouseId")]
+        [InverseProperty("Relations")]
         public virtual FamilyMember Spouse { get; set; }
 
         [ForeignKey("ParentId")]
+        [InverseProperty("Relations")]
         public virtual FamilyMember Parent { get; set; }
     }
 
@@ -194,7 +179,7 @@ namespace ChurchData
         [MaxLength(255)]
         public string SchoolOrWorkplace { get; set; }
 
-        [MaxLength(10)]
+        [MaxLength(50)]
         public string SundaySchoolClass { get; set; }
 
         [ForeignKey("MemberId")]
