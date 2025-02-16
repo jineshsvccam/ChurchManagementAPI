@@ -25,6 +25,7 @@ namespace ChurchData
         public DbSet<FinancialYear> FinancialYears { get; set; }
         public DbSet<PendingFamilyMemberAction> PendingFamilyMemberActions { get; set; }
         public DbSet<ContributionSettings> ContributionSettings { get; set; }
+        public DbSet<FamilyDue> FamilyDues { get; set; }    
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

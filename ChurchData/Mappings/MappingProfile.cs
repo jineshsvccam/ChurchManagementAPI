@@ -9,6 +9,7 @@ namespace ChurchData.Mappings
         public MappingProfile()
         {
             CreateMap<ContributionSettings, ContributionSettingsDto>().ReverseMap();
+            CreateMap<FamilyDue, FamilyDueDto>().ReverseMap();
 
         }
     }

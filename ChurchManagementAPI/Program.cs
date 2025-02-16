@@ -98,6 +98,8 @@ builder.Services.AddScoped<IFinancialYearService, FinancialYearService>();
 builder.Services.AddScoped<ChurchRepositories.Utils.LogsHelper>();
 builder.Services.AddScoped<IContributionSettingsRepository, ContributionSettingsRepository>();
 builder.Services.AddScoped<IContributionSettingsService, ContributionSettingsService>();
+builder.Services.AddScoped<IFamilyDueRepository, FamilyDueRepository>();
+builder.Services.AddScoped<IFamilyDueService, FamilyDueService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
