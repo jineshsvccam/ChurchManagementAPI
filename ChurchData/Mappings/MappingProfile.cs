@@ -11,6 +11,7 @@ namespace ChurchData.Mappings
             CreateMap<ContributionSettings, ContributionSettingsDto>().ReverseMap();
             CreateMap<FamilyDue, FamilyDueDto>().ReverseMap();
             CreateMap<FamilyContribution, FamilyContributionDto>().ReverseMap();
+            CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
 
         }
     }

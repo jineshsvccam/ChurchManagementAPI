@@ -27,6 +27,8 @@ namespace ChurchData
         public DbSet<ContributionSettings> ContributionSettings { get; set; }
         public DbSet<FamilyDue> FamilyDues { get; set; }
         public DbSet<FamilyContribution> FamilyContributions { get; set; }
+        public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -645,7 +647,27 @@ namespace ChurchData
                 //    .OnDelete(DeleteBehavior.Restrict);
             });
 
+            modelBuilder.Entity<RecurringTransaction>(entity =>
+            {
+                entity.ToTable("recurring_transactions");
 
+                entity.HasKey(e => e.RepeatedEntryId);
+
+                entity.Property(e => e.RepeatedEntryId).HasColumnName("recurring_id");
+                entity.Property(e => e.HeadId).HasColumnName("head_id");
+                entity.Property(e => e.FamilyId).HasColumnName("family_id");
+                entity.Property(e => e.ParishId).HasColumnName("parish_id");
+                entity.Property(e => e.IncomeAmount).HasColumnName("income_amount");
+
+                entity.HasOne<TransactionHead>().WithMany()
+                    .HasForeignKey(e => e.HeadId);
+
+                entity.HasOne<Family>().WithMany()
+                    .HasForeignKey(e => e.FamilyId);
+
+                entity.HasOne<Parish>().WithMany()
+                    .HasForeignKey(e => e.ParishId);
+            });
         }
     }
 }

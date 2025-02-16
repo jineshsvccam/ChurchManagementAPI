@@ -102,6 +102,8 @@ builder.Services.AddScoped<IFamilyDueRepository, FamilyDueRepository>();
 builder.Services.AddScoped<IFamilyDueService, FamilyDueService>();
 builder.Services.AddScoped<IFamilyContributionRepository, FamilyContributionRepository>();
 builder.Services.AddScoped<IFamilyContributionService, FamilyContributionService>();
+builder.Services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
+builder.Services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
