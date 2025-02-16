@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Text.Json;
-using ChurchContracts;
+﻿using ChurchContracts;
 using ChurchData;
-using ChurchData.DTOs;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChurchServices

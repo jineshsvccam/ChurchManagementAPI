@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChurchData;
-using ChurchData.DTOs;
+﻿using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchContracts
 {

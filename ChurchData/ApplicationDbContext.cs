@@ -1,8 +1,9 @@
-﻿using ChurchData.DTOs;
+﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchData
 {

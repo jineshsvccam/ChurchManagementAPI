@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ChurchContracts;
+﻿using ChurchContracts;
 using ChurchData;
-using ChurchData.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchRepositories
 {

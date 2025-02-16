@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using ChurchContracts;
 using ChurchData;
-using ChurchData.DTOs;
-using Microsoft.EntityFrameworkCore;
+using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchServices
 {

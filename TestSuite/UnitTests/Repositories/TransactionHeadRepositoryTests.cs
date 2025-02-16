@@ -1,19 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ChurchCommon.Utils;
 using ChurchData;
-using ChurchContracts;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using ChurchRepositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
-using Xunit;
-using ChurchData.DTOs;
-using ChurchRepositories.Utils;
-using ChurchRepositories;
 namespace TransacionHeadsTest
 {
     public class TransactionHeadRepositoryTests

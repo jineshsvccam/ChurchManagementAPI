@@ -1,7 +1,5 @@
 ﻿using ChurchContracts;
-using ChurchData.DTOs;
-using System;
-using System.Threading.Tasks;
+using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchServices
 {

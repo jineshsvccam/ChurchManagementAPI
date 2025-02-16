@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace ChurchData.DTOs
+namespace ChurchDTOs.DTOs.Entities
 {
     public class RegisterDto
     {
@@ -29,5 +29,5 @@ namespace ChurchData.DTOs
         public string Password { get; set; }
     }
 
-   
+
 }

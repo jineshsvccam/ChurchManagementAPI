@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ChurchData.DTOs
+namespace ChurchDTOs.DTOs.Entities
 {
     public class FamilyMemberDto
     {

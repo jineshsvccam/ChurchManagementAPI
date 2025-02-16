@@ -1,7 +1,6 @@
 ﻿using ChurchContracts;
-using ChurchData.DTOs;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
 {

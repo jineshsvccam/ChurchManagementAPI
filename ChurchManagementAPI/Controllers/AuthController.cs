@@ -1,9 +1,5 @@
-﻿using ChurchData;
-using ChurchData.DTOs;
-using ChurchServices;
+﻿using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
 {

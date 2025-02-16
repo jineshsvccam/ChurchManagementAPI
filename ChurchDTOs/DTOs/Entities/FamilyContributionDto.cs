@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ChurchData.DTOs
+namespace ChurchDTOs.DTOs.Entities
 {
     public class FamilyContributionDto
     {

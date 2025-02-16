@@ -1,11 +1,8 @@
 ﻿using ChurchContracts;
 using ChurchData;
-using ChurchData.DTOs;
+using ChurchDTOs.DTOs.Utils;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ChurchRepositories
 {

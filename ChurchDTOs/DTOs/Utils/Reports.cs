@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChurchData;
 
-namespace ChurchData.DTOs
+
+namespace ChurchDTOs.DTOs.Utils
 {
     public class LedgerReportDTO
     {

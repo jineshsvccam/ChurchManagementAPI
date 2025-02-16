@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ChurchContracts;
+﻿using ChurchContracts;
+using ChurchContracts.Utils;
 using ChurchData;
-using ChurchData.DTOs;
 
 namespace ChurchServices
 {

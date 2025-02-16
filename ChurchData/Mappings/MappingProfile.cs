@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
-using ChurchData.DTOs;
-using ChurchData;
+using ChurchDTOs.DTOs.Entities;
+
+
+
 
 namespace ChurchData.Mappings
 {

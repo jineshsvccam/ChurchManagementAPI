@@ -1,5 +1,5 @@
 ﻿using ChurchData;
-using ChurchData.DTOs;
+using ChurchDTOs.DTOs.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

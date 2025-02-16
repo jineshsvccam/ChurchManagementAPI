@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChurchData.DTOs
+namespace ChurchDTOs.DTOs.Entities
 {
     public class ContributionSettingsDto
     {

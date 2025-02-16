@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace ChurchData.DTOs
+namespace ChurchDTOs.DTOs.Entities
 {
     public class PendingFamilyMemberRequestDto
     {
@@ -14,7 +14,7 @@ namespace ChurchData.DTOs
         public int FamilyId { get; set; }
 
         [Required]
-        public int ParishId { get; set; }       
+        public int ParishId { get; set; }
 
         [Required]
         public int SubmittedBy { get; set; }

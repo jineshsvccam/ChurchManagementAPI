@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ChurchContracts;
+﻿using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
-using ChurchData.DTOs;
-using ChurchRepositories;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Core;
 
 namespace ChurchServices
 {
