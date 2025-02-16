@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace ChurchRepositories.Utils
+namespace ChurchCommon.Utils
 {
     public static class UserHelper
     {
@@ -22,5 +22,4 @@ namespace ChurchRepositories.Utils
             return userId;
         }
     }
-
 }

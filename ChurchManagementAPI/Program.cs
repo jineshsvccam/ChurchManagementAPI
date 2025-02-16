@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
@@ -95,7 +96,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFinancialYearRepository, FinancialYearRepository>();
 builder.Services.AddScoped<IFinancialYearService, FinancialYearService>();
-builder.Services.AddScoped<ChurchRepositories.Utils.LogsHelper>();
+builder.Services.AddScoped<LogsHelper>();
 builder.Services.AddScoped<IContributionSettingsRepository, ContributionSettingsRepository>();
 builder.Services.AddScoped<IContributionSettingsService, ContributionSettingsService>();
 builder.Services.AddScoped<IFamilyDueRepository, FamilyDueRepository>();

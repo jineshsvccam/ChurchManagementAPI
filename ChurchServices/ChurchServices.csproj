@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ChurchCommon\ChurchCommon.csproj" />
     <ProjectReference Include="..\ChurchContracts\ChurchContracts.csproj" />
     <ProjectReference Include="..\ChurchRepositories\ChurchRepositories.csproj" />
   </ItemGroup>

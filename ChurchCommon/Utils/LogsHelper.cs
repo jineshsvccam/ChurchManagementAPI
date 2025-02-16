@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ChurchData;
 using ChurchData.DTOs;
-using ChurchData;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace ChurchRepositories.Utils
+namespace ChurchCommon.Utils
 {
     public class LogsHelper
     {
