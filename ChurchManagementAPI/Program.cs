@@ -100,6 +100,8 @@ builder.Services.AddScoped<IContributionSettingsRepository, ContributionSettings
 builder.Services.AddScoped<IContributionSettingsService, ContributionSettingsService>();
 builder.Services.AddScoped<IFamilyDueRepository, FamilyDueRepository>();
 builder.Services.AddScoped<IFamilyDueService, FamilyDueService>();
+builder.Services.AddScoped<IFamilyContributionRepository, FamilyContributionRepository>();
+builder.Services.AddScoped<IFamilyContributionService, FamilyContributionService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));

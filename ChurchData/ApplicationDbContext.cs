@@ -25,7 +25,8 @@ namespace ChurchData
         public DbSet<FinancialYear> FinancialYears { get; set; }
         public DbSet<PendingFamilyMemberAction> PendingFamilyMemberActions { get; set; }
         public DbSet<ContributionSettings> ContributionSettings { get; set; }
-        public DbSet<FamilyDue> FamilyDues { get; set; }    
+        public DbSet<FamilyDue> FamilyDues { get; set; }
+        public DbSet<FamilyContribution> FamilyContributions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -591,6 +592,57 @@ namespace ChurchData
                       .WithMany()
                       .HasForeignKey(cs => cs.ParishId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<FamilyContribution>(entity =>
+            {
+                entity.ToTable("family_contributions");
+
+                entity.HasKey(fc => fc.ContributionId);
+
+                entity.Property(fc => fc.ContributionId).HasColumnName("contribution_id");
+                entity.Property(fc => fc.TransactionDate).HasColumnName("tr_date").IsRequired();
+                entity.Property(fc => fc.VoucherNumber).HasColumnName("vr_no").IsRequired().HasMaxLength(50);
+                entity.Property(fc => fc.TransactionType).HasColumnName("transaction_type").HasMaxLength(10);
+                entity.Property(fc => fc.HeadId).HasColumnName("head_id").IsRequired();
+                entity.Property(fc => fc.FamilyId).HasColumnName("family_id").IsRequired();
+                entity.Property(fc => fc.BankId).HasColumnName("bank_id").IsRequired();
+                entity.Property(fc => fc.ParishId).HasColumnName("parish_id").IsRequired();
+                entity.Property(fc => fc.SettingId).HasColumnName("setting_id").IsRequired();
+                entity.Property(fc => fc.IncomeAmount).HasColumnName("income_amount").HasDefaultValue(0);
+                entity.Property(fc => fc.ExpenseAmount).HasColumnName("expense_amount").HasDefaultValue(0);
+                entity.Property(fc => fc.Description).HasColumnName("description");
+
+                // Constraints (Check Constraints)
+                entity.HasCheckConstraint("contribution_expense_amount_check", "expense_amount >= 0");
+                entity.HasCheckConstraint("contribution_income_amount_check", "income_amount >= 0");
+                entity.HasCheckConstraint("transaction_type_check", "transaction_type IN ('Income', 'Expense')");
+
+                // Foreign Key Constraints
+                entity.HasOne<TransactionHead>()
+                    .WithMany()
+                    .HasForeignKey(fc => fc.HeadId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Family>()
+                    .WithMany()
+                    .HasForeignKey(fc => fc.FamilyId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Bank>()
+                    .WithMany()
+                    .HasForeignKey(fc => fc.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Parish>()
+                    .WithMany()
+                    .HasForeignKey(fc => fc.ParishId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                //entity.HasOne<ContributionSetting>()
+                //    .WithMany()
+                //    .HasForeignKey(fc => fc.SettingId)
+                //    .OnDelete(DeleteBehavior.Restrict);
             });
 
 
