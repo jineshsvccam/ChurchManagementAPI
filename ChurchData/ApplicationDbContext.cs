@@ -24,6 +24,7 @@ namespace ChurchData
         public DbSet<GenericLog> GenericLogs { get; set; }
         public DbSet<FinancialYear> FinancialYears { get; set; }
         public DbSet<PendingFamilyMemberAction> PendingFamilyMemberActions { get; set; }
+        public DbSet<ContributionSettings> ContributionSettings { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -563,6 +564,34 @@ namespace ChurchData
                 entity.Property(e => e.DeathDate).HasColumnName("death_date");
                 entity.HasOne(e => e.Member).WithOne(m => m.Lifecycle).HasForeignKey<FamilyMemberLifecycle>(e => e.MemberId).OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<ContributionSettings>(entity =>
+            {
+                entity.ToTable("contribution_settings");
+
+                entity.HasKey(cs => cs.SettingId);
+
+                entity.Property(cs => cs.SettingId).HasColumnName("setting_id");
+                entity.Property(cs => cs.HeadId).HasColumnName("head_id");
+                entity.Property(cs => cs.ParishId).HasColumnName("parish_id");
+                entity.Property(cs => cs.Amount).HasColumnName("amount").HasPrecision(15, 2);
+                entity.Property(cs => cs.Frequency).HasColumnName("frequency").HasMaxLength(10);
+                entity.Property(cs => cs.DueDay).HasColumnName("due_day");
+                entity.Property(cs => cs.DueMonth).HasColumnName("due_month");
+                entity.Property(cs => cs.FineAmount).HasColumnName("fine_amount").HasPrecision(15, 2);
+                entity.Property(cs => cs.ValidFrom).HasColumnName("valid_from");
+                entity.Property(cs => cs.Category).HasColumnName("category").HasMaxLength(10);
+
+                entity.HasOne<TransactionHead>()
+                      .WithMany()
+                      .HasForeignKey(cs => cs.HeadId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Parish>()
+                      .WithMany()
+                      .HasForeignKey(cs => cs.ParishId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
 
         }
     }

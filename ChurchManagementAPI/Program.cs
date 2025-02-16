@@ -5,8 +5,10 @@ using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
 using ChurchData.DTOs;
+using ChurchData.Mappings;
 using ChurchManagementAPI.Middleware;
 using ChurchRepositories;
+using ChurchRepositories.ChurchRepositories;
 using ChurchServices;
 using ChurchServices.ChurchServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,6 +63,8 @@ builder.Services.AddControllers()
     });
 
 // Register Services and Repositories
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
 builder.Services.AddScoped<IParishService, ParishService>();
 builder.Services.AddScoped<IParishRepository, ParishRepository>();
 builder.Services.AddScoped<IDioceseRepository, DioceseRepository>();
@@ -92,6 +96,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFinancialYearRepository, FinancialYearRepository>();
 builder.Services.AddScoped<IFinancialYearService, FinancialYearService>();
 builder.Services.AddScoped<ChurchRepositories.Utils.LogsHelper>();
+builder.Services.AddScoped<IContributionSettingsRepository, ContributionSettingsRepository>();
+builder.Services.AddScoped<IContributionSettingsService, ContributionSettingsService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
