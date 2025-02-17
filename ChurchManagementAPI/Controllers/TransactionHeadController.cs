@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using ChurchServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,16 +28,16 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<ActionResult<IEnumerable<TransactionHead>>> GetTransactionHeads([FromQuery] int? parishId, [FromQuery] int? headId)
+        public async Task<ActionResult<IEnumerable<TransactionHeadDto>>> GetTransactionHeads([FromQuery] int? parishId, [FromQuery] int? headId)
         {
             _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
             var transactionHeads = await _transactionHeadService.GetTransactionHeadsAsync(parishId, headId);
-            return Ok(transactionHeads);
+            return Ok(transactionHeads); // Return DTOs directly, assuming the service already maps them
         }
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<ActionResult<TransactionHead>> GetById(int id)
+        public async Task<ActionResult<TransactionHeadDto>> GetById(int id)
         {
             _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
             var transactionHead = await _transactionHeadService.GetByIdAsync(id);
@@ -45,28 +46,29 @@ namespace ChurchManagementAPI.Controllers
                 _logger.LogWarning("Transaction head not found with Id: {Id}", id);
                 return NotFound();
             }
-            return Ok(transactionHead);
+            return Ok(transactionHead); // Return DTO directly
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<ActionResult<TransactionHead>> Create(TransactionHead transactionHead)
+        public async Task<ActionResult<TransactionHeadDto>> Create([FromBody] TransactionHeadDto transactionHeadDto)
         {
-            var createdHead = await _transactionHeadService.AddAsync(transactionHead);
-            return CreatedAtAction(nameof(GetById), new { id = createdHead.HeadId }, createdHead);
+            var createdHead = await _transactionHeadService.AddAsync(transactionHeadDto); // Assuming service method accepts and returns DTO
+            return CreatedAtAction(nameof(GetById), new { id = createdHead.HeadId }, createdHead); // Return DTO directly
         }
+
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<IActionResult> Update(int id, [FromBody] TransactionHead transactionHead)
+        public async Task<IActionResult> Update(int id, [FromBody] TransactionHeadDto transactionHeadDto)
         {
-            if (id != transactionHead.HeadId)
+            if (id != transactionHeadDto.HeadId)
             {
-                _logger.LogWarning("Mismatch between URL Id: {Id} and body Id: {BodyId}", id, transactionHead.HeadId);
+                _logger.LogWarning("Mismatch between URL Id: {Id} and body Id: {BodyId}", id, transactionHeadDto.HeadId);
                 return BadRequest("ID mismatch");
             }
 
             _logger.LogInformation("Updating transaction head Id: {Id}", id);
-            var updatedHead = await _transactionHeadService.UpdateAsync(transactionHead);
+            var updatedHead = await _transactionHeadService.UpdateAsync(transactionHeadDto); // Assuming service method accepts DTO
             if (updatedHead == null)
             {
                 _logger.LogWarning("Transaction head not found for update with Id: {Id}", id);
@@ -74,7 +76,7 @@ namespace ChurchManagementAPI.Controllers
             }
 
             _logger.LogInformation("Successfully updated transaction head Id: {Id}", id);
-            return Ok(updatedHead);
+            return Ok(updatedHead); // Return DTO directly
         }
 
         [HttpDelete("{id}")]
@@ -89,17 +91,16 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpPost("create-or-update")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHead> requests)
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHeadDto> transactionHeadDtos)
         {
             _logger.LogInformation("Creating or updating transaction heads.");
-            var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(requests);
+            var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(transactionHeadDtos); // Assuming service method accepts DTOs
             if (createdTransactionHeads.Any())
             {
                 _logger.LogInformation("Successfully created or updated transaction heads.");
-                return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
+                return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads); // Return DTOs directly
             }
             return Ok();
         }
-
     }
 }

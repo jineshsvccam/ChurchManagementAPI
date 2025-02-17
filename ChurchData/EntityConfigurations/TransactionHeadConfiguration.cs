@@ -15,26 +15,35 @@ namespace ChurchData.EntityConfigurations
             builder.HasKey(t => t.HeadId);
 
             builder.Property(t => t.HeadId).HasColumnName("head_id");
+
             builder.Property(t => t.HeadName)
                    .HasColumnName("head_name")
                    .IsRequired()
                    .HasMaxLength(100);
+
             builder.Property(t => t.Type)
                    .HasColumnName("type")
                    .HasMaxLength(10);
+
             builder.Property(t => t.IsMandatory)
                    .HasColumnName("is_mandatory")
                    .HasDefaultValue(false);
-            builder.Property(t => t.Description).HasColumnName("description");
+
+            builder.Property(t => t.Description)
+                   .HasColumnName("description");
+
             builder.Property(t => t.ParishId)
                    .HasColumnName("parish_id")
                    .IsRequired();
+
             builder.Property(t => t.Aramanapct)
                    .HasColumnName("aramanapct")
                    .HasColumnType("double precision");
+
             builder.Property(t => t.Ordr)
                    .HasColumnName("ordr")
                    .HasMaxLength(10);
+
             builder.Property(t => t.HeadNameMl)
                    .HasColumnName("head_name_ml")
                    .HasMaxLength(100);

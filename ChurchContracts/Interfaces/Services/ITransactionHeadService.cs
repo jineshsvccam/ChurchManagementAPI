@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChurchData;
+﻿using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchContracts
 {
     public interface ITransactionHeadService
     {
-        Task<IEnumerable<TransactionHead>> GetTransactionHeadsAsync(int? parishId, int? headId);
-        Task<TransactionHead?> GetByIdAsync(int id);
-        Task<IEnumerable<TransactionHead>> AddOrUpdateAsync(IEnumerable<TransactionHead> requests); 
-        Task<TransactionHead> UpdateAsync(TransactionHead transactionHead); 
-        Task DeleteAsync(int id); 
-        Task<TransactionHead> AddAsync(TransactionHead transactionHead); 
+        Task<IEnumerable<TransactionHeadDto>> GetTransactionHeadsAsync(int? parishId, int? headId);
+        Task<TransactionHeadDto?> GetByIdAsync(int id);
+        Task<IEnumerable<TransactionHeadDto>> AddOrUpdateAsync(IEnumerable<TransactionHeadDto> requests);
+        Task<TransactionHeadDto> UpdateAsync(TransactionHeadDto transactionHeadDto);
+        Task DeleteAsync(int id);
+        Task<TransactionHeadDto> AddAsync(TransactionHeadDto transactionHeadDto);
     }
 }
