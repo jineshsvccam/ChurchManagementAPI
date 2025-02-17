@@ -1,10 +1,9 @@
 ﻿using ChurchContracts;
-using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using ChurchServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<ActionResult<IEnumerable<Family>>> GetFamilies([FromQuery] int? parishId, [FromQuery] int? unitId, [FromQuery] int? familyId)
+        public async Task<ActionResult<IEnumerable<FamilyDto>>> GetFamilies([FromQuery] int? parishId, [FromQuery] int? unitId, [FromQuery] int? familyId)
         {
             _logger.LogInformation("Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}", parishId, unitId, familyId);
             var families = await _familyService.GetFamiliesAsync(parishId, unitId, familyId);
@@ -36,7 +35,7 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<ActionResult<Family>> GetById(int id)
+        public async Task<ActionResult<FamilyDto>> GetById(int id)
         {
             _logger.LogInformation("Fetching family with Id: {FamilyId}", id);
             var family = await _familyService.GetByIdAsync(id);
@@ -47,27 +46,28 @@ namespace ChurchManagementAPI.Controllers
             }
             return Ok(family);
         }
+
         [HttpPost]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<ActionResult<Family>> Create(Family family)
+        public async Task<ActionResult<FamilyDto>> Create([FromBody] FamilyDto familyDto)
         {
-            var createdFamily = await _familyService.AddAsync(family);
-            return CreatedAtAction(nameof(GetById), createdFamily);
+            var createdFamily = await _familyService.AddAsync(familyDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdFamily.FamilyId }, createdFamily);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<IActionResult> Update(int id, [FromBody] Family family)
+        public async Task<IActionResult> Update(int id, [FromBody] FamilyDto familyDto)
         {
             _logger.LogInformation("Updating family with Id: {FamilyId}", id);
 
-            if (id != family.FamilyId)
+            if (id != familyDto.FamilyId)
             {
-                _logger.LogWarning("Family Id mismatch. Path Id: {PathId}, Body Id: {BodyId}", id, family.FamilyId);
+                _logger.LogWarning("Family Id mismatch. Path Id: {PathId}, Body Id: {BodyId}", id, familyDto.FamilyId);
                 return BadRequest("Family ID in the request body does not match the URL parameter.");
             }
 
-            var updatedFamily = await _familyService.UpdateAsync(family);
+            var updatedFamily = await _familyService.UpdateAsync(familyDto);
             if (updatedFamily == null)
             {
                 _logger.LogWarning("Family with Id {FamilyId} not found for update.", id);
@@ -90,7 +90,7 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpPost("create-or-update")]
         [Authorize(Roles = "Admin,Secretary,Trustee")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Family> requests)
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<FamilyDto> requests)
         {
             _logger.LogInformation("Creating or updating {FamilyCount} families.", requests.Count());
             var createdFamilies = await _familyService.AddOrUpdateAsync(requests);
