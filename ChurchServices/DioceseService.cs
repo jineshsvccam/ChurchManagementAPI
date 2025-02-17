@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace ChurchServices
@@ -10,38 +9,44 @@ namespace ChurchServices
     public class DioceseService : IDioceseService
     {
         private readonly IDioceseRepository _dioceseRepository;
+        private readonly IMapper _mapper;
         private readonly ILogger<DioceseService> _logger;
 
-        public DioceseService(IDioceseRepository dioceseRepository, ILogger<DioceseService> logger)
+        public DioceseService(IDioceseRepository dioceseRepository, IMapper mapper, ILogger<DioceseService> logger)
         {
             _dioceseRepository = dioceseRepository;
+            _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Diocese>> GetAllAsync()
+        public async Task<IEnumerable<DioceseDto>> GetAllAsync()
         {
             _logger.LogInformation("Fetching all dioceses from service layer.");
-            return await _dioceseRepository.GetAllAsync();
+            var dioceses = await _dioceseRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<DioceseDto>>(dioceses);
         }
 
-        public async Task<Diocese> GetByIdAsync(int id)
+        public async Task<DioceseDto> GetByIdAsync(int id)
         {
             _logger.LogInformation("Fetching diocese with ID: {Id} from service layer.", id);
-            return await _dioceseRepository.GetByIdAsync(id);
+            var diocese = await _dioceseRepository.GetByIdAsync(id);
+            return _mapper.Map<DioceseDto>(diocese);
         }
 
-        public async Task AddAsync(Diocese diocese)
+        public async Task AddAsync(DioceseDto dioceseDto)
         {
-            _logger.LogInformation("Adding new diocese: {@Diocese}", diocese);
+            _logger.LogInformation("Adding new diocese: {@DioceseDto}", dioceseDto);
+            var diocese = _mapper.Map<Diocese>(dioceseDto);
             await _dioceseRepository.AddAsync(diocese);
             _logger.LogInformation("Diocese added successfully with ID: {Id}", diocese.DioceseId);
         }
 
-        public async Task UpdateAsync(Diocese diocese)
+        public async Task UpdateAsync(DioceseDto dioceseDto)
         {
-            _logger.LogInformation("Updating diocese with ID: {Id}", diocese.DioceseId);
+            _logger.LogInformation("Updating diocese with ID: {Id}", dioceseDto.DioceseId);
+            var diocese = _mapper.Map<Diocese>(dioceseDto);
             await _dioceseRepository.UpdateAsync(diocese);
-            _logger.LogInformation("Diocese with ID {Id} updated successfully.", diocese.DioceseId);
+            _logger.LogInformation("Diocese with ID {Id} updated successfully.", dioceseDto.DioceseId);
         }
 
         public async Task DeleteAsync(int id)

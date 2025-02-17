@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
-using ChurchData;
+using ChurchDTOs.DTOs;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<Diocese>>> GetAll()
+        public async Task<ActionResult<IEnumerable<DioceseDto>>> GetAll()
         {
             _logger.LogInformation("Fetching all dioceses.");
             var dioceses = await _dioceseService.GetAllAsync();
@@ -32,7 +33,7 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Diocese>> GetById(int id)
+        public async Task<ActionResult<DioceseDto>> GetById(int id)
         {
             var diocese = await _dioceseService.GetByIdAsync(id);
 
@@ -47,32 +48,32 @@ namespace ChurchManagementAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> Create(Diocese diocese)
+        public async Task<ActionResult> Create(DioceseDto dioceseDto)
         {
-            _logger.LogInformation("Creating new diocese: {@Diocese}", diocese);
+            _logger.LogInformation("Creating new diocese: {@DioceseDto}", dioceseDto);
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Invalid diocese model received.");
                 return BadRequest(ModelState);
             }
 
-            await _dioceseService.AddAsync(diocese);
-            _logger.LogInformation("Diocese created with ID: {Id}", diocese.DioceseId);
-            return CreatedAtAction(nameof(GetById), new { id = diocese.DioceseId }, diocese);
+            await _dioceseService.AddAsync(dioceseDto);
+            _logger.LogInformation("Diocese created with ID: {Id}", dioceseDto.DioceseId);
+            return CreatedAtAction(nameof(GetById), new { id = dioceseDto.DioceseId }, dioceseDto);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Diocese>> Update(int id, Diocese diocese)
+        public async Task<ActionResult<DioceseDto>> Update(int id, DioceseDto dioceseDto)
         {
             _logger.LogInformation("Updating diocese with ID: {Id}", id);
-            if (id != diocese.DioceseId)
+            if (id != dioceseDto.DioceseId)
             {
-                _logger.LogWarning("Diocese ID mismatch. Expected {ExpectedId}, but received {ReceivedId}.", id, diocese.DioceseId);
+                _logger.LogWarning("Diocese ID mismatch. Expected {ExpectedId}, but received {ReceivedId}.", id, dioceseDto.DioceseId);
                 return BadRequest();
             }
 
-            await _dioceseService.UpdateAsync(diocese);
+            await _dioceseService.UpdateAsync(dioceseDto);
             _logger.LogInformation("Diocese with ID {Id} updated successfully.", id);
             return Ok(await _dioceseService.GetByIdAsync(id));
         }
