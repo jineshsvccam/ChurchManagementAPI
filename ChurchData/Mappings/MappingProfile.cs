@@ -16,6 +16,7 @@ namespace ChurchData.Mappings
             CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
 
             CreateMap<Diocese, DioceseDto>().ReverseMap();
+            CreateMap<District, DistrictDto>().ReverseMap();
 
         }
     }

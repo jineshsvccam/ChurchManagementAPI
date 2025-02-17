@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace ChurchServices
@@ -10,19 +9,22 @@ namespace ChurchServices
     public class DistrictService : IDistrictService
     {
         private readonly IDistrictRepository _districtRepository;
+        private readonly IMapper _mapper;
         private readonly ILogger<DistrictService> _logger;
 
-        public DistrictService(IDistrictRepository districtRepository, ILogger<DistrictService> logger)
+        public DistrictService(IDistrictRepository districtRepository, IMapper mapper, ILogger<DistrictService> logger)
         {
             _districtRepository = districtRepository;
+            _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<IEnumerable<District>> GetAllAsync()
+        public async Task<IEnumerable<DistrictDto>> GetAllAsync()
         {
             try
             {
-                return await _districtRepository.GetAllAsync();
+                var districts = await _districtRepository.GetAllAsync();
+                return _mapper.Map<IEnumerable<DistrictDto>>(districts);
             }
             catch (Exception ex)
             {
@@ -31,17 +33,17 @@ namespace ChurchServices
             }
         }
 
-        public async Task<District> GetByIdAsync(int id)
+        public async Task<DistrictDto> GetByIdAsync(int id)
         {
             try
             {
                 var district = await _districtRepository.GetByIdAsync(id);
-
                 if (district == null)
                 {
                     _logger.LogWarning("No district found with ID: {Id}", id);
+                    return null;
                 }
-                return district;
+                return _mapper.Map<DistrictDto>(district);
             }
             catch (Exception ex)
             {
@@ -50,30 +52,32 @@ namespace ChurchServices
             }
         }
 
-        public async Task AddAsync(District district)
+        public async Task AddAsync(DistrictDto districtDto)
         {
             try
             {
+                var district = _mapper.Map<District>(districtDto);
                 await _districtRepository.AddAsync(district);
                 _logger.LogInformation("Added district: {Name}", district.DistrictName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding district: {Name}", district.DistrictName);
+                _logger.LogError(ex, "Error adding district: {Name}", districtDto.DistrictName);
                 throw;
             }
         }
 
-        public async Task UpdateAsync(District district)
+        public async Task UpdateAsync(DistrictDto districtDto)
         {
             try
             {
+                var district = _mapper.Map<District>(districtDto);
                 await _districtRepository.UpdateAsync(district);
                 _logger.LogInformation("Updated district with ID: {Id}", district.DistrictId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating district with ID: {Id}", district.DistrictId);
+                _logger.LogError(ex, "Error updating district with ID: {Id}", districtDto.DistrictId);
                 throw;
             }
         }
