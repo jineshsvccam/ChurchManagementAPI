@@ -1,4 +1,5 @@
-﻿using ChurchContracts;
+﻿using AutoMapper;
+using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
@@ -18,20 +19,18 @@ namespace ChurchServices
         private readonly IBankRepository _bankRepository;
         private readonly IFinancialYearRepository _financialYearRepository;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-
-        //ILogger<ParishService> logger
-        //_parishRepository = parishRepository ?? throw new ArgumentNullException(nameof(parishRepository));
-        //_logger = logger ?? throw new ArgumentNullException(nameof(logger));
         public ParishService(
-        IParishRepository parishRepository,
-        IUnitRepository unitRepository,
-        IFamilyRepository familyRepository,
-        ITransactionHeadRepository transactionHeadRepository,
-        IBankRepository bankRepository,
-        IFinancialYearRepository financialYearRepository,
-        ILogger<ParishService> logger,
-        IConfiguration configuration)
+            IParishRepository parishRepository,
+            IUnitRepository unitRepository,
+            IFamilyRepository familyRepository,
+            ITransactionHeadRepository transactionHeadRepository,
+            IBankRepository bankRepository,
+            IFinancialYearRepository financialYearRepository,
+            ILogger<ParishService> logger,
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _parishRepository = parishRepository ?? throw new ArgumentNullException(nameof(parishRepository));
             _unitRepository = unitRepository;
@@ -41,128 +40,55 @@ namespace ChurchServices
             _financialYearRepository = financialYearRepository;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<IEnumerable<Parish>> GetAllAsync()
+        public async Task<IEnumerable<ParishDto>> GetAllAsync()
         {
-            try
-            {
-                _logger.LogInformation("Fetching all parishes.");
-                var parishes = await _parishRepository.GetAllAsync();
-                _logger.LogInformation("Retrieved {Count} parishes.", parishes?.ToString()?.Length ?? 0);
-                return parishes;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving all parishes.");
-                throw;
-            }
+            _logger.LogInformation("Fetching all parishes.");
+            var parishes = await _parishRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ParishDto>>(parishes);
         }
 
-        public async Task<Parish?> GetByIdAsync(int id)
+        public async Task<ParishDto?> GetByIdAsync(int id)
         {
-            try
-            {
-                _logger.LogInformation("Fetching parish with ID {ParishId}.", id);
-                var parish = await _parishRepository.GetByIdAsync(id);
-                if (parish == null)
-                {
-                    _logger.LogWarning("Parish with ID {ParishId} not found.", id);
-                }
-                return parish;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving parish with ID {ParishId}.", id);
-                throw;
-            }
+            _logger.LogInformation("Fetching parish with ID {ParishId}.", id);
+            var parish = await _parishRepository.GetByIdAsync(id);
+            return _mapper.Map<ParishDto?>(parish);
         }
 
-        public async Task<Parish> AddAsync(Parish parish)
+        public async Task<ParishDto> AddAsync(ParishDto parishDto)
         {
-            try
-            {
-                if (parish == null)
-                {
-                    throw new ArgumentNullException(nameof(parish), "Parish object cannot be null.");
-                }
+            _logger.LogInformation("Adding new parish: {ParishName}.", parishDto.ParishName);
+            var parish = _mapper.Map<Parish>(parishDto);
+            var createdParish = await _parishRepository.AddAsync(parish);
+          //  await LoadDummyDataAsync(createdParish.ParishId);
+            return _mapper.Map<ParishDto>(createdParish);
 
-                _logger.LogInformation("Adding new parish: {ParishName}.", parish.ParishName);
-
-                var createdParish = await _parishRepository.AddAsync(parish);
-
-                _logger.LogInformation("Parish added successfully with ID {ParishId}.", createdParish.ParishId);
-
-                _logger.LogInformation("Adding dependent entities");
-
-                await LoadDummyDataAsync(createdParish.ParishId);
-
-                return createdParish;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while adding parish: {ParishName}.", parish?.ParishName);
-                throw;
-            }
         }
 
-        public async Task UpdateAsync(Parish parish)
+        public async Task<ParishDto> UpdateAsync(ParishDto parishDto)
         {
-            try
-            {
-                if (parish == null)
-                {
-                    throw new ArgumentNullException(nameof(parish), "Parish object cannot be null.");
-                }
-
-                _logger.LogInformation("Updating parish with ID {ParishId}.", parish.ParishId);
-                await _parishRepository.UpdateAsync(parish);
-                _logger.LogInformation("Parish with ID {ParishId} updated successfully.", parish.ParishId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while updating parish with ID {ParishId}.", parish?.ParishId);
-                throw;
-            }
+            _logger.LogInformation("Updating parish with ID {ParishId}.", parishDto.ParishId);
+            var parish = _mapper.Map<Parish>(parishDto);
+            await _parishRepository.UpdateAsync(parish);
+            return parishDto;
         }
 
         public async Task DeleteAsync(int id)
         {
-            try
-            {
-                _logger.LogInformation("Deleting parish with ID {ParishId}.", id);
-                await _parishRepository.DeleteAsync(id);
-                _logger.LogInformation("Parish with ID {ParishId} deleted successfully.", id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while deleting parish with ID {ParishId}.", id);
-                throw;
-            }
+            _logger.LogInformation("Deleting parish with ID {ParishId}.", id);
+            await _parishRepository.DeleteAsync(id);
         }
 
         public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
         {
-            try
-            {
-                _logger.LogInformation("Fetching parish details for ID {ParishId}. IncludeFamilyMembers: {IncludeFamilyMembers}", parishId, includeFamilyMembers);
-                var parishDetails = await _parishRepository.GetParishDetailsAsync(parishId, includeFamilyMembers);
-
-                if (parishDetails == null)
-                {
-                    _logger.LogWarning("Parish details not found for ID {ParishId}.", parishId);
-                }
-
-                return parishDetails;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving parish details for ID {ParishId}.", parishId);
-                throw;
-            }
+            _logger.LogInformation("Fetching parish details for ID {ParishId}.", parishId);
+            var parishDetails = await _parishRepository.GetParishDetailsAsync(parishId, includeFamilyMembers);
+            return _mapper.Map<ParishDetailsDto>(parishDetails);
         }
 
-        public async Task LoadDummyDataAsync(int parishId)
+        private async Task LoadDummyDataAsync(int parishId)
         {
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), _configuration["DummyDataPath"]);
             if (!File.Exists(filePath))
@@ -170,23 +96,18 @@ namespace ChurchServices
                 throw new FileNotFoundException("Dummy data file not found.");
             }
 
-            if (File.Exists(filePath))
+            var jsonData = await File.ReadAllTextAsync(filePath);
+            var parishData = JsonConvert.DeserializeObject<ParishDetailsDto>(jsonData);
+            if (parishData != null)
             {
-                var jsonData = await File.ReadAllTextAsync(filePath);
-                var parishData = JsonConvert.DeserializeObject<ParishDetailsDto>(jsonData);
-
-                if (parishData != null)
-                {
-                    await InsertChildEntities(parishId, parishData);
-                }
+                await InsertChildEntities(parishId, parishData);
             }
-
         }
-        // Helper method to insert child tables
+
         private async Task InsertChildEntities(int parishId, ParishDetailsDto parishData)
         {
-            // Step 1: Insert Units
-            var createdUnit= new Unit();
+            _logger.LogInformation("Inserting child entities for parish ID {ParishId}.", parishId);
+            var unitId = 0;
             foreach (var unit in parishData.Units)
             {
                 var unitEntity = new Unit
@@ -197,17 +118,16 @@ namespace ChurchServices
                     UnitPresident = unit.UnitPresident,
                     UnitSecretary = unit.UnitSecretary
                 };
-                
-                createdUnit = await _unitRepository.AddAsync(unitEntity);
+                await _unitRepository.AddAsync(unitEntity);
+                unitId = unitEntity.UnitId;
             }
 
-            // Step 2: Insert Families
             foreach (var family in parishData.Families)
             {
                 var familyEntity = new Family
                 {
-                    UnitId = createdUnit.UnitId,
                     ParishId = parishId,
+                    UnitId = unitId,
                     FamilyName = family.FamilyName,
                     Category = family.Category,
                     FamilyNumber = family.FamilyNumber,
@@ -218,7 +138,6 @@ namespace ChurchServices
                 await _familyRepository.AddAsync(familyEntity);
             }
 
-            // Step 3: Insert Transaction Heads
             foreach (var transactionHead in parishData.TransactionHeads)
             {
                 var transactionHeadEntity = new TransactionHead
@@ -231,7 +150,6 @@ namespace ChurchServices
                 await _transactionHeadRepository.AddAsync(transactionHeadEntity);
             }
 
-            // Step 4: Insert Banks
             foreach (var bank in parishData.Banks)
             {
                 var bankEntity = new Bank
@@ -245,7 +163,6 @@ namespace ChurchServices
                 await _bankRepository.AddAsync(bankEntity);
             }
 
-            // Step 5: Insert Financial Years
             foreach (var financialYear in parishData.FinancialYears)
             {
                 var financialYearEntity = new FinancialYear

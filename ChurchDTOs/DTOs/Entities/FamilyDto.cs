@@ -10,6 +10,7 @@ namespace ChurchDTOs.DTOs.Entities
     {
         public int FamilyId { get; set; }
         public string? FamilyName { get; set; }
+        public int UnitId { get; set; }
         public string? Address { get; set; }
         public string? ContactInfo { get; set; }
         public string? Category { get; set; }
