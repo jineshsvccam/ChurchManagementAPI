@@ -21,10 +21,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <Folder Include="EntityConfigurations\" />
-  </ItemGroup>
-	
-  <ItemGroup>
     <ProjectReference Include="..\ChurchDTOs\ChurchDTOs.csproj" />
   </ItemGroup>
 
