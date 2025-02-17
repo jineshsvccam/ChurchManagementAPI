@@ -10,8 +10,8 @@ namespace ChurchData
 {
     public class Unit
     {
-        [NotMapped] // Ensure this field is not mapped to the database
-        public string Action { get; set; } // INSERT or UPDATE
+        //[NotMapped] // Ensure this field is not mapped to the database
+        //public string Action { get; set; } // INSERT or UPDATE
         public int UnitId { get; set; }
         public int ParishId { get; set; }
         public string? UnitName { get; set; }

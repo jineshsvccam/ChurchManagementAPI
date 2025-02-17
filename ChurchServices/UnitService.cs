@@ -1,68 +1,99 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices
 {
     public class UnitService : IUnitService
     {
         private readonly IUnitRepository _unitRepository;
+        private readonly ILogger<UnitService> _logger;
+        private readonly IMapper _mapper;
 
-        public UnitService(IUnitRepository unitRepository)
+        public UnitService(IUnitRepository unitRepository, ILogger<UnitService> logger, IMapper mapper)
         {
             _unitRepository = unitRepository;
+            _logger = logger;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Unit>> GetAllAsync(int? parishId)
+        public async Task<IEnumerable<UnitDto>> GetAllAsync(int? parishId)
         {
-            return await _unitRepository.GetAllAsync(parishId);
+            _logger.LogInformation("Fetching all units for parishId: {ParishId}", parishId);
+            var units = await _unitRepository.GetAllAsync(parishId);
+            var unitsDto = _mapper.Map<IEnumerable<UnitDto>>(units);
+            _logger.LogInformation("Fetched {Count} units", unitsDto.Count());
+            return unitsDto;
         }
 
-        public async Task<Unit?> GetByIdAsync(int id)
+        public async Task<UnitDto?> GetByIdAsync(int id)
         {
-            return await _unitRepository.GetByIdAsync(id);
+            _logger.LogInformation("Fetching unit by id: {Id}", id);
+            var unit = await _unitRepository.GetByIdAsync(id);
+            if (unit == null)
+            {
+                _logger.LogWarning("No unit found with id: {Id}", id);
+                return null;
+            }
+            return _mapper.Map<UnitDto>(unit);
         }
 
-        public async Task<Unit> AddAsync(Unit unit)
+        public async Task<UnitDto> AddAsync(UnitDto unitDto)
         {
-            return await _unitRepository.AddAsync(unit);
+            _logger.LogInformation("Adding new unit with name: {UnitName}", unitDto.UnitName);
+            var unitEntity = _mapper.Map<Unit>(unitDto);
+            var createdUnit = await _unitRepository.AddAsync(unitEntity);
+            _logger.LogInformation("Created unit with id: {UnitId}", createdUnit.UnitId);
+            return _mapper.Map<UnitDto>(createdUnit);
         }
 
-        public async Task<Unit> UpdateAsync(Unit unit)
+        public async Task<UnitDto> UpdateAsync(UnitDto unitDto)
         {
-            await _unitRepository.UpdateAsync(unit);
-            return unit;
+            _logger.LogInformation("Updating unit with id: {UnitId}", unitDto.UnitId);
+            var unitEntity = _mapper.Map<Unit>(unitDto);
+            await _unitRepository.UpdateAsync(unitEntity);
+            _logger.LogInformation("Updated unit with id: {UnitId}", unitDto.UnitId);
+            return unitDto;
         }
 
         public async Task DeleteAsync(int id)
         {
+            _logger.LogInformation("Deleting unit with id: {UnitId}", id);
             await _unitRepository.DeleteAsync(id);
+            _logger.LogInformation("Deleted unit with id: {UnitId}", id);
         }
-        public async Task<IEnumerable<Unit>> AddOrUpdateAsync(IEnumerable<Unit> requests)
+
+        public async Task<IEnumerable<UnitDto>> AddOrUpdateAsync(IEnumerable<UnitDto> requests)
         {
-            var createdUnits = new List<Unit>();
+            _logger.LogInformation("Processing {Count} unit requests", requests.Count());
+            var processedUnits = new List<Unit>();
+
             foreach (var request in requests)
             {
+                var unitEntity = _mapper.Map<Unit>(request);
                 if (request.Action == "INSERT")
                 {
-                    var createdUnit = await _unitRepository.AddAsync(request);
-                    createdUnits.Add(createdUnit);
+                    _logger.LogInformation("Inserting unit with name: {UnitName}", unitEntity.UnitName);
+                    var createdUnit = await _unitRepository.AddAsync(unitEntity);
+                    processedUnits.Add(createdUnit);
                 }
                 else if (request.Action == "UPDATE")
                 {
-                    var createdUnit = await _unitRepository.UpdateAsync(request);
-                    createdUnits.Add(createdUnit);
+                    _logger.LogInformation("Updating unit with id: {UnitId}", unitEntity.UnitId);
+                    var updatedUnit = await _unitRepository.UpdateAsync(unitEntity);
+                    processedUnits.Add(updatedUnit);
                 }
                 else
                 {
+                    _logger.LogError("Invalid action specified: {Action}", request.Action);
                     throw new ArgumentException("Invalid action specified");
                 }
             }
-            return createdUnits;
+
+            _logger.LogInformation("Processed {Count} unit requests", processedUnits.Count);
+            return _mapper.Map<IEnumerable<UnitDto>>(processedUnits);
         }
     }
 }

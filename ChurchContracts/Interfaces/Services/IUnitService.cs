@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChurchData;
+﻿using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchContracts
 {
     public interface IUnitService
     {
-        Task<IEnumerable<Unit>> GetAllAsync(int? parishId);
-        Task<Unit?> GetByIdAsync(int id);
-        Task<Unit> AddAsync(Unit unit);
-        Task<Unit> UpdateAsync(Unit unit);
+        Task<IEnumerable<UnitDto>> GetAllAsync(int? parishId);
+        Task<UnitDto?> GetByIdAsync(int id);
+        Task<UnitDto> AddAsync(UnitDto unitDto);
+        Task<UnitDto> UpdateAsync(UnitDto unitDto);
         Task DeleteAsync(int id);
-        Task<IEnumerable<Unit>> AddOrUpdateAsync(IEnumerable<Unit> units);
+        Task<IEnumerable<UnitDto>> AddOrUpdateAsync(IEnumerable<UnitDto> requests);
     }
-
 }

@@ -1,6 +1,5 @@
 ﻿using ChurchContracts;
-using ChurchData;
-using ChurchServices;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -16,44 +15,48 @@ namespace ChurchManagementAPI.Controllers
             _unitService = unitService;
         }
 
+        // GET: api/unit?parishId={parishId}
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Unit>>> GetUnits([FromQuery] int? parishId)
+        public async Task<ActionResult<IEnumerable<UnitDto>>> GetUnits([FromQuery] int? parishId)
         {
-            var units = await _unitService.GetAllAsync(parishId);
-            return Ok(units);
+            var unitsDto = await _unitService.GetAllAsync(parishId);
+            return Ok(unitsDto);
         }
 
+        // GET: api/unit/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<Unit>> GetById(int id)
+        public async Task<ActionResult<UnitDto>> GetById(int id)
         {
-            var unit = await _unitService.GetByIdAsync(id);
-            if (unit == null)
+            var unitDto = await _unitService.GetByIdAsync(id);
+            if (unitDto == null)
             {
                 return NotFound();
             }
-            return Ok(unit);
+            return Ok(unitDto);
         }
 
+        // POST: api/unit
         [HttpPost]
-        public async Task<ActionResult<Unit>> Create(Unit unit)
+        public async Task<ActionResult<UnitDto>> Create([FromBody] UnitDto unitDto)
         {
-            var createdUnit = await _unitService.AddAsync(unit);
-            return CreatedAtAction(nameof(GetById), new { id = createdUnit.UnitId }, createdUnit);
+            var createdUnitDto = await _unitService.AddAsync(unitDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdUnitDto.UnitId }, createdUnitDto);
         }
 
+        // PUT: api/unit/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Unit unit)
+        public async Task<IActionResult> Update(int id, [FromBody] UnitDto unitDto)
         {
-            if (id != unit.UnitId)
+            if (id != unitDto.UnitId)
             {
                 return BadRequest();
             }
 
-            await _unitService.UpdateAsync(unit);
-
-            return Ok(unit);
+            var updatedUnitDto = await _unitService.UpdateAsync(unitDto);
+            return Ok(updatedUnitDto);
         }
 
+        // DELETE: api/unit/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -61,16 +64,16 @@ namespace ChurchManagementAPI.Controllers
             return NoContent();
         }
 
+        // POST: api/unit/create-or-update
         [HttpPost("create-or-update")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Unit> units)
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<UnitDto> units)
         {
-            var createdUnits = await _unitService.AddOrUpdateAsync(units);
-            if (units.Any())
+            var processedUnitsDto = await _unitService.AddOrUpdateAsync(units);
+            if (processedUnitsDto.Any())
             {
-                return CreatedAtAction(nameof(GetUnits), createdUnits);
+                return CreatedAtAction(nameof(GetUnits), processedUnitsDto);
             }
             return Ok();
         }
     }
-
 }
