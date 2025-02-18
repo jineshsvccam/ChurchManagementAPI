@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using ChurchContracts;
+using ChurchData;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChurchRepositories
 {
-    using ChurchContracts;
-    using ChurchData;
-    using Microsoft.EntityFrameworkCore;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-
-    namespace ChurchRepositories
-    {
-        public class ContributionSettingsRepository : IContributionSettingsRepository
+    public class ContributionSettingsRepository : IContributionSettingsRepository
         {
             private readonly ApplicationDbContext _context;
 
@@ -71,4 +62,4 @@ namespace ChurchRepositories
         }
     }
 
-}
+

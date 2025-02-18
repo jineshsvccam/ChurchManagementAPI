@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json.Serialization;
 
 namespace ChurchDTOs.DTOs.Entities
 {
-    [Keyless]
+
     public class BankDto
-    {        
+    {
+        // Only include Action in the request if provided; omit it from the response when null.
+        [JsonIgnore]
+        public string Action { get; set; } = string.Empty;
         public int BankId { get; set; }
-        public string BankName { get; set; } = null!;
-        public string AccountNumber { get; set; } = null!;
+        public string BankName { get; set; } = string.Empty;
+        public string AccountNumber { get; set; } = string.Empty;
         public decimal OpeningBalance { get; set; }
         public decimal CurrentBalance { get; set; }
+        public int ParishId { get; set; }
     }
 }

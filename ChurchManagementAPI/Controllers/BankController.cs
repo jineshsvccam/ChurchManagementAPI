@@ -1,9 +1,6 @@
-﻿using ChurchContracts;
-using ChurchContracts.ChurchContracts;
-using ChurchData;
+﻿using ChurchContracts.ChurchContracts;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
 {
@@ -19,14 +16,14 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Bank>>> GetBanks([FromQuery] int? parishId, [FromQuery] int? bankId)
+        public async Task<ActionResult<IEnumerable<BankDto>>> GetBanks([FromQuery] int? parishId, [FromQuery] int? bankId)
         {
             var banks = await _bankService.GetBanksAsync(parishId, bankId);
             return Ok(banks);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Bank>> GetById(int id)
+        public async Task<ActionResult<BankDto>> GetById(int id)
         {
             var bank = await _bankService.GetByIdAsync(id);
             if (bank == null)
@@ -37,7 +34,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Bank bank)
+        public async Task<IActionResult> Update(int id, BankDto bank)
         {
             if (id != bank.BankId)
             {
@@ -56,7 +53,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost("create-or-update")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Bank> requests)
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<BankDto> requests)
         {
             try
             {

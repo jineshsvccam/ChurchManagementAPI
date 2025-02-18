@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data.Common;
+﻿using System.Configuration;
 using System.Data.OleDb;
 using ChurchData;
-using ChurchData.DTOs;
+using ChurchDTOs.DTOs.Entities;
 
 public class AccessDataExporter
 {
     public  int ParishId { get; set; }
-    public List<TransactionHead> ExportTransactionHeads(string accessDbPath, string tableName)
+    public List<TransactionHeadDto> ExportTransactionHeads(string accessDbPath, string tableName)
     {
         string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-        var transactionHeads = new List<TransactionHead>();
+        var transactionHeads = new List<TransactionHeadDto>();
 
         using (OleDbConnection conn = new OleDbConnection(connString))
         {
@@ -22,7 +19,7 @@ public class AccessDataExporter
             {
                 while (reader.Read())
                 {
-                    var transactionHead = new TransactionHead
+                    var transactionHead = new TransactionHeadDto
                     {
                         HeadName = reader["HeadName"].ToString(),
                         Type = reader["Typ"].ToString(),
@@ -72,10 +69,10 @@ public class AccessDataExporter
         return units;
     }
 
-    public List<Family> ExportFamilies(string accessDbPath, string tableName, Dictionary<string, int> unitNameLookup)
+    public List<FamilyDto> ExportFamilies(string accessDbPath, string tableName, Dictionary<string, int> unitNameLookup)
     {
         string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-        var families = new List<Family>();
+        var families = new List<FamilyDto>();
 
         using (OleDbConnection conn = new OleDbConnection(connString))
         {
@@ -93,7 +90,7 @@ public class AccessDataExporter
                     var unitName = reader["UnitName"].ToString();
                     var unitID = unitNameLookup.ContainsKey(unitName) ? unitNameLookup[unitName] : 0;
 
-                    var family = new Family
+                    var family = new FamilyDto
                     {
                         Action = "INSERT",
                         UnitId = unitID,
@@ -115,10 +112,10 @@ public class AccessDataExporter
         return families;
     }
 
-    public List<Bank> ExportBanks(string accessDbPath, string tableName)
+    public List<BankDto> ExportBanks(string accessDbPath, string tableName)
     {
         string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-        var banks = new List<Bank>();
+        var banks = new List<BankDto>();
 
         using (OleDbConnection conn = new OleDbConnection(connString))
         {
@@ -128,7 +125,7 @@ public class AccessDataExporter
             {
                 while (reader.Read())
                 {
-                    var bank = new Bank
+                    var bank = new BankDto
                     {
                         BankName = reader["BankName"].ToString(),
                         AccountNumber = reader["AccountNo"].ToString(),
