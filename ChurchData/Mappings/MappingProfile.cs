@@ -10,20 +10,27 @@ namespace ChurchData.Mappings
     {
         public MappingProfile()
         {
+            CreateMap<Bank, BankDto>().ReverseMap();
             CreateMap<ContributionSettings, ContributionSettingsDto>().ReverseMap();
-            CreateMap<FamilyDue, FamilyDueDto>().ReverseMap();
-            CreateMap<FamilyContribution, FamilyContributionDto>().ReverseMap();
-            CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
-
             CreateMap<Diocese, DioceseDto>().ReverseMap();
             CreateMap<District, DistrictDto>().ReverseMap();
+            CreateMap<Family, FamilyDto>().ReverseMap();                     
+            CreateMap<FamilyContribution, FamilyContributionDto>().ReverseMap();
+            CreateMap<FamilyDue, FamilyDueDto>().ReverseMap();
+            //family member 
+            //financial year
             CreateMap<Parish, ParishDetailsDto>().ReverseMap();
             CreateMap<Parish, ParishDto>().ReverseMap();
-            CreateMap<Unit, UnitDto>().ReverseMap();
-            CreateMap<Family, FamilyDto>().ReverseMap();
-            CreateMap<TransactionHead, TransactionHeadDto>().ReverseMap();
-            CreateMap<Bank, BankDto>().ReverseMap();
+            //pending family member action           
+            CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap(); 
             CreateMap<Transaction, TransactionDto>().ReverseMap();
+            CreateMap<TransactionHead, TransactionHeadDto>().ReverseMap();
+            CreateMap<Unit, UnitDto>().ReverseMap();
+
+
+
+
+
 
         }
     }
