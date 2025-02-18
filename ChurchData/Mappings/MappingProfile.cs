@@ -23,6 +23,7 @@ namespace ChurchData.Mappings
             CreateMap<Family, FamilyDto>().ReverseMap();
             CreateMap<TransactionHead, TransactionHeadDto>().ReverseMap();
             CreateMap<Bank, BankDto>().ReverseMap();
+            CreateMap<Transaction, TransactionDto>().ReverseMap();
 
         }
     }

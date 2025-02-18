@@ -1,6 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchContracts.Utils;
-using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -17,7 +17,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<Transaction>>> GetTransactions(
+        public async Task<ActionResult<PagedResult<TransactionDto>>> GetTransactions(
            [FromQuery] int? parishId,
            [FromQuery] int? familyId,
            [FromQuery] int? transactionId,
@@ -31,7 +31,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Transaction>> GetById(int id)
+        public async Task<ActionResult<TransactionDto>> GetById(int id)
         {
             var transaction = await _transactionService.GetByIdAsync(id);
             if (transaction == null)
@@ -42,7 +42,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost("create-or-update")]
-        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<Transaction> requests)
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionDto> requests)
         {
             try
             {
@@ -60,14 +60,14 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Transaction transaction)
+        public async Task<IActionResult> Update(int id, TransactionDto transactionDto)
         {
-            if (id != transaction.TransactionId)
+            if (id != transactionDto.TransactionId)
             {
                 return BadRequest();
             }
 
-            await _transactionService.UpdateAsync(transaction);
+            await _transactionService.UpdateAsync(transactionDto);
             return NoContent();
         }
 
