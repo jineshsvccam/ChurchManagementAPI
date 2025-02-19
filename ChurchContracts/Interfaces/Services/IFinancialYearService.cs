@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ChurchData;
+﻿using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchContracts
 {
     public interface IFinancialYearService
     {
-        Task<FinancialYear?> GetFinancialYearByDateAsync(int parishId, DateTime date);
-        Task<FinancialYear?> GetByIdAsync(int financialYearId);
-        Task<FinancialYear> AddAsync(FinancialYear financialYear);
-        Task<FinancialYear> UpdateAsync(FinancialYear financialYear);
+        Task<FinancialYearDto?> GetFinancialYearByDateAsync(int parishId, DateTime date);
+        Task<FinancialYearDto?> GetByIdAsync(int financialYearId);
+        Task<FinancialYearDto> AddAsync(FinancialYearDto financialYearDto);
+        Task<FinancialYearDto> UpdateAsync(FinancialYearDto financialYearDto);
         Task DeleteAsync(int financialYearId);
-        Task<IEnumerable<FinancialYear>> GetAllAsync();
+        Task<IEnumerable<FinancialYearDto>> GetAllAsync();
         Task LockFinancialYearAsync(int financialYearId);
     }
 }

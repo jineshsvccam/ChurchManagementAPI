@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ChurchContracts;
-using ChurchData;
+﻿using ChurchContracts;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -48,21 +45,21 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddFinancialYear([FromBody] FinancialYear financialYear)
+        public async Task<IActionResult> AddFinancialYear([FromBody] FinancialYearDto financialYearDto)
         {
-            var createdFinancialYear = await _financialYearService.AddAsync(financialYear);
+            var createdFinancialYear = await _financialYearService.AddAsync(financialYearDto);
             return CreatedAtAction(nameof(GetFinancialYearById), new { id = createdFinancialYear.FinancialYearId }, createdFinancialYear);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateFinancialYear(int id, [FromBody] FinancialYear financialYear)
+        public async Task<IActionResult> UpdateFinancialYear(int id, [FromBody] FinancialYearDto financialYearDto)
         {
-            if (id != financialYear.FinancialYearId)
+            if (id != financialYearDto.FinancialYearId)
             {
                 return BadRequest("Financial Year ID mismatch.");
             }
 
-            var updatedFinancialYear = await _financialYearService.UpdateAsync(financialYear);
+            var updatedFinancialYear = await _financialYearService.UpdateAsync(financialYearDto);
             return Ok(updatedFinancialYear);
         }
 

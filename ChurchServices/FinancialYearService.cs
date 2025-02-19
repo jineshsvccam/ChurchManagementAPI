@@ -1,48 +1,63 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using AutoMapper;
 using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices
 {
     public class FinancialYearService : IFinancialYearService
     {
         private readonly IFinancialYearRepository _financialYearRepository;
+        private readonly IMapper _mapper;
+        private readonly ILogger<FinancialYearService> _logger;
 
-        public FinancialYearService(IFinancialYearRepository financialYearRepository)
+        public FinancialYearService(
+            IFinancialYearRepository financialYearRepository,
+            IMapper mapper,
+            ILogger<FinancialYearService> logger)
         {
             _financialYearRepository = financialYearRepository;
+            _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<FinancialYear?> GetFinancialYearByDateAsync(int parishId, DateTime date)
+        public async Task<FinancialYearDto?> GetFinancialYearByDateAsync(int parishId, DateTime date)
         {
-            return await _financialYearRepository.GetFinancialYearByDateAsync(parishId, date);
+            var entity = await _financialYearRepository.GetFinancialYearByDateAsync(parishId, date);
+            return _mapper.Map<FinancialYearDto?>(entity);
         }
 
-        public async Task<FinancialYear?> GetByIdAsync(int financialYearId)
+        public async Task<FinancialYearDto?> GetByIdAsync(int financialYearId)
         {
-            return await _financialYearRepository.GetByIdAsync(financialYearId);
+            var entity = await _financialYearRepository.GetByIdAsync(financialYearId);
+            return _mapper.Map<FinancialYearDto?>(entity);
         }
 
-        public async Task<FinancialYear> AddAsync(FinancialYear financialYear)
+        public async Task<FinancialYearDto> AddAsync(FinancialYearDto financialYearDto)
         {
-            return await _financialYearRepository.AddAsync(financialYear);
+            var entity = _mapper.Map<FinancialYear>(financialYearDto);
+            var result = await _financialYearRepository.AddAsync(entity);
+            return _mapper.Map<FinancialYearDto>(result);
         }
 
-        public async Task<FinancialYear> UpdateAsync(FinancialYear financialYear)
+        public async Task<FinancialYearDto> UpdateAsync(FinancialYearDto financialYearDto)
         {
-            return await _financialYearRepository.UpdateAsync(financialYear);
+            var entity = _mapper.Map<FinancialYear>(financialYearDto);
+            var result = await _financialYearRepository.UpdateAsync(entity);
+            return _mapper.Map<FinancialYearDto>(result);
         }
 
         public async Task DeleteAsync(int financialYearId)
         {
+            _logger.LogInformation($"Deleting financial year with ID {financialYearId}");
             await _financialYearRepository.DeleteAsync(financialYearId);
         }
 
-        public async Task<IEnumerable<FinancialYear>> GetAllAsync()
+        public async Task<IEnumerable<FinancialYearDto>> GetAllAsync()
         {
-            return await _financialYearRepository.GetAllAsync();
+            var entities = await _financialYearRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<FinancialYearDto>>(entities);
         }
 
         public async Task LockFinancialYearAsync(int financialYearId)
@@ -50,6 +65,7 @@ namespace ChurchServices
             var financialYear = await _financialYearRepository.GetByIdAsync(financialYearId);
             if (financialYear == null)
             {
+                _logger.LogWarning($"Financial year with ID {financialYearId} not found.");
                 throw new InvalidOperationException("Financial year not found.");
             }
 
@@ -57,6 +73,7 @@ namespace ChurchServices
             financialYear.LockDate = DateTime.UtcNow;
 
             await _financialYearRepository.UpdateAsync(financialYear);
+            _logger.LogInformation($"Financial year {financialYearId} has been locked.");
         }
     }
 }
