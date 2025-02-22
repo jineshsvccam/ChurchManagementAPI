@@ -54,9 +54,9 @@ namespace ChurchServices
             await _financialYearRepository.DeleteAsync(financialYearId);
         }
 
-        public async Task<IEnumerable<FinancialYearDto>> GetAllAsync()
+        public async Task<IEnumerable<FinancialYearDto>> GetAllAsync(int? parishId)
         {
-            var entities = await _financialYearRepository.GetAllAsync();
+            var entities = await _financialYearRepository.GetAllAsync(parishId);
             return _mapper.Map<IEnumerable<FinancialYearDto>>(entities);
         }
 

@@ -11,6 +11,6 @@ namespace ChurchContracts
         Task<FinancialYear> AddAsync(FinancialYear financialYear);
         Task<FinancialYear> UpdateAsync(FinancialYear financialYear);
         Task DeleteAsync(int financialYearId);
-        Task<IEnumerable<FinancialYear>> GetAllAsync();
+        Task<IEnumerable<FinancialYear>> GetAllAsync(int? parishId);
     }
 }

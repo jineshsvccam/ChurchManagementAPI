@@ -20,6 +20,7 @@ class Program
             string baseUrl = "http://localhost:8080";
             string authurl = $"{baseUrl}/Auth/login";
             string unitApiUrl = $"{baseUrl}/api/Unit";
+            string familydueUrl = $"{baseUrl}/api/FamilyDues";
 
             string transactionHeadsGetUrl = $"{baseUrl}/api/TransactionHead";
             string familyApiGetUrl = $"{baseUrl}/api/Family";
@@ -39,7 +40,8 @@ class Program
             bool processTransactionHeads = false;
             bool processFamilies = false;
             bool processBanks = false;
-            bool processTransactions = true;
+            bool processTransactions = false;
+            bool processFamilyDue = true;
 
             Console.WriteLine("Boolean flags set...");
 
@@ -65,7 +67,7 @@ class Program
             {
                 Console.WriteLine("Processing Units...");
                 var units = dataExporter.ExportUnits(accessDbPath, "UnitL");
-               await apiService.ImportUnits(units, unitApiUrl);
+                await apiService.ImportItemsOnebyOne(units, unitApiUrl);
             }
 
             // Export and Import Transaction Heads
@@ -91,6 +93,15 @@ class Program
                 Console.WriteLine("Processing Banks...");
                 var banks = dataExporter.ExportBanks(accessDbPath, "Bank");
                 await apiService.ImportDataAsync(banks, bankApiUrl);
+            }
+            if(processFamilyDue)
+            {
+                Console.WriteLine("Processing FamilyDue...");
+                var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
+                var familyNames = await apiService.GetFamiliesAsync(familyApiGetUrl);
+                var familyDues = dataExporter.ExportFamilyDues(accessDbPath, "openkudi",headNames,familyNames);
+              
+                await apiService.ImportItemsOnebyOne(familyDues, familydueUrl);
             }
 
             // Export and Import Transactions

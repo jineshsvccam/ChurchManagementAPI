@@ -9,7 +9,7 @@ namespace ChurchContracts
         Task<FinancialYearDto> AddAsync(FinancialYearDto financialYearDto);
         Task<FinancialYearDto> UpdateAsync(FinancialYearDto financialYearDto);
         Task DeleteAsync(int financialYearId);
-        Task<IEnumerable<FinancialYearDto>> GetAllAsync();
+        Task<IEnumerable<FinancialYearDto>> GetAllAsync(int? parishId);
         Task LockFinancialYearAsync(int financialYearId);
     }
 }

@@ -63,9 +63,18 @@ namespace ChurchRepositories
             }
         }
 
-        public async Task<IEnumerable<FinancialYear>> GetAllAsync()
+        public async Task<IEnumerable<FinancialYear>> GetAllAsync(int? parishId)
         {
-            return await _context.FinancialYears.ToListAsync();
+            var query = _context.FinancialYears.AsQueryable();
+
+            if (parishId.HasValue)
+            {
+                query = query.Where(f => f.ParishId == parishId.Value);
+            }
+
+            var result = await query.ToListAsync();
+
+            return result;
         }
     }
 }

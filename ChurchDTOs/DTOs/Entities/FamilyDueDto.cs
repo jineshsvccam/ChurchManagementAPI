@@ -8,6 +8,7 @@ namespace ChurchDTOs.DTOs.Entities
 {
     public class FamilyDueDto
     {
+        public int DuesId { get; set; }
         public int FamilyId { get; set; }
         public int HeadId { get; set; }
         public int ParishId { get; set; }

@@ -143,6 +143,41 @@ public class AccessDataExporter
         return banks;
     }
 
+    public List<FamilyDueDto> ExportFamilyDues(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup)
+    {
+
+        string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
+        var familyDues = new List<FamilyDueDto>();
+
+
+        var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
+        var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
+
+
+        using (OleDbConnection conn = new OleDbConnection(connString))
+        {
+            conn.Open();
+            using (OleDbCommand cmd = new OleDbCommand($"SELECT * FROM {tableName}", conn))
+            using (OleDbDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var due = new FamilyDueDto
+                    {
+                        HeadId = headNameLookupInsensitive.TryGetValue(reader["KudiHead"].ToString(), out int headId) ? headId : 0,
+                        FamilyId = familyNameLookupInsensitive.TryGetValue(reader["Hno"].ToString(), out int familyId) ? familyId : 0,                        ParishId = ParishId,
+                        OpeningBalance= Convert.ToDecimal(reader["kudiamount"])                       
+                    };
+
+                    familyDues.Add(due);
+                }
+            }
+        }
+
+        return familyDues;
+    }
+
+
     public List<TransactionDto> ExportTransactions(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
     {
         // Create case-insensitive dictionaries

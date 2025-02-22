@@ -16,9 +16,9 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllFinancialYears()
+        public async Task<IActionResult> GetAllFinancialYears([FromQuery] int? parishId)
         {
-            var financialYears = await _financialYearService.GetAllAsync();
+            var financialYears = await _financialYearService.GetAllAsync(parishId);
             return Ok(financialYears);
         }
 

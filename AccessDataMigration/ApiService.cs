@@ -63,25 +63,25 @@ public class ApiService
         }
     }
 
-    public async Task ImportUnits(List<UnitDto> units, string apiUrl)
+    public async Task ImportItemsOnebyOne<T>(List<T> datas , string apiUrl)
     {
         var apiService = new ApiService(_httpClient);
 
-        foreach (var unit in units)
+        foreach (var data in datas)
         {
             try
             {
-                apiService.ImportData(unit, apiUrl);
+                apiService.ImportData(data, apiUrl);
             }
             catch (HttpRequestException ex)
             {
                 // Log the detailed error message
-                Console.WriteLine($"Request error for Unit: {unit.UnitName}, Error: {ex.Message}");
+                Console.WriteLine($"Request error for the data, Error: {ex.Message}");
             }
             catch (Exception ex)
             {
                 // Log any other exceptions that might occur
-                Console.WriteLine($"Unexpected error for Unit: {unit.UnitName}, Error: {ex.Message}");
+                Console.WriteLine($"Unexpected error for data, Error: {ex.Message}");
             }
         }
     }
