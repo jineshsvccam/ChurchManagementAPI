@@ -21,7 +21,9 @@ class Program
             string authurl = $"{baseUrl}/Auth/login";
             string unitApiUrl = $"{baseUrl}/api/Unit";
             string familydueUrl = $"{baseUrl}/api/FamilyDues";
-
+            string familyContributionUrl = $"{baseUrl}/api/FamilyContribution";
+            string contributionsettingurl = $"{baseUrl}/api/contribution - settings";
+         
             string transactionHeadsGetUrl = $"{baseUrl}/api/TransactionHead";
             string familyApiGetUrl = $"{baseUrl}/api/Family";
             string bankApiGetUrl = $"{baseUrl}/api/Bank";
@@ -41,7 +43,9 @@ class Program
             bool processFamilies = false;
             bool processBanks = false;
             bool processTransactions = false;
-            bool processFamilyDue = true;
+            bool processFamilyDue = false;
+            bool processFamilyContribution = false;
+            bool processContributionSetting = true;
 
             Console.WriteLine("Boolean flags set...");
 
@@ -103,6 +107,15 @@ class Program
               
                 await apiService.ImportItemsOnebyOne(familyDues, familydueUrl);
             }
+            if (processContributionSetting)
+            {
+                Console.WriteLine("Processing ContributionSettings...");
+                var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
+               
+                var contributionsettings = dataExporter.ExportContributionsSettings(accessDbPath, "kudishika", headNames);
+
+                await apiService.ImportItemsOnebyOne(contributionsettings, contributionsettingurl);
+            }
 
             // Export and Import Transactions
             if (processTransactions)
@@ -149,6 +162,57 @@ class Program
                     {
                         await apiService.ImportDataAsync(batch, transactionApiUrlbulk);
                     }                   
+                }
+
+                // Stop the stopwatch and print the elapsed time
+                stopwatch.Stop();
+                Console.WriteLine("Data imported successfully!");
+                Console.WriteLine($"Time taken: {stopwatch.Elapsed.TotalSeconds} seconds.");
+            }
+            if (processFamilyContribution)
+            {
+                Console.WriteLine("Processing FamilyContribution...");
+
+                // Start the stopwatch
+                var stopwatch = Stopwatch.StartNew();
+                bool isbulkinsertrequired = false;
+
+                var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
+                var familyNames = await apiService.GetFamiliesAsync(familyApiGetUrl);
+                var bankNames = await apiService.GetBanksAsync(bankApiGetUrl);
+
+                var transactions = dataExporter.ExportTransactionsJE(accessDbPath, "DailyData", headNames, familyNames, bankNames);
+                var failedTransactionIds = new System.Collections.Generic.List<int>();
+
+                if (isbulkinsertrequired == false)
+                {
+                    foreach (var transaction in transactions)
+                    {
+                        try
+                        {
+                            await apiService.ImportData(transaction, familyContributionUrl);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error inserting transaction: {transaction.ContributionId}. Error: {ex.Message}");
+                            failedTransactionIds.Add(transaction.ContributionId);
+                        }
+                    }
+
+                    if (failedTransactionIds.Count > 0)
+                    {
+                        string selectStatement = $"SELECT * FROM DailyData WHERE ID IN ({string.Join(", ", failedTransactionIds)})";
+                        Console.WriteLine($"Failed transaction IDs: {string.Join(", ", failedTransactionIds)}");
+                        Console.WriteLine($"SELECT statement for failed transactions: {selectStatement}");
+                    }
+                }
+                else
+                {
+                    var batches = dataExporter.SplitList(transactions, 250);
+                    foreach (var batch in batches)
+                    {
+                        await apiService.ImportDataAsync(batch, transactionApiUrlbulk);
+                    }
                 }
 
                 // Stop the stopwatch and print the elapsed time

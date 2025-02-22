@@ -26,7 +26,8 @@ namespace ChurchRepositories
 
             public async Task<ContributionSettings> AddAsync(ContributionSettings contributionSettings)
             {
-                await _context.ContributionSettings.AddAsync(contributionSettings);
+            contributionSettings.ValidFrom = DateTime.SpecifyKind(contributionSettings.ValidFrom, DateTimeKind.Utc);
+            await _context.ContributionSettings.AddAsync(contributionSettings);
                 await _context.SaveChangesAsync();
                 return contributionSettings;
             }
@@ -36,7 +37,8 @@ namespace ChurchRepositories
                 var existing = await _context.ContributionSettings.FindAsync(contributionSettings.SettingId);
                 if (existing != null)
                 {
-                    _context.Entry(existing).CurrentValues.SetValues(contributionSettings);
+                contributionSettings.ValidFrom = DateTime.SpecifyKind(contributionSettings.ValidFrom, DateTimeKind.Utc);
+                _context.Entry(existing).CurrentValues.SetValues(contributionSettings);
                     await _context.SaveChangesAsync();
                     return contributionSettings;
                 }

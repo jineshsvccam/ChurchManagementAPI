@@ -8,7 +8,9 @@ namespace ChurchDTOs.DTOs.Entities
 {
     public class ContributionSettingsDto
     {
+        public int SettingId { get; set; }
         public int HeadId { get; set; }
+    
         public int ParishId { get; set; }
         public decimal Amount { get; set; }
         public string Frequency { get; set; } = string.Empty;

@@ -32,6 +32,7 @@ namespace ChurchRepositories
 
         public async Task<FamilyContribution> AddAsync(FamilyContribution familyContribution)
         {
+            familyContribution.TransactionDate = DateTime.SpecifyKind(familyContribution.TransactionDate, DateTimeKind.Utc);
             await _context.FamilyContributions.AddAsync(familyContribution);
             await _context.SaveChangesAsync();
             return familyContribution;
@@ -43,6 +44,7 @@ namespace ChurchRepositories
             if (existingContribution != null)
             {
                 _context.Entry(existingContribution).CurrentValues.SetValues(familyContribution);
+                familyContribution.TransactionDate = DateTime.SpecifyKind(familyContribution.TransactionDate, DateTimeKind.Utc);
                 await _context.SaveChangesAsync();
                 return familyContribution;
             }
