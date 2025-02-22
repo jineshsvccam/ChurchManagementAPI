@@ -8,7 +8,7 @@ namespace ChurchDTOs.DTOs.Entities
 {
     public class UnitDto
     {
-        public string Action { get; set; } // INSERT or UPDATE
+        public string? Action { get; set; } // INSERT or UPDATE
         public int UnitId { get; set; }
         public int ParishId { get; set; }
         public string? UnitName { get; set; }

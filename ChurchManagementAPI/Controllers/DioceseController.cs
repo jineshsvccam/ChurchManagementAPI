@@ -51,16 +51,20 @@ namespace ChurchManagementAPI.Controllers
         public async Task<ActionResult> Create(DioceseDto dioceseDto)
         {
             _logger.LogInformation("Creating new diocese: {@DioceseDto}", dioceseDto);
+
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Invalid diocese model received.");
                 return BadRequest(ModelState);
             }
+            
+            var createdDiocese = await _dioceseService.AddAsync(dioceseDto);
 
-            await _dioceseService.AddAsync(dioceseDto);
-            _logger.LogInformation("Diocese created with ID: {Id}", dioceseDto.DioceseId);
-            return CreatedAtAction(nameof(GetById), new { id = dioceseDto.DioceseId }, dioceseDto);
+            _logger.LogInformation("Diocese created with ID: {Id}", createdDiocese.DioceseId);
+
+            return CreatedAtAction(nameof(GetById), new { id = createdDiocese.DioceseId }, createdDiocese);
         }
+
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]

@@ -40,10 +40,10 @@ public class AccessDataExporter
         return transactionHeads;
     }
 
-    public List<Unit> ExportUnits(string accessDbPath, string tableName)
+    public List<UnitDto> ExportUnits(string accessDbPath, string tableName)
     {
         string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-        var units = new List<Unit>();
+        var units = new List<UnitDto>();
 
         using (OleDbConnection conn = new OleDbConnection(connString))
         {
@@ -53,7 +53,7 @@ public class AccessDataExporter
             {
                 while (reader.Read()) // Use synchronous read method
                 {
-                    var unit = new Unit
+                    var unit = new UnitDto
                     {
                         UnitName = reader["Unit"].ToString(),
                         Description = "",
@@ -131,7 +131,7 @@ public class AccessDataExporter
                         AccountNumber = reader["AccountNo"].ToString(),
                         OpeningBalance = Convert.ToDecimal(reader["OB"]),
                         CurrentBalance = Convert.ToDecimal(reader["OB"]), // Assuming current balance is the same as opening balance for now
-                        ParishId = 2, // Default parish ID, modify as necessary
+                        ParishId = ParishId,
                         Action = "INSERT"
                     };
 
@@ -143,7 +143,7 @@ public class AccessDataExporter
         return banks;
     }
 
-    public List<Transaction> ExportTransactions(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
+    public List<TransactionDto> ExportTransactions(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
     {
         // Create case-insensitive dictionaries
         var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
@@ -151,7 +151,7 @@ public class AccessDataExporter
         var bankNameLookupInsensitive = new Dictionary<string, int>(bankNameLookup, StringComparer.OrdinalIgnoreCase);
 
         string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-        var transactions = new List<Transaction>();
+        var transactions = new List<TransactionDto>();
 
         using (OleDbConnection conn = new OleDbConnection(connString))
         {
@@ -164,7 +164,7 @@ public class AccessDataExporter
                     var transactionType = reader["Type"].ToString();
                     transactionType = transactionType == "Receipt" ? "Income" : "Expense";
 
-                    var transaction = new Transaction
+                    var transaction = new TransactionDto
                     {
                         Action = "INSERT",
                         TransactionId = Convert.ToInt32(reader["ID"]),
@@ -177,7 +177,7 @@ public class AccessDataExporter
                         IncomeAmount = Convert.ToDecimal(reader["Credit"]),
                         ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
                         Description = reader["Remarks"].ToString(),
-                        ParishId = 2 // Default parish ID, modify as necessary
+                        ParishId =ParishId
                     };
 
                     transactions.Add(transaction);
@@ -187,29 +187,7 @@ public class AccessDataExporter
 
         return transactions;
     }
-
-    public void ImportUnits(List<Unit> units, string apiUrl)
-    {
-        var apiService = new ApiService();
-
-        foreach (var unit in units)
-        {
-            try
-            {
-                apiService.ImportData(unit, apiUrl);
-            }
-            catch (HttpRequestException ex)
-            {
-                // Log the detailed error message
-                Console.WriteLine($"Request error for Unit: {unit.UnitName}, Error: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                // Log any other exceptions that might occur
-                Console.WriteLine($"Unexpected error for Unit: {unit.UnitName}, Error: {ex.Message}");
-            }
-        }
-    }
+       
     public List<List<T>> SplitList<T>(List<T> source, int batchSize)
     {
         var batches = new List<List<T>>();

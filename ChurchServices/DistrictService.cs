@@ -52,13 +52,14 @@ namespace ChurchServices
             }
         }
 
-        public async Task AddAsync(DistrictDto districtDto)
+        public async Task<DistrictDto> AddAsync(DistrictDto districtDto)
         {
             try
             {
                 var district = _mapper.Map<District>(districtDto);
                 await _districtRepository.AddAsync(district);
                 _logger.LogInformation("Added district: {Name}", district.DistrictName);
+                return _mapper.Map<DistrictDto>(district);
             }
             catch (Exception ex)
             {
@@ -67,13 +68,14 @@ namespace ChurchServices
             }
         }
 
-        public async Task UpdateAsync(DistrictDto districtDto)
+        public async Task<DistrictDto> UpdateAsync(DistrictDto districtDto)
         {
             try
             {
                 var district = _mapper.Map<District>(districtDto);
                 await _districtRepository.UpdateAsync(district);
                 _logger.LogInformation("Updated district with ID: {Id}", district.DistrictId);
+                return _mapper.Map<DistrictDto>(district);
             }
             catch (Exception ex)
             {

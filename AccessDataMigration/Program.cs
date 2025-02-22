@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Configuration;
+using System.Diagnostics;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ChurchData;
 
@@ -7,7 +9,6 @@ class Program
 {
     static async Task Main(string[] args)
     {
-
         Console.WriteLine("Starting Main method...");
 
         try
@@ -15,12 +16,21 @@ class Program
             string accessDbPath = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
             Console.WriteLine($"Access DB Path: {accessDbPath}");
 
-            string unitApiUrl = "http://localhost:8080/api/Unit";
-            string transactionHeadsUrl = "http://localhost:8080/api/TransactionHead";
-            string familyApiUrl = "http://localhost:8080/api/Family";
-            string bankApiGetUrl = "http://localhost:8080/api/Bank";
-            string bankApiUrl = "http://localhost:8080/api/Bank/create-or-update";
-            string transactionApiUrl = "http://localhost:8080/api/Transaction/create-or-update";
+            // Define base URL
+            string baseUrl = "http://localhost:8080";
+            string authurl = $"{baseUrl}/Auth/login";
+            string unitApiUrl = $"{baseUrl}/api/Unit";
+
+            string transactionHeadsGetUrl = $"{baseUrl}/api/TransactionHead";
+            string familyApiGetUrl = $"{baseUrl}/api/Family";
+            string bankApiGetUrl = $"{baseUrl}/api/Bank";
+
+            string transactionHeadsUrl = $"{baseUrl}/api/TransactionHead/create-or-update";
+            string familyApiUrl = $"{baseUrl}/api/Family/create-or-update";           
+            string bankApiUrl = $"{baseUrl}/api/Bank/create-or-update";
+            string transactionApiUrlbulk = $"{baseUrl}/api/Transaction/create-or-update";
+
+            string transactionApiUrl = $"{baseUrl}/api/Transaction";
 
             Console.WriteLine("API URLs set...");
 
@@ -34,9 +44,19 @@ class Program
             Console.WriteLine("Boolean flags set...");
 
             var dataExporter = new AccessDataExporter();
-            var apiService = new ApiService();
 
-            dataExporter.ParishId = 2;
+            // *** NEW: Create and configure HttpClient with BaseAddress ***
+            HttpClient httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+
+            // *** NEW: Create instance of ApiService with the preconfigured HttpClient ***
+            var apiService = new ApiService(httpClient);
+
+            // *** NEW: Call the auth endpoint to retrieve the token and set the Authorization header ***
+            string username = "jiness";
+            string password = "January@23";
+            await apiService.AuthenticateAsync(authurl, username, password);
+
+            dataExporter.ParishId = 31;
 
             Console.WriteLine("Instances created...");
 
@@ -45,7 +65,7 @@ class Program
             {
                 Console.WriteLine("Processing Units...");
                 var units = dataExporter.ExportUnits(accessDbPath, "UnitL");
-                dataExporter.ImportUnits(units, unitApiUrl);
+               await apiService.ImportUnits(units, unitApiUrl);
             }
 
             // Export and Import Transaction Heads
@@ -77,35 +97,53 @@ class Program
             if (processTransactions)
             {
                 Console.WriteLine("Processing Transactions...");
-                var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsUrl);
-                var familyNames = await apiService.GetFamiliesAsync(familyApiUrl);
+
+                // Start the stopwatch
+                var stopwatch = Stopwatch.StartNew();
+                bool isbulkinsertrequired = true;  
+
+                var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
+                var familyNames = await apiService.GetFamiliesAsync(familyApiGetUrl);
                 var bankNames = await apiService.GetBanksAsync(bankApiGetUrl);
 
                 var transactions = dataExporter.ExportTransactions(accessDbPath, "DailyData", headNames, familyNames, bankNames);
-                List<int> failedTransactionIds = new List<int>();
+                var failedTransactionIds = new System.Collections.Generic.List<int>();
 
-                foreach (var transaction in transactions)
+                if (isbulkinsertrequired == false)
                 {
-                    try
+                    foreach (var transaction in transactions)
                     {
-                        await apiService.ImportDataAsync(new List<Transaction> { transaction }, transactionApiUrl);
+                        try
+                        {
+                            await apiService.ImportData(transaction, transactionApiUrl);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error inserting transaction: {transaction.TransactionId}. Error: {ex.Message}");
+                            failedTransactionIds.Add(transaction.TransactionId);
+                        }
                     }
-                    catch (Exception ex)
+
+                    if (failedTransactionIds.Count > 0)
                     {
-                        Console.WriteLine($"Error inserting transaction: {transaction.TransactionId}. Error: {ex.Message}");
-                        failedTransactionIds.Add(transaction.TransactionId);
+                        string selectStatement = $"SELECT * FROM DailyData WHERE ID IN ({string.Join(", ", failedTransactionIds)})";
+                        Console.WriteLine($"Failed transaction IDs: {string.Join(", ", failedTransactionIds)}");
+                        Console.WriteLine($"SELECT statement for failed transactions: {selectStatement}");
                     }
                 }
-
-                if (failedTransactionIds.Any())
+                else
                 {
-                    string selectStatement = $"SELECT * FROM DailyData WHERE ID IN ({string.Join(", ", failedTransactionIds)})";
-                    Console.WriteLine($"Failed transaction IDs: {string.Join(", ", failedTransactionIds)}");
-                    Console.WriteLine($"SELECT statement for failed transactions: {selectStatement}");
+                    var batches = dataExporter.SplitList(transactions,250);
+                    foreach (var batch in batches)
+                    {
+                        await apiService.ImportDataAsync(batch, transactionApiUrlbulk);
+                    }                   
                 }
 
-
+                // Stop the stopwatch and print the elapsed time
+                stopwatch.Stop();
                 Console.WriteLine("Data imported successfully!");
+                Console.WriteLine($"Time taken: {stopwatch.Elapsed.TotalSeconds} seconds.");
             }
         }
         catch (Exception ex)

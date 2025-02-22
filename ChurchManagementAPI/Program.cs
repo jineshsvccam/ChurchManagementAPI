@@ -6,7 +6,7 @@ using ChurchContracts;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
 using ChurchData.Mappings;
-using ChurchManagementAPI.Middleware;
+using ChurchManagementAPI.Controllers.Middleware;
 using ChurchRepositories;
 using ChurchServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

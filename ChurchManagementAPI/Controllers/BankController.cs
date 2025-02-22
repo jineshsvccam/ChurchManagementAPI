@@ -33,6 +33,20 @@ namespace ChurchManagementAPI.Controllers
             return Ok(bank);
         }
 
+        [HttpPost]
+        public async Task<ActionResult> Create(BankDto bank)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var createdBank = await _bankService.AddAsync(bank);
+
+            return CreatedAtAction(nameof(GetById), new { id = createdBank.BankId }, createdBank);
+        }
+
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, BankDto bank)
         {

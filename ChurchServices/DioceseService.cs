@@ -33,20 +33,26 @@ namespace ChurchServices
             return _mapper.Map<DioceseDto>(diocese);
         }
 
-        public async Task AddAsync(DioceseDto dioceseDto)
+        public async Task<DioceseDto> AddAsync(DioceseDto dioceseDto)
         {
             _logger.LogInformation("Adding new diocese: {@DioceseDto}", dioceseDto);
             var diocese = _mapper.Map<Diocese>(dioceseDto);
+
             await _dioceseRepository.AddAsync(diocese);
+
             _logger.LogInformation("Diocese added successfully with ID: {Id}", diocese.DioceseId);
+
+            return _mapper.Map<DioceseDto>(diocese);
         }
 
-        public async Task UpdateAsync(DioceseDto dioceseDto)
+
+        public async Task<DioceseDto> UpdateAsync(DioceseDto dioceseDto)
         {
             _logger.LogInformation("Updating diocese with ID: {Id}", dioceseDto.DioceseId);
             var diocese = _mapper.Map<Diocese>(dioceseDto);
             await _dioceseRepository.UpdateAsync(diocese);
             _logger.LogInformation("Diocese with ID {Id} updated successfully.", dioceseDto.DioceseId);
+            return _mapper.Map<DioceseDto>(diocese);
         }
 
         public async Task DeleteAsync(int id)

@@ -15,7 +15,7 @@ namespace ChurchManagementAPI.Controllers
             _unitService = unitService;
         }
 
-        // GET: api/unit?parishId={parishId}
+        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UnitDto>>> GetUnits([FromQuery] int? parishId)
         {
@@ -23,7 +23,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(unitsDto);
         }
 
-        // GET: api/unit/{id}
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<UnitDto>> GetById(int id)
         {
@@ -35,7 +35,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(unitDto);
         }
 
-        // POST: api/unit
+        
         [HttpPost]
         public async Task<ActionResult<UnitDto>> Create([FromBody] UnitDto unitDto)
         {
@@ -43,7 +43,7 @@ namespace ChurchManagementAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = createdUnitDto.UnitId }, createdUnitDto);
         }
 
-        // PUT: api/unit/{id}
+       
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UnitDto unitDto)
         {

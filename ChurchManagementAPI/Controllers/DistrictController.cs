@@ -53,9 +53,9 @@ namespace ChurchManagementAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            await _districtService.AddAsync(districtDto);
+            var createdDistrict = await _districtService.AddAsync(districtDto);
             _logger.LogInformation("District created with Name: {Name}", districtDto.DistrictName);
-            return CreatedAtAction(nameof(GetById), new { id = districtDto.DistrictId }, districtDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdDistrict.DistrictId }, createdDistrict);
         }
 
         [HttpPut("{id}")]

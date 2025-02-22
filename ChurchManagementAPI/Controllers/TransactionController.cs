@@ -40,6 +40,31 @@ namespace ChurchManagementAPI.Controllers
             }
             return Ok(transaction);
         }
+        [HttpPost]
+        public async Task<IActionResult> Create(TransactionDto transactionDto)
+        {
+            var createdTransaction = await _transactionService.AddAsync(transactionDto);
+            return CreatedAtAction(nameof(GetTransactions), createdTransaction);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, TransactionDto transactionDto)
+        {
+            if (id != transactionDto.TransactionId)
+            {
+                return BadRequest();
+            }
+
+            await _transactionService.UpdateAsync(transactionDto);
+            return Ok(transactionDto);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _transactionService.DeleteAsync(id);
+            return NoContent();
+        }
 
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionDto> requests)
@@ -57,25 +82,6 @@ namespace ChurchManagementAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, TransactionDto transactionDto)
-        {
-            if (id != transactionDto.TransactionId)
-            {
-                return BadRequest();
-            }
-
-            await _transactionService.UpdateAsync(transactionDto);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _transactionService.DeleteAsync(id);
-            return NoContent();
         }
     }
 }

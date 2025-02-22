@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 
-namespace ChurchManagementAPI.Middleware
+namespace ChurchManagementAPI.Controllers.Middleware
 {
     public class GlobalExceptionMiddleware
     {
@@ -47,7 +47,7 @@ namespace ChurchManagementAPI.Middleware
                     statusCode = HttpStatusCode.Unauthorized;
                     errorMessage = "Unauthorized access.";
                     break;
-                                   
+
                 case ArgumentNullException:
                     statusCode = HttpStatusCode.BadRequest;
                     errorMessage = "Invalid request parameters.";

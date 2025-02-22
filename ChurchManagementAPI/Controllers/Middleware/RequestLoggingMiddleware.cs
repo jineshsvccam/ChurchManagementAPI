@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace ChurchManagementAPI.Middleware
+namespace ChurchManagementAPI.Controllers.Middleware
 {
     public class RequestLoggingMiddleware
     {

@@ -1,20 +1,23 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+using AccessDataMigration;
 using ChurchData;
-using ChurchData.DTOs;
+using ChurchDTOs.DTOs.Entities;
 
 public class ApiService
 {
     private readonly HttpClient _httpClient;
-
-    public ApiService()
+    
+    public ApiService(HttpClient httpClient)
     {
-        _httpClient = new HttpClient();
+        _httpClient = httpClient;
     }
 
+    public void SetAuthorizationToken(string token)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
     public async Task ImportDataAsync<T>(List<T> data, string apiUrl)
     {
         var jsonContent = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
@@ -29,7 +32,7 @@ public class ApiService
 
         response.EnsureSuccessStatusCode();
     }
-    public void ImportData<T>(T data, string apiUrl)
+    public async Task ImportData<T>(T data, string apiUrl)
     {
         try
         {
@@ -57,6 +60,29 @@ public class ApiService
             // Log any other exceptions that might occur
             Console.WriteLine($"Unexpected error: {ex.Message}");
             throw;
+        }
+    }
+
+    public async Task ImportUnits(List<UnitDto> units, string apiUrl)
+    {
+        var apiService = new ApiService(_httpClient);
+
+        foreach (var unit in units)
+        {
+            try
+            {
+                apiService.ImportData(unit, apiUrl);
+            }
+            catch (HttpRequestException ex)
+            {
+                // Log the detailed error message
+                Console.WriteLine($"Request error for Unit: {unit.UnitName}, Error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Log any other exceptions that might occur
+                Console.WriteLine($"Unexpected error for Unit: {unit.UnitName}, Error: {ex.Message}");
+            }
         }
     }
 
@@ -144,5 +170,29 @@ public class ApiService
 
         return headNames;
     }
+    public async Task AuthenticateAsync(string authUrl, string username, string password)
+    {
+        var loginData = new { username, password };
+        var content = new StringContent(JsonSerializer.Serialize(loginData), Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = await _httpClient.PostAsync(authUrl, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var authResponse = JsonSerializer.Deserialize<AuthResponse>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (authResponse != null && !string.IsNullOrEmpty(authResponse.Token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Token);
+                Console.WriteLine("Authentication successful, token assigned.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Authentication failed: {response.StatusCode}");
+        }
+    }
+
 
 }

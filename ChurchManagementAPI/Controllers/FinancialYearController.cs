@@ -15,6 +15,13 @@ namespace ChurchManagementAPI.Controllers
             _financialYearService = financialYearService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllFinancialYears()
+        {
+            var financialYears = await _financialYearService.GetAllAsync();
+            return Ok(financialYears);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFinancialYearById(int id)
         {
@@ -24,25 +31,7 @@ namespace ChurchManagementAPI.Controllers
                 return NotFound();
             }
             return Ok(financialYear);
-        }
-
-        [HttpGet("parish/{parishId}/date/{date}")]
-        public async Task<IActionResult> GetFinancialYearByDate(int parishId, DateTime date)
-        {
-            var financialYear = await _financialYearService.GetFinancialYearByDateAsync(parishId, date);
-            if (financialYear == null)
-            {
-                return NotFound();
-            }
-            return Ok(financialYear);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAllFinancialYears()
-        {
-            var financialYears = await _financialYearService.GetAllAsync();
-            return Ok(financialYears);
-        }
+        }      
 
         [HttpPost]
         public async Task<IActionResult> AddFinancialYear([FromBody] FinancialYearDto financialYearDto)
@@ -69,6 +58,18 @@ namespace ChurchManagementAPI.Controllers
             await _financialYearService.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("parish/{parishId}/date/{date}")]
+        public async Task<IActionResult> GetFinancialYearByDate(int parishId, DateTime date)
+        {
+            var financialYear = await _financialYearService.GetFinancialYearByDateAsync(parishId, date);
+            if (financialYear == null)
+            {
+                return NotFound();
+            }
+            return Ok(financialYear);
+        }
+
 
         [HttpPost("{id}/lock")]
         public async Task<IActionResult> LockFinancialYear(int id)

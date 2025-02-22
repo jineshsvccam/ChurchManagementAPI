@@ -6,8 +6,8 @@ namespace ChurchContracts
     {
         Task<IEnumerable<DistrictDto>> GetAllAsync();
         Task<DistrictDto> GetByIdAsync(int id);
-        Task AddAsync(DistrictDto districtDto);
-        Task UpdateAsync(DistrictDto districtDto);
+        Task<DistrictDto> AddAsync(DistrictDto districtDto);
+        Task<DistrictDto> UpdateAsync(DistrictDto districtDto);
         Task DeleteAsync(int id);
     }
 }

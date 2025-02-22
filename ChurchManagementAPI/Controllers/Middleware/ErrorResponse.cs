@@ -1,4 +1,4 @@
-﻿namespace ChurchManagementAPI.Middleware
+﻿namespace ChurchManagementAPI.Controllers.Middleware
 {
     public class ErrorResponse
     {
