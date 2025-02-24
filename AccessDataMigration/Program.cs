@@ -1,4 +1,4 @@
-﻿using System;
+﻿\   using System;
 using System.Configuration;
 using System.Diagnostics;
 using System.Net.Http;
@@ -22,7 +22,7 @@ class Program
             string unitApiUrl = $"{baseUrl}/api/Unit";
             string familydueUrl = $"{baseUrl}/api/FamilyDues";
             string familyContributionUrl = $"{baseUrl}/api/FamilyContribution";
-            string contributionsettingurl = $"{baseUrl}/api/contribution - settings";
+            string contributionsettingurl = $"{baseUrl}/api/ContributionSettings";
          
             string transactionHeadsGetUrl = $"{baseUrl}/api/TransactionHead";
             string familyApiGetUrl = $"{baseUrl}/api/Family";

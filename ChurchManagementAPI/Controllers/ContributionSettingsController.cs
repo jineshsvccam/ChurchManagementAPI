@@ -1,11 +1,12 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
+using ChurchServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
     [ApiController]
-    [Route("api/contribution-settings")]
+    [Route("api/ContributionSettings")]
     public class ContributionSettingsController : ControllerBase
     {
         private readonly IContributionSettingsService _service;
@@ -16,9 +17,9 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? parishId)
         {
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(parishId);
             return Ok(result);
         }
 
@@ -51,6 +52,17 @@ namespace ChurchManagementAPI.Controllers
            await _service.DeleteAsync(id);
            
             return NoContent();
+        }
+
+        [HttpPost("create-or-update")]
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<ContributionSettingsDto> requests)
+        {
+            var createdEntries = await _service.AddOrUpdateAsync(requests);
+            if (createdEntries.Any())
+            {
+                return CreatedAtAction(nameof(GetAll), createdEntries);
+            }
+            return Ok();
         }
     }
 

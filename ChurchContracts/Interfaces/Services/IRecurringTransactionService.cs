@@ -9,5 +9,6 @@ namespace ChurchContracts
         Task<RecurringTransactionDto> AddAsync(RecurringTransactionDto dto);
         Task<RecurringTransactionDto> UpdateAsync(int id, RecurringTransactionDto dto);
         Task DeleteAsync(int id);
+        Task<IEnumerable<RecurringTransactionDto>> AddOrUpdateAsync(IEnumerable<RecurringTransactionDto> requests);
     }
 }

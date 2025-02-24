@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace ChurchDTOs.DTOs.Entities
 {
     public class FamilyContributionDto
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Action { get; set; }
         public int ContributionId { get; set; }
         public DateTime TransactionDate { get; set; }
         public string VoucherNumber { get; set; } = string.Empty;

@@ -9,7 +9,7 @@ namespace ChurchContracts
 {
     public interface IContributionSettingsRepository
     {
-        Task<IEnumerable<ContributionSettings>> GetAllAsync();
+        Task<IEnumerable<ContributionSettings>> GetAllAsync(int? parishId);
         Task<ContributionSettings?> GetByIdAsync(int settingId);
         Task<ContributionSettings> AddAsync(ContributionSettings contributionSettings);
         Task<ContributionSettings> UpdateAsync(ContributionSettings contributionSettings);

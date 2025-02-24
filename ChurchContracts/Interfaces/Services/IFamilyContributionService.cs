@@ -9,5 +9,6 @@ namespace ChurchContracts
         Task<FamilyContributionDto> AddAsync(FamilyContributionDto familyContributionDto);
         Task<FamilyContributionDto> UpdateAsync(FamilyContributionDto familyContributionDto);
         Task DeleteAsync(int id);
+        Task<IEnumerable<FamilyContributionDto>> AddOrUpdateAsync(IEnumerable<FamilyContributionDto> requests);
     }
 }

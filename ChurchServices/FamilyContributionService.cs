@@ -46,5 +46,32 @@ namespace ChurchServices
         {
             await _repository.DeleteAsync(id);
         }
+        public async Task<IEnumerable<FamilyContributionDto>> AddOrUpdateAsync(IEnumerable<FamilyContributionDto> requests)
+        {
+            var processedEntries = new List<FamilyContribution>();
+
+            foreach (var request in requests)
+            {
+                // Map DTO to entity
+                var familyEntity = _mapper.Map<FamilyContribution>(request);
+                if (request.Action == "INSERT")
+                {
+                    var createdFamily = await _repository.AddAsync(familyEntity);
+                    processedEntries.Add(createdFamily);
+                }
+                else if (request.Action == "UPDATE")
+                {
+                    var updatedFamily = await _repository.UpdateAsync(familyEntity);
+                    processedEntries.Add(updatedFamily);
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid action specified");
+                }
+            }
+            return _mapper.Map<IEnumerable<FamilyContributionDto>>(processedEntries);
+        }
+
+
     }
 }

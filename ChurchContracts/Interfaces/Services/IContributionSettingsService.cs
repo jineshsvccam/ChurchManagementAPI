@@ -5,11 +5,12 @@ namespace ChurchContracts
 {
     public interface IContributionSettingsService
     {
-        Task<IEnumerable<ContributionSettingsDto>> GetAllAsync();
+        Task<IEnumerable<ContributionSettingsDto>> GetAllAsync(int? parishId);
         Task<ContributionSettingsDto?> GetByIdAsync(int settingId);
-        Task<ContributionSettings> AddAsync(ContributionSettingsDto contributionSettingsDto);
-        Task<ContributionSettings> UpdateAsync(int settingId, ContributionSettingsDto contributionSettingsDto);
+        Task<ContributionSettingsDto> AddAsync(ContributionSettingsDto contributionSettingsDto);
+        Task<ContributionSettingsDto> UpdateAsync(int settingId, ContributionSettingsDto contributionSettingsDto);
         Task DeleteAsync(int settingId);
+        Task<IEnumerable<ContributionSettingsDto>> AddOrUpdateAsync(IEnumerable<ContributionSettingsDto> requests);
     }
 
 }

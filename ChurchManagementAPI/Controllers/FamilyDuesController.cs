@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
+using ChurchServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -46,6 +47,17 @@ namespace ChurchManagementAPI.Controllers
         {
             await _service.DeleteAsync(id);
             return NoContent();
+        }
+
+        [HttpPost("create-or-update")]
+        public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<FamilyDueDto> requests)
+        {
+            var createdEntries = await _service.AddOrUpdateAsync(requests);
+            if (createdEntries.Any())
+            {
+                return CreatedAtAction(nameof(GetAll), createdEntries);
+            }
+            return Ok();
         }
     }
 }
