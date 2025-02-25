@@ -1,13 +1,12 @@
 ﻿using ChurchContracts;
 using ChurchContracts.Utils;
-using ChurchDTOs.DTOs.Entities;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class TransactionController : ControllerBase
+
+    public class TransactionController : ManagementAuthorizedController
     {
         private readonly ITransactionService _transactionService;
 

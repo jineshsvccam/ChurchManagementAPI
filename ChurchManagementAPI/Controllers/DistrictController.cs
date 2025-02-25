@@ -1,14 +1,11 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
-using Microsoft.AspNetCore.Authorization;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class DistrictController : ControllerBase
+    public class DistrictController : AdminAuthorizedController
     {
         private readonly IDistrictService _districtService;
         private readonly ILogger<DistrictController> _logger;
@@ -20,7 +17,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<DistrictDto>>> GetAll()
         {
             _logger.LogInformation("Fetching all districts.");
@@ -30,7 +26,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DistrictDto>> GetById(int id)
         {
             var district = await _districtService.GetByIdAsync(id);
@@ -43,7 +38,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create(DistrictDto districtDto)
         {
             _logger.LogInformation("Creating new district: {@District}", districtDto);
@@ -59,7 +53,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DistrictDto>> Update(int id, DistrictDto districtDto)
         {
             _logger.LogInformation("Updating district with ID: {Id}", id);
@@ -82,7 +75,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting district with ID: {Id}", id);

@@ -1,21 +1,11 @@
 ﻿using ChurchContracts;
-using ChurchData;
 using ChurchDTOs.DTOs.Entities;
-using ChurchServices;
-using Microsoft.AspNetCore.Authorization;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class TransactionHeadController : ControllerBase
+    public class TransactionHeadController : ManagementAuthorizedController
     {
         private readonly ITransactionHeadService _transactionHeadService;
         private readonly ILogger<TransactionHeadController> _logger;
@@ -27,7 +17,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<IEnumerable<TransactionHeadDto>>> GetTransactionHeads([FromQuery] int? parishId, [FromQuery] int? headId)
         {
             _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
@@ -36,7 +25,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<TransactionHeadDto>> GetById(int id)
         {
             _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
@@ -50,7 +38,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<ActionResult<TransactionHeadDto>> Create([FromBody] TransactionHeadDto transactionHeadDto)
         {
             var createdHead = await _transactionHeadService.AddAsync(transactionHeadDto); // Assuming service method accepts and returns DTO
@@ -58,7 +45,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> Update(int id, [FromBody] TransactionHeadDto transactionHeadDto)
         {
             if (id != transactionHeadDto.HeadId)
@@ -80,7 +66,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting transaction head Id: {Id}", id);
@@ -90,7 +75,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost("create-or-update")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHeadDto> transactionHeadDtos)
         {
             _logger.LogInformation("Creating or updating transaction heads.");

@@ -1,19 +1,12 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
-using ChurchServices;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Authorize]
-    [Route("api/[controller]")]
-    public class FamilyController : ControllerBase
+    public class FamilyController : ManagementAuthorizedController
     {
         private readonly IFamilyService _familyService;
         private readonly ILogger<FamilyController> _logger;
@@ -24,8 +17,7 @@ namespace ChurchManagementAPI.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        [HttpGet]       
         public async Task<ActionResult<IEnumerable<FamilyDto>>> GetFamilies([FromQuery] int? parishId, [FromQuery] int? unitId, [FromQuery] int? familyId)
         {
             _logger.LogInformation("Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}", parishId, unitId, familyId);
@@ -33,8 +25,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(families);
         }
 
-        [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        [HttpGet("{id}")]      
         public async Task<ActionResult<FamilyDto>> GetById(int id)
         {
             _logger.LogInformation("Fetching family with Id: {FamilyId}", id);
@@ -47,16 +38,14 @@ namespace ChurchManagementAPI.Controllers
             return Ok(family);
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        [HttpPost]       
         public async Task<ActionResult<FamilyDto>> Create([FromBody] FamilyDto familyDto)
         {
             var createdFamily = await _familyService.AddAsync(familyDto);
             return CreatedAtAction(nameof(GetById), new { id = createdFamily.FamilyId }, createdFamily);
         }
 
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        [HttpPut("{id}")]      
         public async Task<IActionResult> Update(int id, [FromBody] FamilyDto familyDto)
         {
             _logger.LogInformation("Updating family with Id: {FamilyId}", id);
@@ -78,8 +67,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(updatedFamily);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        [HttpDelete("{id}")]        
         public async Task<IActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting family with Id: {FamilyId}", id);
@@ -88,8 +76,7 @@ namespace ChurchManagementAPI.Controllers
             return NoContent();
         }
 
-        [HttpPost("create-or-update")]
-        [Authorize(Roles = "Admin,Secretary,Trustee")]
+        [HttpPost("create-or-update")]       
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<FamilyDto> requests)
         {
             _logger.LogInformation("Creating or updating {FamilyCount} families.", requests.Count());

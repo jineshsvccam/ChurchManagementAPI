@@ -1,16 +1,11 @@
 ﻿using ChurchContracts;
-using ChurchDTOs.DTOs;
 using ChurchDTOs.DTOs.Entities;
-using Microsoft.AspNetCore.Authorization;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class DioceseController : ControllerBase
+    public class DioceseController : AdminAuthorizedController
     {
         private readonly IDioceseService _dioceseService;
         private readonly ILogger<DioceseController> _logger;
@@ -22,7 +17,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<DioceseDto>>> GetAll()
         {
             _logger.LogInformation("Fetching all dioceses.");
@@ -32,7 +26,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DioceseDto>> GetById(int id)
         {
             var diocese = await _dioceseService.GetByIdAsync(id);
@@ -47,7 +40,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Create(DioceseDto dioceseDto)
         {
             _logger.LogInformation("Creating new diocese: {@DioceseDto}", dioceseDto);
@@ -57,7 +49,7 @@ namespace ChurchManagementAPI.Controllers
                 _logger.LogWarning("Invalid diocese model received.");
                 return BadRequest(ModelState);
             }
-            
+
             var createdDiocese = await _dioceseService.AddAsync(dioceseDto);
 
             _logger.LogInformation("Diocese created with ID: {Id}", createdDiocese.DioceseId);
@@ -65,9 +57,7 @@ namespace ChurchManagementAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = createdDiocese.DioceseId }, createdDiocese);
         }
 
-
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DioceseDto>> Update(int id, DioceseDto dioceseDto)
         {
             _logger.LogInformation("Updating diocese with ID: {Id}", id);
@@ -83,7 +73,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Delete(int id)
         {
             _logger.LogInformation("Deleting diocese with ID: {Id}", id);

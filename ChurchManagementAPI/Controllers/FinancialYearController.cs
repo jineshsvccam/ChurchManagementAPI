@@ -1,12 +1,11 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class FinancialYearController : ControllerBase
+    public class FinancialYearController : ManagementAuthorizedController
     {
         private readonly IFinancialYearService _financialYearService;
 

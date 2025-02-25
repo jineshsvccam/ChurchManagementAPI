@@ -1,14 +1,11 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
-using ChurchServices;
-using Microsoft.AspNetCore.Authorization;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RecurringTransactionController : ControllerBase
+    public class RecurringTransactionController : ManagementAuthorizedController
     {
         private readonly IRecurringTransactionService _service;
 

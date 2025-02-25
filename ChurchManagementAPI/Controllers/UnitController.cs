@@ -1,12 +1,11 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
-{
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UnitController : ControllerBase
+{   
+    public class UnitController : ManagementAuthorizedController
     {
         private readonly IUnitService _unitService;
 

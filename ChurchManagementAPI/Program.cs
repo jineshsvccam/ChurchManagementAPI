@@ -137,6 +137,28 @@ builder.Services.AddAuthentication(options =>
         NameClaimType = ClaimTypes.NameIdentifier,  //  Ensure NameClaimType is set
         RoleClaimType = ClaimTypes.Role
     };
+    // Only override OnForbidden to return a custom 403 message when the user is authenticated
+    options.Events = new JwtBearerEvents
+    {
+        OnForbidden = context =>
+        {
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            // You can customize the response message here.
+            return context.Response.WriteAsync("{\"error\": \"Access forbidden: You do not have the required permissions to access this resource.\"}");
+        }
+    };
+});
+
+// Add Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole("Admin"));
+    options.AddPolicy("ManagementPolicy", policy =>
+        policy.RequireRole("Admin", "Secretary", "Trustee"));
+    options.AddPolicy("FamilyMemberPolicy", policy =>
+        policy.RequireRole("Admin", "Secretary", "Trustee", "FamilyMember"));
 });
 
 builder.Services.AddControllers();
@@ -206,19 +228,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChurchManagementAPI v1"));
 
-    // Disable authentication in development mode
-    app.Use(async (context, next) =>
-    {
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, "1"), // Default User ID
-            new Claim(ClaimTypes.Name, "DevUser"),
-            new Claim(ClaimTypes.Role, "Admin") // Set default role(s)
-        }, "mock"));
+    //// Disable authentication in development mode
+    //app.Use(async (context, next) =>
+    //{
+    //    var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+    //    {
+    //        new Claim(ClaimTypes.NameIdentifier, "1"), // Default User ID
+    //        new Claim(ClaimTypes.Name, "DevUser"),
+    //        new Claim(ClaimTypes.Role, "Admin") // Set default role(s)
+    //    }, "mock"));
 
-        context.User = user;
-        await next();
-    });
+    //    context.User = user;
+    //    await next();
+    //});
 }
 
 // ✅ Ensure authentication runs before middleware

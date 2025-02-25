@@ -1,12 +1,12 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Utils;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ReportsController : ControllerBase
+   
+    public class ReportsController : ManagementAuthorizedController
     {
         private readonly ILedgerService _ledgerService;
         private readonly IBankConsolidatedStatementService _bankService;

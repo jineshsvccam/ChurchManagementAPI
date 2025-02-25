@@ -1,13 +1,12 @@
 ﻿using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
-using ChurchServices;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class FamilyContributionController : ControllerBase
+
+    public class FamilyContributionController : ManagementAuthorizedController
     {
         private readonly IFamilyContributionService _service;
 

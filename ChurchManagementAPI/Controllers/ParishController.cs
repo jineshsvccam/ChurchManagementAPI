@@ -1,15 +1,12 @@
-﻿using ChurchContracts;
+﻿using AutoMapper;
+using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
+using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
-using Microsoft.Extensions.Logging;
-using ChurchData;
 
 namespace ChurchManagementAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ParishController : ControllerBase
+    public class ParishController : AdminAuthorizedController
     {
         private readonly IParishService _parishService;
         private readonly IMapper _mapper;
@@ -66,9 +63,8 @@ namespace ChurchManagementAPI.Controllers
                 return BadRequest();
             }
 
-            
-           var updatedParish= await _parishService.UpdateAsync(parishDto);
-         
+            var updatedParish = await _parishService.UpdateAsync(parishDto);
+
             if (updatedParish == null)
             {
                 return NotFound();
@@ -76,7 +72,6 @@ namespace ChurchManagementAPI.Controllers
             _logger.LogInformation("Parish with ID {ParishId} updated successfully.", id);
 
             return Ok(updatedParish);
-            
         }
 
         [HttpDelete("{id}")]
