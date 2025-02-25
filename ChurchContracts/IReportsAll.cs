@@ -19,7 +19,12 @@ namespace ChurchContracts
 
     public interface IBankConsolidatedStatementRepository
     {
-        Task<BankStatementConsolidatedDTO> GetBankStatementAsync(int parishId, DateTime? startDate, DateTime? endDate, bool includeTransactions = false);
+        Task<BankStatementConsolidatedDTO> GetBankStatementAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate,
+            bool includeTransactions = false,
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
 
     #endregion
@@ -36,7 +41,12 @@ namespace ChurchContracts
     }
     public interface IBankConsolidatedStatementService
     {
-        Task<BankStatementConsolidatedDTO> GetBankStatementAsync(int parishId, DateTime? startDate, DateTime? endDate, bool includeTransactions = false);
+        Task<BankStatementConsolidatedDTO> GetBankStatementAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate,
+            bool includeTransactions = false,
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
     #endregion
 }

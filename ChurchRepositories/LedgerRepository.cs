@@ -1,4 +1,5 @@
-﻿using ChurchContracts;
+﻿using AutoMapper;
+using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +9,12 @@ namespace ChurchRepositories
     public class LedgerRepository : ILedgerRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public LedgerRepository(ApplicationDbContext context)
+        public LedgerRepository(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
@@ -44,24 +47,12 @@ namespace ChurchRepositories
             var transactions = await query.ToListAsync();
 
             // Map each transaction into our custom DTO based on the chosen customization option.
-            var transactionsList = transactions.Select(t => new FinancialReportCustomDTO
-            {
-                TransactionId = t.TransactionId,
-                TrDate = t.TrDate,
-                VrNo = t.VrNo,
-                TransactionType = t.TransactionType,
-                IncomeAmount = t.IncomeAmount,
-                ExpenseAmount = t.ExpenseAmount,
-                Description = t.Description,
-                HeadId = (customizationOption == FinancialReportCustomizationOption.IdsOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.HeadId : (int?)null,
-                HeadName = (customizationOption == FinancialReportCustomizationOption.NamesOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.HeadName : null,
-                FamilyId = (customizationOption == FinancialReportCustomizationOption.IdsOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.FamilyId : (int?)null,
-                FamilyName = (customizationOption == FinancialReportCustomizationOption.NamesOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.FamilyName : null,
-                BankId = (customizationOption == FinancialReportCustomizationOption.IdsOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.BankId : (int?)null,
-                BankName = (customizationOption == FinancialReportCustomizationOption.NamesOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.BankName : null,
-                ParishId = (customizationOption == FinancialReportCustomizationOption.IdsOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.ParishId : (int?)null
-               // ParishName = (customizationOption == FinancialReportCustomizationOption.NamesOnly || customizationOption == FinancialReportCustomizationOption.Both) ? t.ParishName : null
-            }).ToList();
+
+            // Use AutoMapper to map transactions into FinancialReportCustomDTO list.
+            var mappedTransactions = includeTransactions
+                 ? _mapper.Map<List<FinancialReportCustomDTO>>(transactions, opts =>
+                    opts.Items["CustomizationOption"] = customizationOption)
+                 : new List<FinancialReportCustomDTO>();
 
             // Group transactions by Head. We group by both HeadId and HeadName but adjust the output based on customization.
             var groupedTransactions = transactions
@@ -78,7 +69,7 @@ namespace ChurchRepositories
             var report = new LedgerReportDTO
             {
                 Heads = groupedTransactions,
-                Transactions = includeTransactions ? transactionsList : new List<FinancialReportCustomDTO>()
+                Transactions = includeTransactions ? mappedTransactions : new List<FinancialReportCustomDTO>()
             };
 
             return new List<LedgerReportDTO> { report };

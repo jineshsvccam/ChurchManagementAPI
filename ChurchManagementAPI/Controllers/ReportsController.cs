@@ -34,9 +34,10 @@ namespace ChurchManagementAPI.Controllers
             [FromQuery] int parishId,
             [FromQuery] DateTime? startDate,
             [FromQuery] DateTime? endDate,
-            [FromQuery] bool includeTransactions = false)
+            [FromQuery] bool includeTransactions = false,
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
-            var bankStatement = await _bankService.GetBankStatementAsync(parishId, startDate, endDate, includeTransactions);
+            var bankStatement = await _bankService.GetBankStatementAsync(parishId, startDate, endDate, includeTransactions, customizationOption);
             return Ok(bankStatement);
         }
 

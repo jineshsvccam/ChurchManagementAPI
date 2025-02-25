@@ -14,6 +14,7 @@ namespace ChurchData.EntityConfigurations
         public void Configure(EntityTypeBuilder<BankDTO> builder)
         {
             builder.HasNoKey();
+            builder.Property(e => e.BankId).HasColumnName("bank_id");
             builder.Property(b => b.BankName).HasColumnName("bank_name");
             builder.Property(b => b.OpeningBalance).HasColumnName("opening_balance");
             builder.Property(b => b.ClosingBalance).HasColumnName("closing_balance");

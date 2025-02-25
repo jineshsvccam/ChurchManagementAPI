@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -27,16 +28,20 @@ namespace ChurchDTOs.DTOs.Utils
     public class BankStatementConsolidatedDTO
     {
         public List<BankDTO> Banks { get; set; } = new List<BankDTO>();
-        public List<FinancialReportsView> Transactions { get; set; } = new List<FinancialReportsView>();
+        public List<FinancialReportCustomDTO> Transactions { get; set; } = new List<FinancialReportCustomDTO>();
     }
 
     public class BankDTO
     {
-        public string BankName { get; set; }
-        public decimal OpeningBalance { get; set; }
-        public decimal ClosingBalance { get; set; }
+      
+        public int? BankId { get; set; }      
+        public string BankName { get; set; }     
+        public decimal OpeningBalance { get; set; }       
+        public decimal ClosingBalance { get; set; }       
         public decimal Balance { get; set; }
     }
+
+
 
     public class TrialBalanceDTO
     {
