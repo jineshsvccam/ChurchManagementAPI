@@ -70,7 +70,7 @@ namespace ChurchRepositories
             await _context.TransactionHeads.AddAsync(transactionHead);
             await _context.SaveChangesAsync();
 
-            await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, SerializeTransactionHead(transactionHead));
+            await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, Extensions.Serialize(transactionHead));
 
             _logger.LogInformation("Successfully added transaction head Id: {Id}", transactionHead.HeadId);
             return transactionHead;
@@ -91,12 +91,12 @@ namespace ChurchRepositories
                 throw new KeyNotFoundException("TransactionHead not found");
             }
 
-            var oldValues = CloneTransactionHead(existingTransactionHead);
+            var oldValues =existingTransactionHead.Clone();
 
             _context.TransactionHeads.Update(transactionHead);
             await _context.SaveChangesAsync();
 
-            await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, SerializeTransactionHead(oldValues), SerializeTransactionHead(transactionHead));
+            await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(transactionHead));
 
             _logger.LogInformation("Successfully updated transaction head Id: {Id}", transactionHead.HeadId);
             return transactionHead;
@@ -117,37 +117,10 @@ namespace ChurchRepositories
             _context.TransactionHeads.Remove(transactionHead);
             await _context.SaveChangesAsync();
 
-            await _logsHelper.LogChangeAsync("transaction_heads", id, "DELETE", userId, SerializeTransactionHead(transactionHead), null);
+            await _logsHelper.LogChangeAsync("transaction_heads", id, "DELETE", userId, Extensions.Serialize(transactionHead), null);
 
             _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
         }
 
-        private string SerializeTransactionHead(TransactionHead transactionHead)
-        {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(new
-            {
-                transactionHead.HeadId,
-                transactionHead.ParishId,
-                transactionHead.HeadName,
-                transactionHead.Type,
-                transactionHead.Description
-            });
-        }
-
-        private TransactionHead CloneTransactionHead(TransactionHead source)
-        {
-            return new TransactionHead
-            {
-                HeadId = source.HeadId,
-                ParishId = source.ParishId,
-                HeadName = source.HeadName,
-                Type = source.Type,
-                IsMandatory = source.IsMandatory,
-                Description = source.Description,
-                Aramanapct = source.Aramanapct,
-                Ordr = source.Ordr,
-                HeadNameMl = source.HeadNameMl
-            };
-        }
     }
 }

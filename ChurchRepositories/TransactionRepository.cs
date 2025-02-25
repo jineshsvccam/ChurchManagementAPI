@@ -1,6 +1,8 @@
-﻿using ChurchContracts;
+﻿using ChurchCommon.Utils;
+using ChurchContracts;
 using ChurchContracts.Utils;
 using ChurchData;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -10,11 +12,16 @@ namespace ChurchRepositories
     {
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _cache;
+        private readonly LogsHelper _logsHelper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TransactionRepository(ApplicationDbContext context, IMemoryCache cache)
+        public TransactionRepository(ApplicationDbContext context, IMemoryCache cache, LogsHelper logsHelper,
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _cache = cache;
+            _logsHelper = logsHelper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<PagedResult<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize)
@@ -77,18 +84,23 @@ namespace ChurchRepositories
 
         public async Task<Transaction> AddAsync(Transaction transaction)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             await _context.Transactions.AddAsync(transaction);
             await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "INSERT", userId, null, Extensions.Serialize(transaction));
             return transaction;
         }
 
         public async Task<Transaction> UpdateAsync(Transaction transaction)
         {
             var existingTransaction = await _context.Transactions.FindAsync(transaction.TransactionId);
+            Transaction oldValues = transaction.Clone();
             if (existingTransaction != null)
             {
+                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
                 _context.Entry(existingTransaction).CurrentValues.SetValues(transaction);
                 await _context.SaveChangesAsync();
+                await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(transaction));
                 return transaction;
             }
             else
@@ -100,15 +112,18 @@ namespace ChurchRepositories
         public async Task DeleteAsync(int id)
         {
             var transaction = await _context.Transactions.FindAsync(id);
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             if (transaction != null)
             {
                 _context.Transactions.Remove(transaction);
                 await _context.SaveChangesAsync();
+                await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "DELETE", userId, Extensions.Serialize(transaction), null);
             }
             else
             {
                 throw new KeyNotFoundException("Transaction not found");
             }
         }
+
     }
 }

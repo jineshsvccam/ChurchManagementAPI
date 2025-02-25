@@ -11,6 +11,7 @@ namespace ChurchManagementAPI.Controllers.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<RequestLoggingMiddleware> _logger;
+        private const int MaxResponseBodyLength = 1000; // Limit response body size in logs
 
         public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
         {
@@ -38,14 +39,21 @@ namespace ChurchManagementAPI.Controllers.Middleware
             {
                 await _next(context);
 
-                responseBodyStream.Seek(0, SeekOrigin.Begin);
-                var responseBody = await new StreamReader(responseBodyStream, Encoding.UTF8).ReadToEndAsync();
-                responseBodyStream.Seek(0, SeekOrigin.Begin);
+                if (context.Request.Method != "GET") // Avoid logging large GET responses
+                {
+                    responseBodyStream.Seek(0, SeekOrigin.Begin);
+                    var responseBody = await new StreamReader(responseBodyStream, Encoding.UTF8).ReadToEndAsync();
+                    responseBodyStream.Seek(0, SeekOrigin.Begin);
 
-                _logger.LogInformation("Response: {StatusCode} for {RequestPath} | Time Taken: {ElapsedMs} ms | Response Body: {ResponseBody}",
-                    context.Response.StatusCode, requestPath, stopwatch.ElapsedMilliseconds, responseBody);
+                    if (responseBody.Length > MaxResponseBodyLength)
+                    {
+                        responseBody = responseBody.Substring(0, MaxResponseBodyLength) + "... [Truncated]";
+                    }
 
-                // Copy the response body back to the original stream
+                    _logger.LogInformation("Response: {StatusCode} for {RequestPath} | Time Taken: {ElapsedMs} ms | Response Body: {ResponseBody}",
+                        context.Response.StatusCode, requestPath, stopwatch.ElapsedMilliseconds, responseBody);
+                }
+
                 await responseBodyStream.CopyToAsync(originalResponseBodyStream);
             }
             finally
@@ -64,7 +72,7 @@ namespace ChurchManagementAPI.Controllers.Middleware
             using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, leaveOpen: true);
             var body = await reader.ReadToEndAsync();
             context.Request.Body.Position = 0;
-            return body;
+            return body.Length > MaxResponseBodyLength ? body.Substring(0, MaxResponseBodyLength) + "... [Truncated]" : body;
         }
     }
 }

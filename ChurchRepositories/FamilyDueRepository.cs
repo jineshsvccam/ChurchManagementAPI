@@ -1,7 +1,10 @@
-﻿using ChurchContracts;
+﻿using ChurchCommon.Utils;
+using ChurchContracts;
 using ChurchData;
-
+using ChurchDTOs.DTOs.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,11 +14,21 @@ namespace ChurchRepositories
     public class FamilyDueRepository : IFamilyDueRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly LogsHelper _logsHelper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<TransactionHeadRepository> _logger;
 
-        public FamilyDueRepository(ApplicationDbContext context)
+        public FamilyDueRepository(ApplicationDbContext context,
+                                 IHttpContextAccessor httpContextAccessor,
+                                 ILogger<TransactionHeadRepository> logger,
+                                  LogsHelper logsHelper)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            _logsHelper = logsHelper;
+            _logger = logger;
         }
+
 
         public async Task<IEnumerable<FamilyDue>> GetAllAsync(int? parishId)
         {
@@ -32,18 +45,23 @@ namespace ChurchRepositories
 
         public async Task<FamilyDue> AddAsync(FamilyDue familyDue)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             await _context.FamilyDues.AddAsync(familyDue);
             await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("family_dues", familyDue.DuesId, "INSERT", userId, null, Extensions.Serialize(familyDue));
             return familyDue;
         }
 
         public async Task<FamilyDue> UpdateAsync(FamilyDue familyDue)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var existingDue = await _context.FamilyDues.FindAsync(familyDue.DuesId);
             if (existingDue != null)
             {
+                var oldValues = existingDue.Clone();
                 _context.Entry(existingDue).CurrentValues.SetValues(familyDue);
                 await _context.SaveChangesAsync();
+                await _logsHelper.LogChangeAsync("family_dues", familyDue.DuesId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(familyDue));
                 return familyDue;
             }
             else
@@ -54,11 +72,13 @@ namespace ChurchRepositories
 
         public async Task DeleteAsync(int id)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var due = await _context.FamilyDues.FindAsync(id);
             if (due != null)
             {
                 _context.FamilyDues.Remove(due);
                 await _context.SaveChangesAsync();
+                await _logsHelper.LogChangeAsync("family_dues", due.DuesId, "DELETE", userId, null, Extensions.Serialize(due));
             }
             else
             {

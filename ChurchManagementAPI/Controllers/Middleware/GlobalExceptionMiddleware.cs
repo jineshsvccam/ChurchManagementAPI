@@ -1,8 +1,5 @@
 ﻿using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
 
 namespace ChurchManagementAPI.Controllers.Middleware
 {
@@ -49,26 +46,57 @@ namespace ChurchManagementAPI.Controllers.Middleware
                     break;
 
                 case ArgumentNullException:
+                case ArgumentException:
                     statusCode = HttpStatusCode.BadRequest;
                     errorMessage = "Invalid request parameters.";
                     break;
 
-                    // Add more custom exception handlers if needed.
+                case InvalidOperationException:
+                    statusCode = HttpStatusCode.BadRequest;
+                    errorMessage = "Invalid operation.";
+                    break;
+
+                case FormatException:
+                    statusCode = HttpStatusCode.BadRequest;
+                    errorMessage = "Invalid format.";
+                    break;
+
+                case TimeoutException:
+                    statusCode = HttpStatusCode.RequestTimeout;
+                    errorMessage = "Request timed out.";
+                    break;
+
+                    // Default case: Keep it as InternalServerError
             }
 
-            _logger.LogError(exception, "Exception: {ExceptionType} | Path: {RequestPath} | Message: {ErrorMessage}",
+            // Log full exception details including inner exceptions
+            _logger.LogError(exception, "Exception Occurred: {ExceptionType} | Path: {RequestPath} | Message: {ErrorMessage}",
                 exception.GetType().Name, context.Request.Path, exception.Message);
+
+            LogInnerExceptions(exception);
 
             var errorResponse = new
             {
                 StatusCode = (int)statusCode,
                 Message = errorMessage,
-                Detailed = _env.IsDevelopment() ? exception.Message : null // Show detailed message only in development
+                Detailed = _env.IsDevelopment() ? exception.Message : null, // Show detailed message only in development
+                StackTrace = _env.IsDevelopment() ? exception.StackTrace : null
             };
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;
             await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
+        }
+
+       
+        private void LogInnerExceptions(Exception ex)
+        {
+            Exception inner = ex.InnerException;
+            while (inner != null)
+            {
+                _logger.LogError(inner, "Inner Exception: {ExceptionType} | Message: {ErrorMessage}", inner.GetType().Name, inner.Message);
+                inner = inner.InnerException;
+            }
         }
     }
 }

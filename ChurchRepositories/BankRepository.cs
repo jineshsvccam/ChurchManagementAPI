@@ -1,20 +1,29 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ChurchContracts;
+﻿using ChurchCommon.Utils;
 using ChurchContracts.ChurchContracts;
 using ChurchData;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Logging;
 
 namespace ChurchRepositories
 {
     public class BankRepository : IBankRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<TransactionHeadRepository> _logger;
+        private readonly LogsHelper _logsHelper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public BankRepository(ApplicationDbContext context)
+        public BankRepository(ApplicationDbContext context,
+                                 IHttpContextAccessor httpContextAccessor,
+                                ILogger<TransactionHeadRepository> logger,
+                                 LogsHelper logsHelper)
         {
             _context = context;
+            _logger = logger;
+            _logsHelper = logsHelper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<Bank>> GetBanksAsync(int? parishId, int? bankId)
@@ -41,18 +50,24 @@ namespace ChurchRepositories
 
         public async Task<Bank> AddAsync(Bank bank)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             await _context.Banks.AddAsync(bank);
             await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("banks", bank.BankId, "INSERT", userId, null, Extensions.Serialize(bank));
             return bank;
         }
 
         public async Task<Bank> UpdateAsync(Bank bank)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var existingBank = await _context.Banks.FindAsync(bank.BankId);
             if (existingBank != null)
             {
+                var oldValues = existingBank.Clone();
+
                 _context.Entry(existingBank).CurrentValues.SetValues(bank);
                 await _context.SaveChangesAsync();
+                await _logsHelper.LogChangeAsync("banks", bank.BankId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(bank));
                 return bank;
             }
             else
@@ -63,11 +78,13 @@ namespace ChurchRepositories
 
         public async Task DeleteAsync(int id)
         {
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var bank = await _context.Banks.FindAsync(id);
             if (bank != null)
             {
                 _context.Banks.Remove(bank);
                 await _context.SaveChangesAsync();
+                await _logsHelper.LogChangeAsync("banks", bank.BankId, "DELETE", userId, Extensions.Serialize(bank), null);
             }
             else
             {

@@ -74,7 +74,7 @@ namespace ChurchRepositories
             await _context.SaveChangesAsync();
             _logger.LogInformation("Family added successfully with Id: {Id}", family.FamilyId);
 
-            await _logsHelper.LogChangeAsync("families", family.FamilyId, "INSERT", userId, null, SerializeFamilies(family));
+            await _logsHelper.LogChangeAsync("families", family.FamilyId, "INSERT", userId, null, Extensions.Serialize(family));
             return family;
         }
 
@@ -89,12 +89,12 @@ namespace ChurchRepositories
                 _logger.LogWarning("Family with Id: {Id} not found", family.FamilyId);
                 throw new KeyNotFoundException("Family not found");
             }
-            var oldValues = CloneFamily(existingFamily);
+            var oldValues = family.Clone();
 
             _context.Entry(existingFamily).CurrentValues.SetValues(family);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Family updated successfully with Id: {Id}", family.FamilyId);
-            await _logsHelper.LogChangeAsync("families", family.FamilyId, "UPDATE", userId, SerializeFamilies(oldValues), SerializeFamilies(family));
+            await _logsHelper.LogChangeAsync("families", family.FamilyId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(family));
             return family;
         }
 
@@ -113,25 +113,8 @@ namespace ChurchRepositories
             _context.Families.Remove(family);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Family deleted successfully with Id: {Id}", id);
-            await _logsHelper.LogChangeAsync("families", family.FamilyId, "DELETE", userId, SerializeFamilies(family), null);
+            await _logsHelper.LogChangeAsync("families", family.FamilyId, "DELETE", userId, Extensions.Serialize(family), null);
         }
 
-        private string SerializeFamilies(Family family)
-        {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(family);
-        }
-        private Family CloneFamily(Family source)
-        {
-            return new Family
-            {
-                FamilyId = source.FamilyId,
-                FamilyName = source.FamilyName,
-                ParishId = source.ParishId,
-                UnitId = source.UnitId,
-                Address = source.Address,
-                FamilyNumber = source.FamilyNumber,
-                HeadName = source.HeadName
-            };
-        }
     }
 }
