@@ -28,7 +28,7 @@ namespace ChurchCommon.Utils
         public static T CloneviaJson<T>(this T source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(source));
+            return System.Text.Json.JsonSerializer.Deserialize<T>(System.Text.Json.JsonSerializer.Serialize(source));
         }
         public static string Serialize<T>(T obj)
         {

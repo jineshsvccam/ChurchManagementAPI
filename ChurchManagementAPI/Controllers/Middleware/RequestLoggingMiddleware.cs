@@ -39,7 +39,7 @@ namespace ChurchManagementAPI.Controllers.Middleware
             {
                 await _next(context);
 
-                if (context.Request.Method != "GET") // Avoid logging large GET responses
+              //  if (context.Request.Method != "GET") // Avoid logging large GET responses
                 {
                     responseBodyStream.Seek(0, SeekOrigin.Begin);
                     var responseBody = await new StreamReader(responseBodyStream, Encoding.UTF8).ReadToEndAsync();

@@ -17,7 +17,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int? parishId)
+        public async Task<ActionResult<IEnumerable<ContributionSettingsDto>>> GetAll([FromQuery] int? parishId)
         {
             var result = await _service.GetAllAsync(parishId);
             return Ok(result);
@@ -42,8 +42,8 @@ namespace ChurchManagementAPI.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] ContributionSettingsDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
-           
-            return NoContent();
+
+            return Ok(updated);
         }
 
         [HttpDelete("{id}")]
@@ -62,7 +62,7 @@ namespace ChurchManagementAPI.Controllers
             {
                 return CreatedAtAction(nameof(GetAll), createdEntries);
             }
-            return Ok();
+            return Ok(createdEntries);
         }
     }
 

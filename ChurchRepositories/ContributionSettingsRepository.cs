@@ -2,7 +2,6 @@
 using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
-using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
