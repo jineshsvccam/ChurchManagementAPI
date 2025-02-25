@@ -228,19 +228,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ChurchManagementAPI v1"));
 
-    //// Disable authentication in development mode
-    //app.Use(async (context, next) =>
-    //{
-    //    var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-    //    {
-    //        new Claim(ClaimTypes.NameIdentifier, "1"), // Default User ID
-    //        new Claim(ClaimTypes.Name, "DevUser"),
-    //        new Claim(ClaimTypes.Role, "Admin") // Set default role(s)
-    //    }, "mock"));
+    // Disable authentication in development mode
+    app.Use(async (context, next) =>
+    {
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, "1"), // Default User ID
+            new Claim(ClaimTypes.Name, "DevUser"),
+            new Claim(ClaimTypes.Role, "Admin") // Set default role(s)
+        }, "mock"));
 
-    //    context.User = user;
-    //    await next();
-    //});
+        context.User = user;
+        await next();
+    });
 }
 
 // ✅ Ensure authentication runs before middleware

@@ -22,9 +22,10 @@ namespace ChurchManagementAPI.Controllers
             [FromQuery] int parishId,
             [FromQuery] DateTime? startDate,
             [FromQuery] DateTime? endDate,
-            [FromQuery] bool includeTransactions = false)
+            [FromQuery] bool includeTransactions = false,
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
-            var ledger = await _ledgerService.GetLedgerAsync(parishId, startDate, endDate, includeTransactions);
+            var ledger = await _ledgerService.GetLedgerAsync(parishId, startDate, endDate, includeTransactions, customizationOption);
             return Ok(ledger);
         }
 
