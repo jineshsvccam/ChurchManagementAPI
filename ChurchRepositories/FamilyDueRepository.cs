@@ -78,7 +78,7 @@ namespace ChurchRepositories
             {
                 _context.FamilyDues.Remove(due);
                 await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("family_dues", due.DuesId, "DELETE", userId, null, Extensions.Serialize(due));
+                await _logsHelper.LogChangeAsync("family_dues", due.DuesId, "DELETE", userId, Extensions.Serialize(due), null);
             }
             else
             {

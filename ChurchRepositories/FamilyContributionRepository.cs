@@ -21,7 +21,7 @@ namespace ChurchRepositories
         public FamilyContributionRepository(ApplicationDbContext context,
                                   IHttpContextAccessor httpContextAccessor,
                                   ILogger<TransactionHeadRepository> logger,
-                                   LogsHelper logsHelper)        
+                                   LogsHelper logsHelper)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
@@ -79,7 +79,7 @@ namespace ChurchRepositories
             {
                 _context.FamilyContributions.Remove(contribution);
                 await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("family_contributions", contribution.ContributionId, "DELETE", userId, null, Extensions.Serialize(contribution));
+                await _logsHelper.LogChangeAsync("family_contributions", contribution.ContributionId, "DELETE", userId, Extensions.Serialize(contribution), null);
             }
             else
             {

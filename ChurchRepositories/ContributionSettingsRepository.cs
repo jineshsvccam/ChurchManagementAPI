@@ -83,7 +83,7 @@ namespace ChurchRepositories
             {
                 _context.ContributionSettings.Remove(contributionSetting);
                 await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("contribution_settings", contributionSetting.SettingId, "DELETE", userId, null, Extensions.Serialize(contributionSetting));
+                await _logsHelper.LogChangeAsync("contribution_settings", contributionSetting.SettingId, "DELETE", userId, Extensions.Serialize(contributionSetting),null);
             }
             else
             {
