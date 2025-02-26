@@ -69,6 +69,22 @@ namespace ChurchDTOs.DTOs.Utils
        public List<FinancialReportNoticeBoardDTO> UnpaidMembers { get; set; }
     }
 
+    public class AllTransactionReportDTO
+    {
+        public List<FinancialReportCustomDTO> Transactions { get; set; }
+    }
+
+    public class AramanaReportDTO
+    {
+        public List<AramanaDetails> AramanaDetails { get; set; }
+    }
+    public class AramanaDetails
+    {
+        public string HeadName { get; set; }
+        public decimal ToBePaid { get; set; }
+        public decimal Paid { get; set; }
+        public decimal Balance { get; set; }
+    }
     public class FinancialReportNoticeBoardDTO
     {
         public DateTime TrDate { get; set; }

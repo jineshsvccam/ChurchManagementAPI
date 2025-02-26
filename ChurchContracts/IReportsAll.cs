@@ -53,6 +53,21 @@ namespace ChurchContracts
             string headName ,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
+    public interface IAllTransactionsRepository
+    {
+        Task<AllTransactionReportDTO> GetAllTransactionAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate,           
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+    }
+    public interface IAramanaReportRepository
+    {
+        Task<AramanaReportDTO> GetAramanaReportAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate);
+    }
 
 
     #endregion
@@ -102,6 +117,22 @@ namespace ChurchContracts
             DateTime? endDate,
             string headName,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+    }
+    public interface IAllTransactionsService
+    {
+        Task<AllTransactionReportDTO> GetAllTransactionAsync(
+                   int parishId,
+                   DateTime? startDate,
+                   DateTime? endDate,
+                   FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+
+    }
+    public interface IAramanaReportService
+    {
+        Task<AramanaReportDTO> GetAramanaReportAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate);
     }
     #endregion
 }

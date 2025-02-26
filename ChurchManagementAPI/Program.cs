@@ -109,6 +109,11 @@ builder.Services.AddScoped<ICashBookRepository, CashBookRepository>();
 builder.Services.AddScoped<ICashBookService, CashBookService>();
 builder.Services.AddScoped<INoticeBoardRepository, NoticeBoardRepository>();
 builder.Services.AddScoped<INoticeBoardService, NoticeBoardService>();
+builder.Services.AddScoped<IAllTransactionsRepository, AllTransacionsRepository>();
+builder.Services.AddScoped<IAllTransactionsService, AllTransactionsService>();
+builder.Services.AddScoped<IAramanaReportRepository, AramanaReportRepository>();
+builder.Services.AddScoped<IAramanaReportService, AramanaReportService>();
+
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
