@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -65,8 +66,8 @@ namespace ChurchDTOs.DTOs.Utils
 
     public class NoticeBoardDTO
     {
-       public List<FinancialReportNoticeBoardDTO> PaidMembers { get; set; }
-       public List<FinancialReportNoticeBoardDTO> UnpaidMembers { get; set; }
+        public List<FinancialReportNoticeBoardDTO> PaidMembers { get; set; }
+        public List<FinancialReportNoticeBoardDTO> UnpaidMembers { get; set; }
     }
 
     public class AllTransactionReportDTO
@@ -85,10 +86,39 @@ namespace ChurchDTOs.DTOs.Utils
         public decimal Paid { get; set; }
         public decimal Balance { get; set; }
     }
+
+    public class FamilyReportDTO
+    {
+        public int FamilyNumber { get; set; }
+        public string FamilyName { get; set; }
+        public int FamilyId { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal TotalReceived { get; set; }
+        public List<FinancialReportCustomDTO> Transactions { get; set; }
+
+    }
+
+    public class KudishikalReportDTO
+    {
+        public int FamilyNumber { get; set; }
+        public string FamilyName { get; set; }
+        public int FamilyId { get; set; }
+        public List<KudishikaDetails> KudishikaItems { get; set; }
+        
+    }
+    public class KudishikaDetails
+    {
+        public string HeadName { get; set; }
+        public decimal OpeningBalance { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal TotalDues { get; set; }
+        public decimal ClosingBalance { get; set; }
+        public List<FinancialReportCustomDTO> Transactions { get; set; }
+    }
     public class FinancialReportNoticeBoardDTO
     {
         public DateTime TrDate { get; set; }
-        public string VrNo { get; set; }      
+        public string VrNo { get; set; }
         public decimal IncomeAmount { get; set; }
 
         // For Family

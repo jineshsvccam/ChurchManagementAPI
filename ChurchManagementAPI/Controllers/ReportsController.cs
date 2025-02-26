@@ -15,6 +15,8 @@ namespace ChurchManagementAPI.Controllers
         private readonly INoticeBoardService _noticeBoardService;
         private readonly IAllTransactionsService _allTransactionsService;
         private readonly IAramanaReportService _aramanaReportService;
+        private readonly IFamilyReportService _familyReportService;
+        private readonly IKudishikaReportService _kudishikaReportService;
 
         public ReportsController(ILedgerService ledgerService,
             IBankConsolidatedStatementService bankService,
@@ -22,8 +24,10 @@ namespace ChurchManagementAPI.Controllers
             ICashBookService cashBookService,
             INoticeBoardService noticeBoardService,
             IAllTransactionsService allTransactionsService,
-            IAramanaReportService aramanaReportService
-            )
+            IAramanaReportService aramanaReportService,
+            IFamilyReportService familyReportService,
+            IKudishikaReportService kudishikaReportService)
+
         {
             _ledgerService = ledgerService;
             _bankService = bankService;
@@ -32,6 +36,8 @@ namespace ChurchManagementAPI.Controllers
             _noticeBoardService = noticeBoardService;
             _allTransactionsService = allTransactionsService;
             _aramanaReportService = aramanaReportService;
+            _familyReportService = familyReportService;
+            _kudishikaReportService = kudishikaReportService;
         }
 
         [HttpGet("ledger")]
@@ -97,7 +103,7 @@ namespace ChurchManagementAPI.Controllers
         public async Task<ActionResult<NoticeBoardDTO>> GetAllTransactions(
              [FromQuery] int parishId,
              [FromQuery] DateTime startDate,
-             [FromQuery] DateTime endDate,            
+             [FromQuery] DateTime endDate,
              [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
             var allTransactionReport = await _allTransactionsService.GetAllTransactionAsync(parishId, startDate, endDate, customizationOption);
@@ -112,6 +118,26 @@ namespace ChurchManagementAPI.Controllers
         {
             var aramanareport = await _aramanaReportService.GetAramanaReportAsync(parishId, startDate, endDate);
             return Ok(aramanareport);
+        }
+
+        [HttpGet("familyReport")]
+        public async Task<ActionResult<FamilyReportDTO>> GetFamilyReport(
+           [FromQuery] int parishId,
+           [FromQuery] int familyNumber)
+        {
+            var familyReport = await _familyReportService.GetFamilyReportAsync(parishId, familyNumber);
+            return Ok(familyReport);
+        }
+
+        [HttpGet("kudishikaReport")]
+        public async Task<ActionResult<FamilyReportDTO>> GetKudishikaReport(
+          [FromQuery] int parishId,
+          [FromQuery] int familyNumber,
+          [FromQuery] DateTime startDate,
+          [FromQuery] DateTime endDate)
+        {
+            var familyReport = await _kudishikaReportService.GetKudishikaReportAsync(parishId, familyNumber, startDate, endDate);
+            return Ok(familyReport);
         }
     }
 }

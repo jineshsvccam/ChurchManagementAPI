@@ -22,6 +22,8 @@ namespace ChurchData
         public DbSet<FamilyMember> FamilyMembers { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<FinancialReportsView> FinancialReportsView { get; set; }
+        public DbSet<FinancialReportsViewDues> FinancialReportsViewDues { get; set; }
+
         public DbSet<BankDTO> BankBalances { get; set; }
         public DbSet<GenericLog> GenericLogs { get; set; }
         public DbSet<FinancialYear> FinancialYears { get; set; }

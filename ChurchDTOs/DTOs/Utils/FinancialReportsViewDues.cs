@@ -1,14 +1,15 @@
-﻿namespace ChurchData
+﻿
+namespace ChurchDTOs.DTOs.Utils
 {
-    public class FinancialReportsView
+    public class FinancialReportsViewDues
     {
         public int TransactionId { get; set; }
         public DateTime TrDate { get; set; }
         public string VrNo { get; set; }
         public string TransactionType { get; set; }
         public int UnitId { get; set; }
-        public int HeadId { get; set; }       
-        public int FamilyId { get; set; }      
+        public int HeadId { get; set; }
+        public int FamilyId { get; set; }
         public int BankId { get; set; }
         public int ParishId { get; set; }
         public decimal IncomeAmount { get; set; }
@@ -20,7 +21,8 @@
         public string FamilyName { get; set; }
         public int FamilyNumber { get; set; }
         public string BankName { get; set; }
-       
+
         public string ParishName { get; set; }
     }
+
 }

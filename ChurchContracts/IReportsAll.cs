@@ -50,7 +50,7 @@ namespace ChurchContracts
             int parishId,
             DateTime? startDate,
             DateTime? endDate,
-            string headName ,
+            string headName,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
     public interface IAllTransactionsRepository
@@ -58,29 +58,43 @@ namespace ChurchContracts
         Task<AllTransactionReportDTO> GetAllTransactionAsync(
             int parishId,
             DateTime? startDate,
-            DateTime? endDate,           
+            DateTime? endDate,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
     public interface IAramanaReportRepository
     {
         Task<AramanaReportDTO> GetAramanaReportAsync(
+           int parishId,
+           DateTime? startDate,
+           DateTime? endDate);
+    }
+    public interface IFamilyReportRepository
+    {
+        Task<FamilyReportDTO> GetFamilyReportAsync(
             int parishId,
+            int familyNumber);
+    }
+
+    public interface IKudishikaReportRepository
+    {
+        Task<KudishikalReportDTO> GetKudishikaReportAsync(
+            int parishId,
+            int familyNumber,
             DateTime? startDate,
             DateTime? endDate);
     }
-
 
     #endregion
 
     #region Services Interfaces
     public interface ILedgerService
     {
-           Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
-            int parishId,
-            DateTime? startDate,
-            DateTime? endDate,
-            bool includeTransactions = false,
-            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+        Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
+         int parishId,
+         DateTime? startDate,
+         DateTime? endDate,
+         bool includeTransactions = false,
+         FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
     public interface IBankConsolidatedStatementService
     {
@@ -131,6 +145,20 @@ namespace ChurchContracts
     {
         Task<AramanaReportDTO> GetAramanaReportAsync(
             int parishId,
+            DateTime? startDate,
+            DateTime? endDate);
+    }
+    public interface IFamilyReportService
+    {
+        Task<FamilyReportDTO> GetFamilyReportAsync(
+            int parishId,
+            int familyNumber);
+    }
+    public interface IKudishikaReportService
+    {
+        Task<KudishikalReportDTO> GetKudishikaReportAsync(
+            int parishId,
+            int familyNumber,
             DateTime? startDate,
             DateTime? endDate);
     }

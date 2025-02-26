@@ -113,6 +113,10 @@ builder.Services.AddScoped<IAllTransactionsRepository, AllTransacionsRepository>
 builder.Services.AddScoped<IAllTransactionsService, AllTransactionsService>();
 builder.Services.AddScoped<IAramanaReportRepository, AramanaReportRepository>();
 builder.Services.AddScoped<IAramanaReportService, AramanaReportService>();
+builder.Services.AddScoped<IFamilyReportRepository, FamilyReportRepository>();
+builder.Services.AddScoped<IFamilyReportService, FamilyReportService>();
+builder.Services.AddScoped<IKudishikaReportRepository, KudishikaReportRepository>();
+builder.Services.AddScoped<IKudishikaReportService, KudishikaReportService>();
 
 
 // Register configuration settings
