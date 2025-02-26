@@ -5,16 +5,23 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-   
+
     public class ReportsController : ManagementAuthorizedController
     {
         private readonly ILedgerService _ledgerService;
         private readonly IBankConsolidatedStatementService _bankService;
+        private readonly ITrialBalanceService _trialBalanceService;
+        private readonly ICashBookService _cashBookService; 
 
-        public ReportsController(ILedgerService ledgerService, IBankConsolidatedStatementService bankService)
+        public ReportsController(ILedgerService ledgerService,
+            IBankConsolidatedStatementService bankService,
+            ITrialBalanceService trialBalanceService,
+            ICashBookService cashBookService)
         {
             _ledgerService = ledgerService;
             _bankService = bankService;
+            _trialBalanceService = trialBalanceService;
+            _cashBookService = cashBookService;
         }
 
         [HttpGet("ledger")]
@@ -29,7 +36,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(ledger);
         }
 
-        [HttpGet("bank-statement")]
+        [HttpGet("bankstatement")]
         public async Task<ActionResult<BankStatementConsolidatedDTO>> GetBankStatement(
             [FromQuery] int parishId,
             [FromQuery] DateTime? startDate,
@@ -41,6 +48,27 @@ namespace ChurchManagementAPI.Controllers
             return Ok(bankStatement);
         }
 
-        // Add more report endpoints here...
+        [HttpGet("trialbalance")]
+        public async Task<ActionResult<TrialBalanceDTO>> GetTrialBalances(
+           [FromQuery] int parishId,
+           [FromQuery] DateTime startDate,  // assuming required if includeTransactions true
+           [FromQuery] DateTime endDate,
+           [FromQuery] bool includeTransactions = false,
+           [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
+        {
+            var trialBalance = await _trialBalanceService.GetTrialBalanceAsync(parishId, startDate, endDate, includeTransactions, customizationOption);
+            return Ok(trialBalance);
+        }
+        [HttpGet("cashbook")]
+        public async Task<ActionResult<TrialBalanceDTO>> GetCashBook(
+              [FromQuery] int parishId,
+              [FromQuery] DateTime startDate,
+              [FromQuery] DateTime endDate,
+              [FromQuery] string bankName = "All",
+              [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
+        {
+            var cashbook = await _cashBookService.GetCashBookAsync(parishId, startDate, endDate, bankName, customizationOption);
+            return Ok(cashbook);
+        }
     }
 }

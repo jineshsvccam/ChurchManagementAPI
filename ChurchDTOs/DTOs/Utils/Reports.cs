@@ -47,14 +47,24 @@ namespace ChurchDTOs.DTOs.Utils
     {
         public decimal OpeningBalance { get; set; }
         public decimal ClosingBalance { get; set; }
-        public List<FinancialReportsView> LedgerStatements { get; set; }
+        public List<BankDTO> OpeningDetails { get; set; } = new List<BankDTO>();
+        public List<BankDTO> ClosingDetails { get; set; } = new List<BankDTO>();
+        public List<HeadDTO> Heads { get; set; }
+        public List<FinancialReportCustomDTO> Transactions { get; set; } = new List<FinancialReportCustomDTO>();
+
     }
 
-    public class BankStatementDTO
+    public class CashBookDetailDTO
     {
-        // this can be used for cashbook or bank statement. If cashbook, ItemName will be "Cash"; if bank statement, ItemName will be Bank.
-        public string ItemName { get; set; } // either "Cash" or other bank names      
-        public List<FinancialReportsView> LedgerStatements { get; set; }
+        public string BankName { get; set; }
+        public double OpeningBalance { get; set; }
+        public double ClosingBalance { get; set; }
+        public List<FinancialReportCustomDTO> Statements { get; set; }
+    }
+
+    public class CashBookReportDTO
+    {
+        public List<CashBookDetailDTO> CashBooks { get; set; }
     }
 
     public class FinancialReportCustomDTO

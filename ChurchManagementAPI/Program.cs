@@ -81,10 +81,6 @@ builder.Services.AddScoped<IFamilyMemberRepository, FamilyMemberRepository>();
 builder.Services.AddScoped<IFamilyMemberService, FamilyMemberService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
-builder.Services.AddScoped<ILedgerRepository, LedgerRepository>();
-builder.Services.AddScoped<ILedgerService, LedgerService>();
-builder.Services.AddScoped<IBankConsolidatedStatementRepository, BankConsolidatedStatementRepository>();
-builder.Services.AddScoped<IBankConsolidatedStatementService, BankConsolidatedStatementService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRoleRepository, UserRoleRepository>();
 builder.Services.AddScoped<IRoleService, RoleService>();
@@ -102,6 +98,15 @@ builder.Services.AddScoped<IFamilyContributionRepository, FamilyContributionRepo
 builder.Services.AddScoped<IFamilyContributionService, FamilyContributionService>();
 builder.Services.AddScoped<IRecurringTransactionRepository, RecurringTransactionRepository>();
 builder.Services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
+
+builder.Services.AddScoped<ILedgerRepository, LedgerRepository>();
+builder.Services.AddScoped<ILedgerService, LedgerService>();
+builder.Services.AddScoped<IBankConsolidatedStatementRepository, BankConsolidatedStatementRepository>();
+builder.Services.AddScoped<IBankConsolidatedStatementService, BankConsolidatedStatementService>();
+builder.Services.AddScoped<ITrialBalancetRepository, TrialBalanceRepository>();
+builder.Services.AddScoped<ITrialBalanceService, TrialBalanceService>();
+builder.Services.AddScoped<ICashBookRepository, CashBookRepository>();
+builder.Services.AddScoped<ICashBookService, CashBookService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
