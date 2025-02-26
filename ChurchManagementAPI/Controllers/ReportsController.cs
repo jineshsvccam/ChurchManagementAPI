@@ -11,17 +11,20 @@ namespace ChurchManagementAPI.Controllers
         private readonly ILedgerService _ledgerService;
         private readonly IBankConsolidatedStatementService _bankService;
         private readonly ITrialBalanceService _trialBalanceService;
-        private readonly ICashBookService _cashBookService; 
+        private readonly ICashBookService _cashBookService;
+        private readonly INoticeBoardService _noticeBoardService;
 
         public ReportsController(ILedgerService ledgerService,
             IBankConsolidatedStatementService bankService,
             ITrialBalanceService trialBalanceService,
-            ICashBookService cashBookService)
+            ICashBookService cashBookService,
+            INoticeBoardService noticeBoardService)
         {
             _ledgerService = ledgerService;
             _bankService = bankService;
             _trialBalanceService = trialBalanceService;
             _cashBookService = cashBookService;
+            _noticeBoardService = noticeBoardService;   
         }
 
         [HttpGet("ledger")]
@@ -69,6 +72,18 @@ namespace ChurchManagementAPI.Controllers
         {
             var cashbook = await _cashBookService.GetCashBookAsync(parishId, startDate, endDate, bankName, customizationOption);
             return Ok(cashbook);
+        }
+
+        [HttpGet("noticeboard")]
+        public async Task<ActionResult<NoticeBoardDTO>> GetNoticeBoard(
+              [FromQuery] int parishId,
+              [FromQuery] DateTime startDate,
+              [FromQuery] DateTime endDate,
+              [FromQuery] string headName,
+              [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
+        {
+            var noticeBoard = await _noticeBoardService.GetNoticeBoardAsync(parishId, startDate, endDate, headName, customizationOption);
+            return Ok(noticeBoard);
         }
     }
 }

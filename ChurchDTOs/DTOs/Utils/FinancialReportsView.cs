@@ -12,6 +12,7 @@ namespace ChurchData
         public DateTime TrDate { get; set; }
         public string VrNo { get; set; }
         public string TransactionType { get; set; }
+        public int UnitId { get; set; }
         public int HeadId { get; set; }       
         public int FamilyId { get; set; }      
         public int BankId { get; set; }
@@ -20,8 +21,10 @@ namespace ChurchData
         public decimal ExpenseAmount { get; set; }
         public string Description { get; set; }
 
+        public string UnitName { get; set; }
         public string HeadName { get; set; }
         public string FamilyName { get; set; }
+        public int FamilyNumber { get; set; }
         public string BankName { get; set; }
        
         public string ParishName { get; set; }

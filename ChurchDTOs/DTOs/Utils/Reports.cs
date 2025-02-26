@@ -30,18 +30,15 @@ namespace ChurchDTOs.DTOs.Utils
         public List<BankDTO> Banks { get; set; } = new List<BankDTO>();
         public List<FinancialReportCustomDTO> Transactions { get; set; } = new List<FinancialReportCustomDTO>();
     }
-
     public class BankDTO
     {
-      
-        public int? BankId { get; set; }      
-        public string BankName { get; set; }     
-        public decimal OpeningBalance { get; set; }       
-        public decimal ClosingBalance { get; set; }       
+
+        public int? BankId { get; set; }
+        public string BankName { get; set; }
+        public decimal OpeningBalance { get; set; }
+        public decimal ClosingBalance { get; set; }
         public decimal Balance { get; set; }
     }
-
-
 
     public class TrialBalanceDTO
     {
@@ -54,6 +51,10 @@ namespace ChurchDTOs.DTOs.Utils
 
     }
 
+    public class CashBookReportDTO
+    {
+        public List<CashBookDetailDTO> CashBooks { get; set; }
+    }
     public class CashBookDetailDTO
     {
         public string BankName { get; set; }
@@ -62,9 +63,27 @@ namespace ChurchDTOs.DTOs.Utils
         public List<FinancialReportCustomDTO> Statements { get; set; }
     }
 
-    public class CashBookReportDTO
+    public class NoticeBoardDTO
     {
-        public List<CashBookDetailDTO> CashBooks { get; set; }
+       public List<FinancialReportNoticeBoardDTO> PaidMembers { get; set; }
+       public List<FinancialReportNoticeBoardDTO> UnpaidMembers { get; set; }
+    }
+
+    public class FinancialReportNoticeBoardDTO
+    {
+        public DateTime TrDate { get; set; }
+        public string VrNo { get; set; }      
+        public decimal IncomeAmount { get; set; }
+
+        // For Family
+        public int? FamilyId { get; set; }
+        public int FamilyNumber { get; set; }
+        public string FamilyName { get; set; }
+
+        // For Unit
+        public int? UnitId { get; set; }
+        public string UnitName { get; set; }
+
     }
 
     public class FinancialReportCustomDTO

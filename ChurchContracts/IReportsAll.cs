@@ -44,6 +44,16 @@ namespace ChurchContracts
             string bankName = "All",
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
+    public interface INoticeBoardRepository
+    {
+        Task<NoticeBoardDTO> GetNoticeBoardAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate,
+            string headName ,
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+    }
+
 
     #endregion
 
@@ -82,6 +92,15 @@ namespace ChurchContracts
             DateTime? startDate,
             DateTime? endDate,
             string bankName = "All",
+            FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+    }
+    public interface INoticeBoardService
+    {
+        Task<NoticeBoardDTO> GetNoticeBoardAsync(
+            int parishId,
+            DateTime? startDate,
+            DateTime? endDate,
+            string headName,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
     }
     #endregion

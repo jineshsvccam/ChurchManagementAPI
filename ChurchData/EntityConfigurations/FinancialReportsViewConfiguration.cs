@@ -25,6 +25,9 @@ namespace ChurchData.EntityConfigurations
             builder.Property(e => e.HeadName).HasColumnName("headname");
             builder.Property(e => e.BankId).HasColumnName("bankid");
             builder.Property(e => e.BankName).HasColumnName("bankname");
+            builder.Property(e => e.UnitId).HasColumnName("unitid");
+            builder.Property(e => e.UnitName).HasColumnName("unitname");
+            builder.Property(e => e.FamilyNumber).HasColumnName("familynumber");
         }
     }
 }

@@ -70,7 +70,41 @@ namespace ChurchData.Mappings
                 return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
             }));
 
-
+            //for notice board
+            CreateMap<FinancialReportsView, FinancialReportNoticeBoardDTO>()
+            .ForMember(dest => dest.FamilyId, opt => opt.MapFrom((src, dest, destMember, context) =>
+            {
+                var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+                return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both)
+                        ? src.FamilyId
+                        : (int?)null;
+            }))
+            .ForMember(dest => dest.FamilyName, opt => opt.MapFrom((src, dest, destMember, context) =>
+            {
+                var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+                // The view is assumed to already combine head name and family name in FamilyName.
+                return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both)
+                        ? src.FamilyName
+                        : null;
+            }))
+            .ForMember(dest => dest.UnitId, opt => opt.MapFrom((src, dest, destMember, context) =>
+            {
+                var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+                return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both)
+                        ? src.UnitId
+                        : (int?)null;
+            }))
+            .ForMember(dest => dest.UnitName, opt => opt.MapFrom((src, dest, destMember, context) =>
+            {
+                var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+                return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both)
+                        ? src.UnitName
+                        : null;
+            }))
+            .ForMember(dest => dest.FamilyNumber, opt => opt.MapFrom(src => src.FamilyNumber))
+            .ForMember(dest => dest.TrDate, opt => opt.MapFrom(src => src.TrDate))
+            .ForMember(dest => dest.VrNo, opt => opt.MapFrom(src => src.VrNo))
+            .ForMember(dest => dest.IncomeAmount, opt => opt.MapFrom(src => src.IncomeAmount));
 
 
 

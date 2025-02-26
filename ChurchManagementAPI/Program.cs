@@ -107,6 +107,8 @@ builder.Services.AddScoped<ITrialBalancetRepository, TrialBalanceRepository>();
 builder.Services.AddScoped<ITrialBalanceService, TrialBalanceService>();
 builder.Services.AddScoped<ICashBookRepository, CashBookRepository>();
 builder.Services.AddScoped<ICashBookService, CashBookService>();
+builder.Services.AddScoped<INoticeBoardRepository, NoticeBoardRepository>();
+builder.Services.AddScoped<INoticeBoardService, NoticeBoardService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
