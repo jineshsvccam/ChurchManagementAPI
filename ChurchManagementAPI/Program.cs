@@ -4,6 +4,8 @@ using System.Text.Json;
 using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchContracts.ChurchContracts;
+using ChurchContracts.Interfaces.Repositories;
+using ChurchContracts.Interfaces.Services;
 using ChurchData;
 using ChurchData.Mappings;
 using ChurchManagementAPI.Controllers.Middleware;
@@ -49,6 +51,16 @@ builder.Services.AddScoped<RoleManager<Role>>();
 builder.Services.AddScoped<UserManager<User>>();
 builder.Services.AddScoped<SignInManager<User>>();
 builder.Services.AddScoped<AuthService>();
+
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        policy => policy.WithOrigins("http://localhost:5173") // Allow only this frontend
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+});
 
 // JSON serialization settings
 builder.Services.AddControllers()
@@ -117,6 +129,9 @@ builder.Services.AddScoped<IFamilyReportRepository, FamilyReportRepository>();
 builder.Services.AddScoped<IFamilyReportService, FamilyReportService>();
 builder.Services.AddScoped<IKudishikaReportRepository, KudishikaReportRepository>();
 builder.Services.AddScoped<IKudishikaReportService, KudishikaReportService>();
+
+builder.Services.AddScoped<IPublicRepository, PublicRepository>();
+builder.Services.AddScoped<IPublicService, PublicService>();
 
 
 // Register configuration settings
@@ -258,6 +273,9 @@ if (app.Environment.IsDevelopment())
         await next();
     });
 }
+
+// Use CORS before other middlewares
+app.UseCors("AllowSpecificOrigin");
 
 // ✅ Ensure authentication runs before middleware
 app.UseHttpsRedirection();

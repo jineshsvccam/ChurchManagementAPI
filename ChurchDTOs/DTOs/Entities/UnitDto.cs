@@ -16,6 +16,12 @@ namespace ChurchDTOs.DTOs.Entities
         public string? UnitPresident { get; set; }
         public string? UnitSecretary { get; set; }
     }
-
+    public class UnitSimpleDto
+    {
+        public int UnitId { get; set; }
+        public int ParishId { get; set; }
+        public string UnitName { get; set; }
+        public List<FamilySimpleDto> Families { get; set; }
+    }
 
 }

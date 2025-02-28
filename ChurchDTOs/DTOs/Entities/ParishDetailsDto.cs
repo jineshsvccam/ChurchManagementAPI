@@ -46,4 +46,13 @@ namespace ChurchDTOs.DTOs.Entities
      
     }
 
+    public class ParishSimpleDto
+    {
+        public int ParishId { get; set; }
+        public required string ParishName { get; set; }
+        public string? ParishLocation { get; set; }       
+        public int DistrictId { get; set; }
+        public List<UnitSimpleDto> Units { get; set; }
+    }
+
 }

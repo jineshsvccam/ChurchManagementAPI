@@ -30,7 +30,7 @@ namespace ChurchManagementAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
-            var user = await _authService.RegisterUserAsync(registerDto.Username, registerDto.Email, registerDto.Password, registerDto.ParishId, registerDto.FamilyId, registerDto.RoleIds);
+            var user = await _authService.RegisterUserAsync(registerDto);
             if (user == null)
             {
                 return BadRequest("User registration failed.");
@@ -38,6 +38,8 @@ namespace ChurchManagementAPI.Controllers
 
             return Ok(new { Message = "User registered successfully.", UserId = user.Id });
         }
+
+      
     }
 
 

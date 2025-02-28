@@ -1,79 +1,121 @@
-﻿using ChurchData;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+using ChurchContracts;
+using ChurchData;
+using ChurchDTOs.DTOs.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
-public class AuthService
+public class AuthService : IAuthService
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-  //  private readonly RoleManager<IdentityRole<int>> _roleManager;
     private readonly IConfiguration _configuration;
     private readonly RoleManager<Role> _roleManager;
+    private readonly ILogger<AuthService> _logger;
+    private readonly ApplicationDbContext _context;
 
-    public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Role> roleManager, IConfiguration configuration)
+    // Constructor: Sets up dependencies
+    public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
+        RoleManager<Role> roleManager, IConfiguration configuration,
+        ILogger<AuthService> logger, ApplicationDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _configuration = configuration;
+        _logger = logger;
+        _context = context;
     }
 
+    // AuthenticateUserAsync: Checks login and returns token
     public async Task<(bool IsSuccess, string Token, string Message)> AuthenticateUserAsync(string username, string password)
     {
-        var user = await _userManager.FindByNameAsync(username);
-
+        var user = await _userManager.FindByNameAsync(username); // Find user
         if (user == null)
-            return (false, null, "User not found.");
+            return (false, null, "User not found."); // Debug: Check username
 
         if (!await _userManager.CheckPasswordAsync(user, password))
-            return (false, null, "Invalid password.");
+            return (false, null, "Invalid password."); // Debug: Wrong password?
 
-        if (user.Status != UserStatus.Active)  // Assuming 'Active' is your enum value
-            return (false, null, "Your account is not approved.");
+        if (user.Status != UserStatus.Active)
+            return (false, null, "Your account is not approved."); // Debug: User inactive?
 
-        return (true, GenerateJwtToken(user), "Login successful.");
+        return (true, GenerateJwtToken(user), "Login successful."); // Success: Token generated
     }
 
-
-    public async Task<User?> RegisterUserAsync(string username, string email, string password,int parishId,int familyId, List<int> roleIds)
+    // RegisterUserAsync: Creates user and assigns roles
+    public async Task<User?> RegisterUserAsync(RegisterDto model)
     {
-        var user = new User
+        using var transaction = await _context.Database.BeginTransactionAsync(); // Start transaction
+        try
         {
-            UserName = username,
-            Email = email,
-            EmailConfirmed = true,
-            ParishId = parishId,
-            FamilyId = familyId
-        };
-
-        var result = await _userManager.CreateAsync(user, password);
-        if (!result.Succeeded)
-        {
-            // Log errors
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new Exception($"User creation failed: {errors}");
-        }
-
-        // Assign roles
-        foreach (var roleId in roleIds)
-        {
-            var role = await _roleManager.FindByIdAsync(roleId.ToString());
-            if (role != null)
+            // Create user
+            var user = new User
             {
-                await _userManager.AddToRoleAsync(user, role.Name);
-            }
-        }
+                UserName = model.Username,
+                Email = model.Email,
+                EmailConfirmed = true,
+                ParishId = model.ParishId,
+                FamilyId = model.FamilyId
+            };
 
-        return user;
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new Exception($"User creation failed: {errors}"); // Debug: Check error details
+            }
+
+            // Assign roles
+            foreach (var roleId in model.RoleIds)
+            {
+                var role = await _roleManager.FindByIdAsync(roleId.ToString());
+                if (role == null)
+                    throw new Exception($"Role with ID {roleId} not found."); // Debug: Invalid role ID?
+
+                var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
+                if (!isInRole)
+                {
+                    var roleResult = await _userManager.AddToRoleAsync(user, role.Name);
+                    if (!roleResult.Succeeded)
+                    {
+                        var roleErrors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                        throw new Exception($"Failed to assign role {role.Name}: {roleErrors}"); // Debug: Role assignment failed?
+                    }
+
+                    // Update UserRole entity
+                    var userRole = await _context.UserRoles
+                        .FirstOrDefaultAsync(ur => ur.UserId == user.Id && ur.RoleId == roleId);
+                    if (userRole != null)
+                    {
+                        userRole.Status = RoleStatus.Pending;
+                        userRole.ApprovedBy = null;
+                        userRole.ApprovedAt = null;
+                    }
+                    else
+                        throw new Exception("UserRole entity not found after role assignment."); // Debug: Missing UserRole?
+
+                    await _context.SaveChangesAsync(); // Save changes
+                }
+            }
+
+            await transaction.CommitAsync(); // Commit if all succeeds
+            return user;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(); // Rollback on error
+            _logger.LogError(ex, "Error during user registration for {Username}", model.Username); // Debug: Check log for exception
+            throw;
+        }
     }
 
+    // GenerateJwtToken: Creates JWT for user
     private string GenerateJwtToken(User user)
     {
         var claims = new List<Claim>
@@ -83,22 +125,20 @@ public class AuthService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
 
-        var userRoles = _userManager.GetRolesAsync(user).Result;
+        var userRoles = _userManager.GetRolesAsync(user).Result; // Get user roles
         foreach (var role in userRoles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
+            claims.Add(new Claim(ClaimTypes.Role, role)); // Add roles to claims
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])); // JWT key
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
+            expires: DateTime.UtcNow.AddHours(1), // Expires in 1 hour
             signingCredentials: creds);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return new JwtSecurityTokenHandler().WriteToken(token); // Return token string
     }
 }

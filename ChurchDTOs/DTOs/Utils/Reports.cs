@@ -115,6 +115,40 @@ namespace ChurchDTOs.DTOs.Utils
         public decimal ClosingBalance { get; set; }
         public List<FinancialReportCustomDTO> Transactions { get; set; }
     }
+
+    public class PivotReportDTO
+    {
+        public int HeadId { get; set; }
+        public string HeadName { get; set; }
+        public List<MonthAmountDTO> MonthlyAmounts { get; set; } = new List<MonthAmountDTO>();
+    }
+
+    public class MonthAmountDTO
+    {
+        public string MonthLabel { get; set; }   // e.g., "Apr", "May", ... "Mar", "Total"
+        public decimal Value { get; set; }
+    }
+
+    public class SingleHeadFiscalReportDTO
+    {
+        public int HeadId { get; set; }
+        public string HeadName { get; set; }
+        public List<FiscalYearDetail> FiscalYears { get; set; } = new List<FiscalYearDetail>();
+    }
+
+    public class FiscalYearDetail
+    {
+        public int FiscalYear { get; set; }
+        public List<MonthValue> MonthValues { get; set; } = new List<MonthValue>();
+        public decimal Total { get; set; }
+    }
+
+    public class MonthValue
+    {
+        public string MonthLabel { get; set; } // e.g., "Apr", "May", "Jun", ...
+        public decimal Value { get; set; }
+    }
+
     public class FinancialReportNoticeBoardDTO
     {
         public DateTime TrDate { get; set; }

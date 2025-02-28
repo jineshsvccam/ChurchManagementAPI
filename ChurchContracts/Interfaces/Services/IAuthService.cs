@@ -1,9 +1,10 @@
-﻿using ChurchDTOs.DTOs.Entities;
+﻿using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 
 namespace ChurchContracts
 {
     public interface IAuthService
     {
-        Task<string> RegisterUserAsync(RegisterDto model);
+        Task<User?> RegisterUserAsync(RegisterDto model);
     }
 }

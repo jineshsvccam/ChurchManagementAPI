@@ -27,6 +27,7 @@ namespace ChurchData.Mappings
             CreateMap<Transaction, TransactionDto>().ReverseMap();
             CreateMap<TransactionHead, TransactionHeadDto>().ReverseMap();
             CreateMap<Unit, UnitDto>().ReverseMap();
+            CreateMap<Role, RoleDto>().ReverseMap();
 
             CreateMap<FinancialReportsView, FinancialReportCustomDTO>()
             .ForMember(dest => dest.HeadId, opt => opt.MapFrom((src, dest, destMember, context) =>

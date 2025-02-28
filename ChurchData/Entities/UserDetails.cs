@@ -27,7 +27,7 @@ namespace ChurchData
         public int? ApprovedBy { get; set; }  // Nullable, since initially unapproved
 
         [Column(TypeName = "timestamp")]
-        public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
+        public DateTime RequestedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
 
         [Column(TypeName = "timestamp")]
         public DateTime? ApprovedAt { get; set; } // Nullable, as it’s only set upon approval
