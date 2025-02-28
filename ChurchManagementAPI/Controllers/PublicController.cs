@@ -25,6 +25,6 @@ namespace ChurchManagementAPI.Controllers
             return Ok(parishesAll);
         }
 
-       
+      
     }
 }

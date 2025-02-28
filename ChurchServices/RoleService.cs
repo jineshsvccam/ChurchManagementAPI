@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using ChurchRepositories;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace ChurchServices
             return await _roleRepository.GetRoleByIdAsync(roleId);
         }
 
-        public async Task<IEnumerable<Role>> GetAllRolesAsync()
+        public async Task<IEnumerable<RoleDto>> GetAllRolesAsync()
         {
             return await _roleRepository.GetAllRolesAsync();
         }
