@@ -15,7 +15,7 @@ namespace ChurchRepositories
             _context = context;
         }
 
-        public async Task<UserRole> GetUserRoleByIdAsync(int userId, int roleId)
+        public async Task<UserRole> GetUserRoleByIdAsync(Guid userId, Guid roleId)
         {
             var identityUserRole = await _context.UserRoles
                 .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
@@ -39,7 +39,7 @@ namespace ChurchRepositories
 
 
 
-        public async Task<IEnumerable<UserRole>> GetUserRolesByUserIdAsync(int userId)
+        public async Task<IEnumerable<UserRole>> GetUserRolesByUserIdAsync(Guid userId)
         {
             var userRoles = await _context.UserRoles
                 .Where(ur => ur.UserId == userId)
@@ -70,7 +70,7 @@ namespace ChurchRepositories
             return userRole;
         }
 
-        public async Task DeleteUserRoleAsync(int userId, int roleId)
+        public async Task DeleteUserRoleAsync(Guid userId, Guid roleId)
         {
             var userRole = await _context.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
             if (userRole != null)

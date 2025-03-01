@@ -46,7 +46,7 @@ builder.Services.AddIdentity<User, Role>(options =>
     .AddDefaultTokenProviders();
 
 // Explicitly register IRoleStore<Role>
-builder.Services.AddScoped<IRoleStore<Role>, RoleStore<Role, ApplicationDbContext, int>>();
+builder.Services.AddScoped<IRoleStore<Role>, RoleStore<Role, ApplicationDbContext, Guid>>();
 builder.Services.AddScoped<RoleManager<Role>>();
 builder.Services.AddScoped<UserManager<User>>();
 builder.Services.AddScoped<SignInManager<User>>();

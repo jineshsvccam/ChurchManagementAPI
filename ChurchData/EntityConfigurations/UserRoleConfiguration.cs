@@ -17,18 +17,15 @@ namespace ChurchData.EntityConfigurations
             builder.Property(ur => ur.RoleId)
                    .HasColumnName("role_id");
 
-            // Enum-based column for Role Status
             builder.Property(ur => ur.Status)
                    .HasColumnName("status")
-                   .HasConversion<string>() // Store as string in DB
+                   .HasConversion<string>() // Stores enum as string; adjust if mapping to PostgreSQL enum
                    .HasDefaultValue(RoleStatus.Pending);
 
-            // Track who approved the role assignment
             builder.Property(ur => ur.ApprovedBy)
                    .HasColumnName("approved_by")
                    .IsRequired(false);
 
-            // Timestamp fields
             builder.Property(ur => ur.RequestedAt)
                    .HasColumnName("requested_at")
                    .HasColumnType("timestamp")
@@ -39,7 +36,6 @@ namespace ChurchData.EntityConfigurations
                    .HasColumnType("timestamp")
                    .IsRequired(false);
 
-            // Relationships
             builder.HasOne(ur => ur.User)
                    .WithMany(u => u.UserRoles)
                    .HasForeignKey(ur => ur.UserId)
@@ -50,7 +46,6 @@ namespace ChurchData.EntityConfigurations
                    .HasForeignKey(ur => ur.RoleId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            // Relationship with ApprovedBy (Admin)
             builder.HasOne(ur => ur.ApprovedByUser)
                    .WithMany()
                    .HasForeignKey(ur => ur.ApprovedBy)

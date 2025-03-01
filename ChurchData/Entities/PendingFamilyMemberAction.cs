@@ -24,7 +24,7 @@ namespace ChurchData
         public int MemberId { get; set; }
 
         [Required]
-        public int SubmittedBy { get; set; }
+        public Guid SubmittedBy { get; set; }
 
         [Required, MaxLength(10)]
         public string ActionType { get; set; }  // e.g. "INSERT"
@@ -38,7 +38,7 @@ namespace ChurchData
         [Required]
         public DateTime SubmittedAt { get; set; }  // Maps to submitted_at
 
-        public int? ApprovedBy { get; set; }
+        public Guid? ApprovedBy { get; set; }
         public DateTime? ApprovedAt { get; set; }
     }
 }

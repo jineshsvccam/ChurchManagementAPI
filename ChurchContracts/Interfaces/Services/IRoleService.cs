@@ -5,10 +5,10 @@ namespace ChurchContracts
 {
     public interface IRoleService
     {
-        Task<Role> GetRoleByIdAsync(int roleId);
+        Task<Role> GetRoleByIdAsync(Guid roleId);
         Task<IEnumerable<RoleDto>> GetAllRolesAsync();
-        Task<Role> AddRoleAsync(Role role);
-        Task<Role> UpdateRoleAsync(Role role);
-        Task DeleteRoleAsync(int roleId);
+        Task<RoleDto> AddRoleAsync(RoleDto role);
+        Task<RoleDto> UpdateRoleAsync(RoleDto role);
+        Task DeleteRoleAsync(Guid roleId);
     }
 }

@@ -15,7 +15,7 @@ namespace ChurchDTOs.DTOs.Entities
         public string Password { get; set; }
 
         [Required]
-        public List<int> RoleIds { get; set; } // Allow assigning multiple roles
+        public List<Guid> RoleIds { get; set; } // Allow assigning multiple roles
 
         [Required]
         public int ParishId { get; set; }
@@ -31,7 +31,7 @@ namespace ChurchDTOs.DTOs.Entities
 
     public class RoleDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
     }
 

@@ -16,7 +16,7 @@ namespace ChurchServices
             _roleRepository = roleRepository;
         }
 
-        public async Task<Role> GetRoleByIdAsync(int roleId)
+        public async Task<Role> GetRoleByIdAsync(Guid roleId)
         {
             return await _roleRepository.GetRoleByIdAsync(roleId);
         }
@@ -26,17 +26,17 @@ namespace ChurchServices
             return await _roleRepository.GetAllRolesAsync();
         }
 
-        public async Task<Role> AddRoleAsync(Role role)
+        public async Task<RoleDto> AddRoleAsync(RoleDto role)
         {
             return await _roleRepository.AddRoleAsync(role);
         }
 
-        public async Task<Role> UpdateRoleAsync(Role role)
+        public async Task<RoleDto> UpdateRoleAsync(RoleDto role)
         {
             return await _roleRepository.UpdateRoleAsync(role);
         }
 
-        public async Task DeleteRoleAsync(int roleId)
+        public async Task DeleteRoleAsync(Guid roleId)
         {
             await _roleRepository.DeleteRoleAsync(roleId);
         }

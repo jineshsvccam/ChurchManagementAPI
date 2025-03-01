@@ -43,7 +43,7 @@ namespace ChurchData
 
         public MemberStatus? MemberStatus { get; set; }
 
-        public int? UpdatedUser { get; set; }
+        public Guid? UpdatedUser { get; set; }
 
         public virtual User UpdatedUserNavigation { get; set; } // Navigation Property
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

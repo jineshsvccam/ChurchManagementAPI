@@ -14,7 +14,7 @@ namespace ChurchServices
             _userRepository = userRepository;
         }
 
-        public async Task<User> GetUserByIdAsync(int userId)
+        public async Task<User> GetUserByIdAsync(Guid userId)
         {
             return await _userRepository.GetUserByIdAsync(userId);
         }
@@ -24,7 +24,7 @@ namespace ChurchServices
             return await _userRepository.GetAllUsersAsync();
         }
 
-        public async Task<User> AddUserAsync(User user, string password, List<int> roleIds)
+        public async Task<User> AddUserAsync(User user, string password, List<Guid> roleIds)
         {
             return await _userRepository.AddUserAsync(user, password, roleIds);
         }
@@ -34,7 +34,7 @@ namespace ChurchServices
             return await _userRepository.UpdateUserAsync(user);
         }
 
-        public async Task DeleteUserAsync(int userId)
+        public async Task DeleteUserAsync(Guid userId)
         {
             await _userRepository.DeleteUserAsync(userId);
         }

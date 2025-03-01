@@ -18,13 +18,19 @@ namespace ChurchManagementAPI.Controllers
             _roleService = roleService;
         }
 
-        [HttpGet]
+        [HttpGet("parishes")]
         public async Task<ActionResult<ParishesAllDto>> GetAll()
         {
             var parishesAll = await _publicService.GetAllParishesAsync();
             return Ok(parishesAll);
         }
 
-      
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            var roles = await _roleService.GetAllRolesAsync();
+            return Ok(roles);
+        }
+
     }
 }

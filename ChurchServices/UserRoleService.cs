@@ -14,12 +14,12 @@ namespace ChurchServices
             _userRoleRepository = userRoleRepository;
         }
 
-        public async Task<UserRole> GetUserRoleByIdAsync(int userId, int roleId)
+        public async Task<UserRole> GetUserRoleByIdAsync(Guid userId, Guid roleId)
         {
             return await _userRoleRepository.GetUserRoleByIdAsync(userId, roleId);
         }
 
-        public async Task<IEnumerable<UserRole>> GetUserRolesByUserIdAsync(int userId)
+        public async Task<IEnumerable<UserRole>> GetUserRolesByUserIdAsync(Guid userId)
         {
             return await _userRoleRepository.GetUserRolesByUserIdAsync(userId);
         }
@@ -29,7 +29,7 @@ namespace ChurchServices
             return await _userRoleRepository.AddUserRoleAsync(userRole);
         }
 
-        public async Task DeleteUserRoleAsync(int userId, int roleId)
+        public async Task DeleteUserRoleAsync(Guid userId, Guid roleId)
         {
             await _userRoleRepository.DeleteUserRoleAsync(userId, roleId);
         }

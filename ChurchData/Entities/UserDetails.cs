@@ -1,50 +1,66 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-
 
 namespace ChurchData
 {
-    public class User : IdentityUser<int>
+    public class User : IdentityUser<Guid>
     {
-        public int? ParishId { get; set; }
-        public int? FamilyId { get; set; }
-        public UserStatus Status { get; set; } = UserStatus.Pending; // Default status
+        [Required]
+        [Column("fullname")]
+        [MaxLength(255)]
+        public string FullName { get; set; }
 
-        // Navigation properties
+        [Required]
+        [Column("mobile")]
+        [MaxLength(20)]
+        public string Mobile { get; set; }
+
+        [Column("family_id")]
+        public int? FamilyId { get; set; }
+
+        [Column("parish_id")]
+        public int? ParishId { get; set; }
+
+        [Column("status")]
+        public UserStatus Status { get; set; } = UserStatus.Pending;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
-        public virtual Family Family { get; set; }
-        public virtual Parish Parish { get; set; }
+        public virtual Family? Family { get; set; }
+        public virtual Parish? Parish { get; set; }
     }
 
-    // Custom UserRole: Inherits from IdentityUserRole<int>
-    public class UserRole : IdentityUserRole<int>
+    public class UserRole : IdentityUserRole<Guid>
     {
+        [Key, Column(Order = 0)]
+        public Guid UserId { get; set; }
+
+        [Key, Column(Order = 1)]
+        public Guid RoleId { get; set; }
+
         [Required]
         public RoleStatus Status { get; set; } = RoleStatus.Pending;
 
-        public int? ApprovedBy { get; set; }  // Nullable, since initially unapproved
+        public Guid? ApprovedBy { get; set; }
 
         [Column(TypeName = "timestamp")]
-        public DateTime RequestedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified);
+        public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
 
         [Column(TypeName = "timestamp")]
-        public DateTime? ApprovedAt { get; set; } // Nullable, as it’s only set upon approval
+        public DateTime? ApprovedAt { get; set; }
 
-        // Navigation Properties
-        public virtual User User { get; set; }
-        public virtual Role Role { get; set; }
-        public virtual User ApprovedByUser { get; set; }  // Admin who approved/rejected the role
-
+        public virtual User? User { get; set; }
+        public virtual Role? Role { get; set; }
+        public virtual User? ApprovedByUser { get; set; }
     }
-
-
-    // Custom Role: Inherits from IdentityRole<int> (which already contains Id and Name)
-    public class Role : IdentityRole<int>
+    public class Role : IdentityRole<Guid>
     {
-        // Remove duplicate properties: Use Id (for role_id) and Name (for role_name)
-        // Navigation property
         public string ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
     }
@@ -53,8 +69,9 @@ namespace ChurchData
         Active,
         Inactive,
         Suspended,
-        Pending // For newly registered users waiting for activation
+        Pending
     }
+
     public enum RoleStatus
     {
         Pending,

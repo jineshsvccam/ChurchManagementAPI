@@ -1,5 +1,6 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetRoleById(int id)
+        public async Task<IActionResult> GetRoleById(Guid id)
         {
             var role = await _roleService.GetRoleByIdAsync(id);
             if (role == null)
@@ -38,14 +39,14 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRole([FromBody] Role role)
+        public async Task<IActionResult> AddRole([FromBody] RoleDto role)
         {
             var createdRole = await _roleService.AddRoleAsync(role);
             return CreatedAtAction(nameof(GetRoleById), new { id = createdRole.Id }, createdRole);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRole(int id, [FromBody] Role role)
+        public async Task<IActionResult> UpdateRole(Guid id, [FromBody] RoleDto role)
         {
             if (id != role.Id)
             {
@@ -60,7 +61,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(int id)
+        public async Task<IActionResult> DeleteRole(Guid id)
         {
             await _roleService.DeleteRoleAsync(id);
             return NoContent();

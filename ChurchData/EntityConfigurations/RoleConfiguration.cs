@@ -8,26 +8,30 @@ namespace ChurchData.EntityConfigurations
     {
         public void Configure(EntityTypeBuilder<Role> builder)
         {
-            builder.ToTable("roles"); // Table name mapping
+            builder.ToTable("roles");
 
+            builder.HasKey(r => r.Id); // Primary Key
             builder.Property(r => r.Id)
                    .HasColumnName("role_id")
-                   .UseIdentityAlwaysColumn();
+                   .HasDefaultValueSql("uuid_generate_v4()"); // Fix identity issue
 
             builder.Property(r => r.Name)
                    .HasColumnName("role_name")
                    .IsRequired()
                    .HasMaxLength(50);
 
-            // Add required Identity fields
             builder.Property(r => r.NormalizedName)
                    .HasColumnName("normalized_name")
-                   .HasMaxLength(50)
-                   .IsRequired();
+                   .IsRequired()
+                   .HasMaxLength(50);
 
             builder.Property(r => r.ConcurrencyStamp)
                    .HasColumnName("concurrencystamp")
                    .IsConcurrencyToken();
+
+            // Ensure uniqueness for role_name and normalized_name
+            builder.HasIndex(r => r.Name).IsUnique();
+            builder.HasIndex(r => r.NormalizedName).IsUnique();
         }
     }
 }

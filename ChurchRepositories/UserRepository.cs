@@ -21,7 +21,7 @@ namespace ChurchRepositories
             _roleManager = roleManager;
         }
 
-        public async Task<User?> GetUserByIdAsync(int userId)
+        public async Task<User?> GetUserByIdAsync(Guid userId)
         {
             return await _context.Users
                 .Include(u => u.UserRoles)
@@ -52,7 +52,7 @@ namespace ChurchRepositories
                 .ToListAsync();
         }
 
-        public async Task<User> AddUserAsync(User user, string password, List<int> roleIds)
+        public async Task<User> AddUserAsync(User user, string password, List<Guid> roleIds)
         {
             var result = await _userManager.CreateAsync(user, password);
             if (!result.Succeeded)
@@ -78,7 +78,7 @@ namespace ChurchRepositories
             return user;
         }
 
-        public async Task DeleteUserAsync(int userId)
+        public async Task DeleteUserAsync(Guid userId)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user != null)

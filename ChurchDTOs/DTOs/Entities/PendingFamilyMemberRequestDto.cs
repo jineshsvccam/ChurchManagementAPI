@@ -17,7 +17,7 @@ namespace ChurchDTOs.DTOs.Entities
         public int ParishId { get; set; }
 
         [Required]
-        public int SubmittedBy { get; set; }
+        public Guid SubmittedBy { get; set; }
 
         // The payload property represents the complete JSON data.
         [Required]
@@ -29,7 +29,7 @@ namespace ChurchDTOs.DTOs.Entities
         public int ActionId { get; set; }
 
         [Required]
-        public int ApprovedBy { get; set; }
+        public Guid ApprovedBy { get; set; }
     }
 
     public class ServiceResponse

@@ -17,7 +17,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{userId}/{roleId}")]
-        public async Task<IActionResult> GetUserRoleById(int userId, int roleId)
+        public async Task<IActionResult> GetUserRoleById(Guid userId, Guid roleId)
         {
             var userRole = await _userRoleService.GetUserRoleByIdAsync(userId, roleId);
             if (userRole == null)
@@ -35,7 +35,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpDelete("{userId}/{roleId}")]
-        public async Task<IActionResult> DeleteUserRole(int userId, int roleId)
+        public async Task<IActionResult> DeleteUserRole(Guid userId, Guid roleId)
         {
             await _userRoleService.DeleteUserRoleAsync(userId, roleId);
             return NoContent();

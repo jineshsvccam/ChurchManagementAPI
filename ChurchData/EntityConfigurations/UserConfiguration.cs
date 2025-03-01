@@ -11,16 +11,27 @@ namespace ChurchData.EntityConfigurations
 
             builder.Property(u => u.Id)
                    .HasColumnName("user_id")
-                   .UseIdentityAlwaysColumn();
+                   .HasDefaultValueSql("uuid_generate_v4()");
 
             builder.Property(u => u.UserName)
                    .HasColumnName("username")
                    .HasMaxLength(100)
                    .IsRequired();
 
+            builder.Property(u => u.FullName)
+                   .HasColumnName("fullname")
+                   .HasMaxLength(255)
+                   .IsRequired();
+
+            builder.Property(u => u.Mobile)
+                   .HasColumnName("mobile")
+                   .HasMaxLength(20)
+                   .IsRequired();
+
             builder.Property(u => u.NormalizedUserName)
                    .HasColumnName("normalizedusername")
-                   .HasMaxLength(255);
+                   .HasMaxLength(100)
+                   .IsRequired();
 
             builder.Property(u => u.Email)
                    .HasColumnName("email")
@@ -29,15 +40,18 @@ namespace ChurchData.EntityConfigurations
 
             builder.Property(u => u.NormalizedEmail)
                    .HasColumnName("normalizedemail")
-                   .HasMaxLength(255);
+                   .HasMaxLength(100)
+                   .IsRequired();
 
             builder.Property(u => u.EmailConfirmed)
                    .HasColumnName("email_confirmed")
-                   .IsRequired();
+                   .IsRequired()
+                   .HasDefaultValue(false);
 
             builder.Property(u => u.PasswordHash)
                    .HasColumnName("password_hash")
-                   .HasMaxLength(255);
+                   .HasMaxLength(512)
+                   .IsRequired();
 
             builder.Property(u => u.SecurityStamp)
                    .HasColumnName("securitystamp");
@@ -45,51 +59,52 @@ namespace ChurchData.EntityConfigurations
             builder.Property(u => u.ConcurrencyStamp)
                    .HasColumnName("concurrencystamp");
 
-            builder.Property(u => u.PhoneNumber)
-                   .HasColumnName("phonenumber")
-                   .HasMaxLength(255);
-
-            builder.Property(u => u.PhoneNumberConfirmed)
-                   .HasColumnName("phonenumberconfirmed")
-                   .IsRequired();
-
             builder.Property(u => u.TwoFactorEnabled)
                    .HasColumnName("twofactorenabled")
-                   .IsRequired();
+                   .IsRequired()
+                   .HasDefaultValue(false);
 
             builder.Property(u => u.AccessFailedCount)
                    .HasColumnName("accessfailedcount")
-                   .IsRequired();
+                   .IsRequired()
+                   .HasDefaultValue(0);
 
             builder.Property(u => u.LockoutEnabled)
                    .HasColumnName("lockoutenabled")
-                   .IsRequired();
+                   .IsRequired()
+                   .HasDefaultValue(false);
 
             builder.Property(u => u.LockoutEnd)
                    .HasColumnName("lockoutend");
 
-            // Foreign Keys
+            builder.Property(u => u.CreatedAt)
+                   .HasColumnName("created_at")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            builder.Property(u => u.UpdatedAt)
+                   .HasColumnName("updated_at")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
             builder.Property(u => u.FamilyId)
                    .HasColumnName("family_id");
 
             builder.Property(u => u.ParishId)
                    .HasColumnName("parish_id");
 
-            // User Status (Active, Inactive, Suspended)
             builder.Property(u => u.Status)
                    .HasColumnName("status")
-                   .HasConversion<string>() // Enum stored as string
+                   .HasConversion<string>()
                    .HasDefaultValue(UserStatus.Pending);
 
             builder.HasOne(u => u.Family)
                    .WithMany(f => f.Users)
                    .HasForeignKey(u => u.FamilyId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(u => u.Parish)
                    .WithMany(p => p.Users)
                    .HasForeignKey(u => u.ParishId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

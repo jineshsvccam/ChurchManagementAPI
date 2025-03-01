@@ -79,8 +79,8 @@ namespace ChurchManagementAPI.Controllers.Middleware
             {
                 StatusCode = (int)statusCode,
                 Message = errorMessage,
-                Detailed = _env.IsDevelopment() ? exception.Message : null, // Show detailed message only in development
-                StackTrace = _env.IsDevelopment() ? exception.StackTrace : null
+                Detailed = _env.IsDevelopment() ? exception.Message : null,
+                StackTrace = _env.IsDevelopment() && exception.InnerException != null ? exception.InnerException.ToString() : null
             };
 
             context.Response.ContentType = "application/json";
