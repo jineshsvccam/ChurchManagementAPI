@@ -21,5 +21,15 @@ namespace ChurchCommon.Utils
 
             return userId;
         }
+
+        public static Guid GetCurrentUserIdGuid(IHttpContextAccessor httpContextAccessor)
+        {
+            var userIdClaim = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
+            {
+                throw new UnauthorizedAccessException("User ID not found.");
+            }
+            return userId;
+        }
     }
 }

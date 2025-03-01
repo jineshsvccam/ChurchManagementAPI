@@ -11,18 +11,13 @@ namespace ChurchData
         [MaxLength(255)]
         public string FullName { get; set; }
 
-        [Required]
-        [Column("mobile")]
-        [MaxLength(20)]
-        public string Mobile { get; set; }
-
         [Column("family_id")]
         public int? FamilyId { get; set; }
 
         [Column("parish_id")]
         public int? ParishId { get; set; }
 
-        [Column("status")]
+
         public UserStatus Status { get; set; } = UserStatus.Pending;
 
         [Column("created_at")]
@@ -48,11 +43,7 @@ namespace ChurchData
         public RoleStatus Status { get; set; } = RoleStatus.Pending;
 
         public Guid? ApprovedBy { get; set; }
-
-        [Column(TypeName = "timestamp")]
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
-
-        [Column(TypeName = "timestamp")]
         public DateTime? ApprovedAt { get; set; }
 
         public virtual User? User { get; set; }

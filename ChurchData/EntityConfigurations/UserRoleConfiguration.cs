@@ -15,26 +15,28 @@ namespace ChurchData.EntityConfigurations
                    .HasColumnName("user_id");
 
             builder.Property(ur => ur.RoleId)
-                   .HasColumnName("role_id");
+                   .HasColumnName("role_id");           
 
-            builder.Property(ur => ur.Status)
-                   .HasColumnName("status")
-                   .HasConversion<string>() // Stores enum as string; adjust if mapping to PostgreSQL enum
-                   .HasDefaultValue(RoleStatus.Pending);
+            builder.Property(u => u.Status)
+                    .HasColumnName("status")
+                    .HasColumnType("character varying(20)")
+                    .HasConversion(
+                        v => v.ToString(),
+                        v => (RoleStatus)Enum.Parse(typeof(RoleStatus), v))
+                    .HasDefaultValue(RoleStatus.Pending);
 
             builder.Property(ur => ur.ApprovedBy)
                    .HasColumnName("approved_by")
                    .IsRequired(false);
 
             builder.Property(ur => ur.RequestedAt)
-                   .HasColumnName("requested_at")
-                   .HasColumnType("timestamp")
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                 .HasColumnName("requested_at")
+                 .HasColumnType("timestamp with time zone") 
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 
             builder.Property(ur => ur.ApprovedAt)
-                   .HasColumnName("approved_at")
-                   .HasColumnType("timestamp")
-                   .IsRequired(false);
+                .HasColumnName("approved_at")
+                .HasColumnType("timestamp with time zone"); 
 
             builder.HasOne(ur => ur.User)
                    .WithMany(u => u.UserRoles)

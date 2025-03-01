@@ -29,6 +29,20 @@ namespace ChurchData.Mappings
             CreateMap<Unit, UnitDto>().ReverseMap();
             CreateMap<Role, RoleDto>().ReverseMap();
 
+            CreateMap<UserRole, PendingUserRoleDto>()
+           .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name))
+           .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
+           .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+           .ForMember(dest => dest.ParishId, opt => opt.MapFrom(src => src.User.ParishId)) // Keep ParishId mapping
+           .ForMember(dest => dest.FamilyId, opt => opt.MapFrom(src => src.User.FamilyId)) // Use correct field name
+           .ForMember(dest => dest.ParishName, opt => opt.MapFrom(src => src.User.Parish != null ? src.User.Parish.ParishName : ""))
+           .ForMember(dest => dest.FamilyName, opt => opt.MapFrom(src =>
+               src.User.Family != null ?
+               string.Concat(src.User.Family.HeadName ?? "", " ", src.User.Family.FamilyName ?? "").Trim()
+               : ""))
+           .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email));
+
+
             CreateMap<FinancialReportsView, FinancialReportCustomDTO>()
             .ForMember(dest => dest.HeadId, opt => opt.MapFrom((src, dest, destMember, context) =>
             {

@@ -51,70 +51,60 @@ public class AuthService : IAuthService
     // RegisterUserAsync: Creates user and assigns roles
     public async Task<User?> RegisterUserAsync(RegisterDto model)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync(); // Start transaction
+        using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            // Create user
             var user = new User
             {
                 UserName = model.Username,
                 Email = model.Email,
                 EmailConfirmed = true,
                 ParishId = model.ParishId,
-                FamilyId = model.FamilyId
+                FamilyId = model.FamilyId,
+                FullName = model.FullName,
+                PhoneNumber = model.PhoneNumber,
+                Status = UserStatus.Pending
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new Exception($"User creation failed: {errors}"); // Debug: Check error details
+                throw new Exception($"User creation failed: {errors}");
             }
 
-            // Assign roles
             foreach (var roleId in model.RoleIds)
             {
                 var role = await _roleManager.FindByIdAsync(roleId.ToString());
                 if (role == null)
-                    throw new Exception($"Role with ID {roleId} not found."); // Debug: Invalid role ID?
+                    throw new Exception($"Role with ID {roleId} not found.");
 
                 var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
                 if (!isInRole)
                 {
-                    var roleResult = await _userManager.AddToRoleAsync(user, role.Name);
-                    if (!roleResult.Succeeded)
+                    var userRole = new UserRole
                     {
-                        var roleErrors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
-                        throw new Exception($"Failed to assign role {role.Name}: {roleErrors}"); // Debug: Role assignment failed?
-                    }
-
-                    // Update UserRole entity
-                    var userRole = await _context.UserRoles
-                        .FirstOrDefaultAsync(ur => ur.UserId == user.Id && ur.RoleId == roleId);
-                    if (userRole != null)
-                    {
-                        userRole.Status = RoleStatus.Pending;
-                        userRole.ApprovedBy = null;
-                        userRole.ApprovedAt = null;
-                    }
-                    else
-                        throw new Exception("UserRole entity not found after role assignment."); // Debug: Missing UserRole?
-
-                    await _context.SaveChangesAsync(); // Save changes
+                        UserId = user.Id,
+                        RoleId = roleId,
+                        Status = RoleStatus.Pending,
+                        ApprovedBy = null,
+                        ApprovedAt = null
+                    };
+                    _context.UserRoles.Add(userRole);
                 }
             }
 
-            await transaction.CommitAsync(); // Commit if all succeeds
+            await _context.SaveChangesAsync(); // Save all UserRoles at once
+            await transaction.CommitAsync();
             return user;
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(); // Rollback on error
-            _logger.LogError(ex, "Error during user registration for {Username}", model.Username); // Debug: Check log for exception
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error during user registration for {Username}", model.Username);
             throw;
         }
     }
-
     // GenerateJwtToken: Creates JWT for user
     private string GenerateJwtToken(User user)
     {

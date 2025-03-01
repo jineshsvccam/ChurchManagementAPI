@@ -1,6 +1,8 @@
 ﻿using ChurchContracts;
 using ChurchData;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers
@@ -40,5 +42,30 @@ namespace ChurchManagementAPI.Controllers
             await _userRoleService.DeleteUserRoleAsync(userId, roleId);
             return NoContent();
         }
+
+        [HttpGet("pending")]
+        public async Task<IActionResult> GetPendingRoles()
+        {
+            var pendingRoles = await _userRoleService.GetPendingUserRolesAsync();
+            return Ok(pendingRoles);
+        }
+
+        [HttpPost("approverole")]
+        public async Task<IActionResult> ApproveUserRoleAsync([FromBody] ApproveRoleDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest("Invalid request payload.");
+            }
+
+            var result = await _userRoleService.ApproveUserRoleAsync(dto);
+            if (result == null)
+            {
+                return NotFound("User role not found.");
+            }
+
+            return Ok(new { message = "User role updated successfully." });
+        }
+
     }
 }

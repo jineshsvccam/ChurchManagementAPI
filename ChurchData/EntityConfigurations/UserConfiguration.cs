@@ -23,10 +23,15 @@ namespace ChurchData.EntityConfigurations
                    .HasMaxLength(255)
                    .IsRequired();
 
-            builder.Property(u => u.Mobile)
-                   .HasColumnName("mobile")
-                   .HasMaxLength(20)
-                   .IsRequired();
+            builder.Property(u => u.PhoneNumber)
+                    .HasColumnName("phonenumber")
+                    .HasMaxLength(20);
+                   
+
+            builder.Property(u => u.PhoneNumberConfirmed)
+                   .HasColumnName("phonenumberconfirmed")
+                   .IsRequired()
+                   .HasDefaultValue(false);
 
             builder.Property(u => u.NormalizedUserName)
                    .HasColumnName("normalizedusername")
@@ -79,11 +84,13 @@ namespace ChurchData.EntityConfigurations
 
             builder.Property(u => u.CreatedAt)
                    .HasColumnName("created_at")
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                 .HasColumnType("timestamp with time zone")
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 
             builder.Property(u => u.UpdatedAt)
                    .HasColumnName("updated_at")
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                 .HasColumnType("timestamp with time zone")
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 
             builder.Property(u => u.FamilyId)
                    .HasColumnName("family_id");
@@ -92,9 +99,12 @@ namespace ChurchData.EntityConfigurations
                    .HasColumnName("parish_id");
 
             builder.Property(u => u.Status)
-                   .HasColumnName("status")
-                   .HasConversion<string>()
-                   .HasDefaultValue(UserStatus.Pending);
+                    .HasColumnName("status")
+                    .HasColumnType("character varying(20)")
+                    .HasConversion(
+                        v => v.ToString(),
+                        v => (UserStatus)Enum.Parse(typeof(UserStatus), v))
+                    .HasDefaultValue(UserStatus.Pending);
 
             builder.HasOne(u => u.Family)
                    .WithMany(f => f.Users)
