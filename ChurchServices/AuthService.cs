@@ -33,20 +33,21 @@ public class AuthService : IAuthService
     }
 
     // AuthenticateUserAsync: Checks login and returns token
-    public async Task<(bool IsSuccess, string Token, string Message)> AuthenticateUserAsync(string username, string password)
+    public async Task<(bool IsSuccess, string Token, string Message, string FullName)> AuthenticateUserAsync(string username, string password)
     {
         var user = await _userManager.FindByNameAsync(username); // Find user
         if (user == null)
-            return (false, null, "User not found."); // Debug: Check username
+            return (false, null, "User not found.", null); // Debug: Check username
 
         if (!await _userManager.CheckPasswordAsync(user, password))
-            return (false, null, "Invalid password."); // Debug: Wrong password?
+            return (false, null, "Invalid password.", null); // Debug: Wrong password?
 
         if (user.Status != UserStatus.Active)
-            return (false, null, "Your account is not approved."); // Debug: User inactive?
+            return (false, null, "Your account is not approved.", null); // Debug: User inactive?
 
-        return (true, GenerateJwtToken(user), "Login successful."); // Success: Token generated
+        return (true, GenerateJwtToken(user), "Login successful.", user.FullName); // Success: Token + FullName
     }
+
 
     // RegisterUserAsync: Creates user and assigns roles
     public async Task<User?> RegisterUserAsync(RegisterDto model)
