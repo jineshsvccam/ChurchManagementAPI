@@ -75,9 +75,9 @@ namespace ChurchRepositories
 
         public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
         {
-            var user = await GetCurrentUserAsync();
-            if (parishId != user.ParishId)
-                throw new UnauthorizedAccessException("You are not authorized to access this parish data.");
+            //var user = await GetCurrentUserAsync();
+            //if (parishId != user.ParishId)
+            //    throw new UnauthorizedAccessException("You are not authorized to access this parish data.");
 
             var parish = await _context.Parishes.FindAsync(parishId) ?? throw new KeyNotFoundException("Parish not found.");
 

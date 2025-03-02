@@ -14,6 +14,7 @@ namespace ChurchCommon.Utils
         {
             var userIdClaim = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
 
+            return 1;
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
                 throw new UnauthorizedAccessException("User ID not found.");

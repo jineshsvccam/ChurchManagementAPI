@@ -44,6 +44,18 @@ namespace ChurchDTOs.DTOs.Entities
 
         public string Status { get; set; } // "Approved" or "Rejected"
     }
+    public class AuthResultDto
+    {
+        public bool IsSuccess { get; set; }
+        public string Token { get; set; }
+        public string Message { get; set; }
+        public string FullName { get; set; }
+        public int? ParishId { get; set; }
+        public string ParishName { get; set; }
+        public int? FamilyId { get; set; }
+        public string FamilyName { get; set; }
+        public List<string> Roles { get; set; }
+    }
 
     public class PendingUserRoleDto
     {

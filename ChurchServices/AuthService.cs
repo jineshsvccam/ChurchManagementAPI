@@ -33,21 +33,51 @@ public class AuthService : IAuthService
     }
 
     // AuthenticateUserAsync: Checks login and returns token
-    public async Task<(bool IsSuccess, string Token, string Message, string FullName)> AuthenticateUserAsync(string username, string password)
+    public async Task<AuthResultDto> AuthenticateUserAsync(string username, string password)
     {
-        var user = await _userManager.FindByNameAsync(username); // Find user
+        // var user = await _userManager.FindByNameAsync(username);
+        var user = await _context.Users
+             .Include(u => u.Family)
+             .Include(u => u.Parish)
+             .FirstOrDefaultAsync(u => u.UserName == username);
+
         if (user == null)
-            return (false, null, "User not found.", null); // Debug: Check username
+            return new AuthResultDto
+            {
+                IsSuccess = false,
+                Message = "User not found."
+            };
 
         if (!await _userManager.CheckPasswordAsync(user, password))
-            return (false, null, "Invalid password.", null); // Debug: Wrong password?
+            return new AuthResultDto
+            {
+                IsSuccess = false,
+                Message = "Invalid password."
+            };
 
         if (user.Status != UserStatus.Active)
-            return (false, null, "Your account is not approved.", null); // Debug: User inactive?
+            return new AuthResultDto
+            {
+                IsSuccess = false,
+                Message = "Your account is not approved."
+            };
 
-        return (true, GenerateJwtToken(user), "Login successful.", user.FullName); // Success: Token + FullName
+        // Get roles for the user
+        var roles = await _userManager.GetRolesAsync(user);
+
+        return new AuthResultDto
+        {
+            IsSuccess = true,
+            Token = GenerateJwtToken(user),
+            Message = "Login successful.",
+            FullName = user.FullName,
+            ParishId = user.ParishId,
+            ParishName = user.Parish?.ParishName,
+            FamilyId = user.FamilyId,
+            FamilyName = string.Concat(user.Family?.HeadName, " ", user.Family?.FamilyName),
+            Roles = roles.ToList()
+        };
     }
-
 
     // RegisterUserAsync: Creates user and assigns roles
     public async Task<User?> RegisterUserAsync(RegisterDto model)
