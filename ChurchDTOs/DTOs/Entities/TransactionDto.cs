@@ -1,4 +1,6 @@
-﻿public class TransactionDto
+﻿using ChurchDTOs.DTOs.Utils;
+
+public class TransactionDto : IParishEntity
 {
     public string? Action { get; set; } // Action is included in DTO
     public int TransactionId { get; set; }
@@ -12,6 +14,7 @@
     public int? FamilyId { get; set; }
     public int? BankId { get; set; }
     public int ParishId { get; set; }
+    public string? BillName { get; set; }
 
 
 

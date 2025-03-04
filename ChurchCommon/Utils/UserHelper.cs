@@ -4,7 +4,11 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using ChurchData;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchCommon.Utils
 {
@@ -31,6 +35,27 @@ namespace ChurchCommon.Utils
                 throw new UnauthorizedAccessException("User ID not found.");
             }
             return userId;
+        }
+
+        public static async Task<(string RoleName, int? ParishId, int? FamilyId)> GetCurrentUserRoleAsync(
+         IHttpContextAccessor httpContextAccessor, ApplicationDbContext context, ILogger logger)
+        {
+            Guid currentUserId = GetCurrentUserIdGuid(httpContextAccessor);
+
+            var currentUserRole = await context.UserRoles
+                .Include(ur => ur.Role)
+                .Include(ur => ur.User)
+                .Include(ur => ur.User.Parish)
+                .Include(ur => ur.User.Family)
+                .FirstOrDefaultAsync(ur => ur.UserId == currentUserId);
+
+            if (currentUserRole == null)
+            {
+                logger.LogError("User role not found for user with id {currentUserId}", currentUserId);
+                throw new InvalidOperationException("User role not found.");
+            }
+
+            return (currentUserRole.Role.Name, currentUserRole.User?.ParishId, currentUserRole.User?.FamilyId);
         }
     }
 }

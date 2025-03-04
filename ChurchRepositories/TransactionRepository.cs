@@ -27,6 +27,8 @@ namespace ChurchRepositories
         public async Task<PagedResult<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize)
         {
             var cacheKey = $"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}";
+           // _cache.Remove($"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}");
+
 
             if (!_cache.TryGetValue(cacheKey, out PagedResult<Transaction> transactions))
             {

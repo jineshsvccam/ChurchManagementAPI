@@ -1,4 +1,5 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
@@ -6,11 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChurchManagementAPI.Controllers
 {
 
-    public class FamilyContributionController : ManagementAuthorizedController
+    public class FamilyContributionController : ManagementAuthorizedController<FamilyContributionController>
     {
         private readonly IFamilyContributionService _service;
 
-        public FamilyContributionController(IFamilyContributionService service)
+        public FamilyContributionController(IFamilyContributionService service,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<FamilyContributionController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _service = service;
         }

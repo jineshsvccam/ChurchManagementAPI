@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
+using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchDTOs.DTOs.Entities
 {
-    public class FamilyDto
+    public class FamilyDto : IParishEntity
     {
         /// <summary>
         /// Indicates the operation to be performed ("INSERT" or "UPDATE").

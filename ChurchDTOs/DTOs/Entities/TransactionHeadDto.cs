@@ -1,8 +1,9 @@
 ﻿using System.Text.Json.Serialization;
+using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchDTOs.DTOs.Entities
 {
-    public class TransactionHeadDto
+    public class TransactionHeadDto : IParishEntity
     {
         // Used for request operations; remove from response if not set.
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

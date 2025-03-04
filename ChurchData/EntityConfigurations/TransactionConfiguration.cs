@@ -60,6 +60,32 @@ namespace ChurchData.EntityConfigurations
                    .HasColumnName("parish_id")
                    .IsRequired();
 
+            // New Columns Configuration
+            builder.Property(t => t.CreatedAt)
+                   .HasColumnName("created_at")
+                   .HasColumnType("timestamp with time zone")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .IsRequired();
+
+            builder.Property(t => t.CreatedBy)
+                   .HasColumnName("created_by")
+                   .IsRequired();
+
+            builder.Property(t => t.UpdatedAt)
+                   .HasColumnName("updated_at")
+                   .HasColumnType("timestamp with time zone")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .IsRequired(false);
+
+            builder.Property(t => t.UpdatedBy)
+                   .HasColumnName("updated_by")
+                   .IsRequired(false);
+
+            builder.Property(t => t.BillName)
+                   .HasColumnName("bill_name")
+                   .HasMaxLength(255);
+
+            // Foreign Key Constraints
             builder.HasOne(t => t.TransactionHead)
                    .WithMany(th => th.Transactions)
                    .HasForeignKey(t => t.HeadId)
@@ -78,6 +104,16 @@ namespace ChurchData.EntityConfigurations
             builder.HasOne(t => t.Parish)
                    .WithMany(p => p.Transactions)
                    .HasForeignKey(t => t.ParishId)
+                   .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne<User>() // Assuming User entity is available
+                   .WithMany()
+                   .HasForeignKey(t => t.CreatedBy)
+                   .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne<User>() // Assuming User entity is available
+                   .WithMany()
+                   .HasForeignKey(t => t.UpdatedBy)
                    .OnDelete(DeleteBehavior.NoAction);
         }
     }

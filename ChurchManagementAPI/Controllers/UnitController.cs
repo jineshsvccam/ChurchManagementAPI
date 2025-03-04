@@ -1,20 +1,26 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
-{   
-    public class UnitController : ManagementAuthorizedController
+{
+    public class UnitController : ManagementAuthorizedController<UnitController>
     {
         private readonly IUnitService _unitService;
 
-        public UnitController(IUnitService unitService)
+        public UnitController(
+             IUnitService unitService,
+             IHttpContextAccessor httpContextAccessor,
+             ApplicationDbContext context,
+             ILogger<UnitController> logger)
+             : base(httpContextAccessor, context, logger)
         {
             _unitService = unitService;
         }
 
-        
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UnitDto>>> GetUnits([FromQuery] int? parishId)
         {

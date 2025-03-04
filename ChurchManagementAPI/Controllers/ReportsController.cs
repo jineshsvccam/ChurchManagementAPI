@@ -1,12 +1,14 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Utils;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
 
-    public class ReportsController : ManagementAuthorizedController
+    public class ReportsController : ManagementAuthorizedController<ReportsController>
     {
         private readonly ILedgerService _ledgerService;
         private readonly IBankConsolidatedStatementService _bankService;
@@ -18,6 +20,10 @@ namespace ChurchManagementAPI.Controllers
         private readonly IFamilyReportService _familyReportService;
         private readonly IKudishikaReportService _kudishikaReportService;
 
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<ReportsController> _logger;
+
         public ReportsController(ILedgerService ledgerService,
             IBankConsolidatedStatementService bankService,
             ITrialBalanceService trialBalanceService,
@@ -26,7 +32,10 @@ namespace ChurchManagementAPI.Controllers
             IAllTransactionsService allTransactionsService,
             IAramanaReportService aramanaReportService,
             IFamilyReportService familyReportService,
-            IKudishikaReportService kudishikaReportService)
+            IKudishikaReportService kudishikaReportService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<ReportsController> logger) : base(httpContextAccessor, context,logger)
 
         {
             _ledgerService = ledgerService;
@@ -100,12 +109,13 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("allTransactions")]
-        public async Task<ActionResult<NoticeBoardDTO>> GetAllTransactions(
+        public async Task<ActionResult<AllTransactionReportDTO>> GetAllTransactions(
              [FromQuery] int parishId,
              [FromQuery] DateTime startDate,
              [FromQuery] DateTime endDate,
              [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
+           // await ValidateParishIdAsync(parishId);
             var allTransactionReport = await _allTransactionsService.GetAllTransactionAsync(parishId, startDate, endDate, customizationOption);
             return Ok(allTransactionReport);
         }

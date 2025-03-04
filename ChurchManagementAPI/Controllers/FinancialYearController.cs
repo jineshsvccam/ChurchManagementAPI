@@ -1,15 +1,20 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class FinancialYearController : ManagementAuthorizedController
+    public class FinancialYearController : ManagementAuthorizedController<FinancialYearController>
     {
         private readonly IFinancialYearService _financialYearService;
 
-        public FinancialYearController(IFinancialYearService financialYearService)
+        public FinancialYearController(IFinancialYearService financialYearService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<FinancialYearController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _financialYearService = financialYearService;
         }
@@ -30,7 +35,7 @@ namespace ChurchManagementAPI.Controllers
                 return NotFound();
             }
             return Ok(financialYear);
-        }      
+        }
 
         [HttpPost]
         public async Task<IActionResult> AddFinancialYear([FromBody] FinancialYearDto financialYearDto)

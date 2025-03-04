@@ -1,9 +1,10 @@
 ﻿using System.Text.Json.Serialization;
+using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchDTOs.DTOs.Entities
 {
 
-    public class BankDto
+    public class BankDto : IParishEntity
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Action { get; set; }

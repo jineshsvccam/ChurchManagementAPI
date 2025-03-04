@@ -1,15 +1,20 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class FamilyDuesController : ManagementAuthorizedController
+    public class FamilyDuesController : ManagementAuthorizedController<FamilyDuesController>
     {
         private readonly IFamilyDueService _service;
 
-        public FamilyDuesController(IFamilyDueService service)
+        public FamilyDuesController(IFamilyDueService service,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<FamilyDuesController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _service = service;
         }

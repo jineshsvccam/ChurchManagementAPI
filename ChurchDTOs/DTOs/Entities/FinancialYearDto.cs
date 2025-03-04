@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchDTOs.DTOs.Entities
 {
-    public class FinancialYearDto
+    public class FinancialYearDto : IParishEntity
     {
         public int FinancialYearId { get; set; }
         public int ParishId { get; set; }

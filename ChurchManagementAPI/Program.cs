@@ -8,6 +8,7 @@ using ChurchContracts.Interfaces.Repositories;
 using ChurchContracts.Interfaces.Services;
 using ChurchData;
 using ChurchData.Mappings;
+using ChurchManagementAPI.Controllers.Base;
 using ChurchManagementAPI.Controllers.Middleware;
 using ChurchRepositories;
 using ChurchServices;
@@ -74,6 +75,8 @@ builder.Services.AddControllers()
 
 // Register Services and Repositories
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+
 
 builder.Services.AddScoped<IParishService, ParishService>();
 builder.Services.AddScoped<IParishRepository, ParishRepository>();

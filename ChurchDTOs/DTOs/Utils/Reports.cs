@@ -104,7 +104,7 @@ namespace ChurchDTOs.DTOs.Utils
         public string FamilyName { get; set; }
         public int FamilyId { get; set; }
         public List<KudishikaDetails> KudishikaItems { get; set; }
-        
+
     }
     public class KudishikaDetails
     {
@@ -175,6 +175,7 @@ namespace ChurchDTOs.DTOs.Utils
         public decimal IncomeAmount { get; set; }
         public decimal ExpenseAmount { get; set; }
         public string Description { get; set; }
+        public string? BillName { get; set; }
 
         // For Head
         public int? HeadId { get; set; }

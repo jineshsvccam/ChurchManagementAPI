@@ -1,16 +1,21 @@
 ﻿using ChurchContracts;
 using ChurchContracts.Utils;
+using ChurchData;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
 
-    public class TransactionController : ManagementAuthorizedController
+    public class TransactionController : ManagementAuthorizedController<TransactionController>
     {
         private readonly ITransactionService _transactionService;
 
-        public TransactionController(ITransactionService transactionService)
+        public TransactionController(ITransactionService transactionService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<TransactionController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _transactionService = transactionService;
         }

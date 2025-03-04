@@ -1,4 +1,5 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
@@ -6,11 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChurchManagementAPI.Controllers
 {
 
-    public class ContributionSettingsController : ManagementAuthorizedController
+    public class ContributionSettingsController : ManagementAuthorizedController<ContributionSettingsController>
     {
         private readonly IContributionSettingsService _service;
 
-        public ContributionSettingsController(IContributionSettingsService service)
+        public ContributionSettingsController(IContributionSettingsService service,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<ContributionSettingsController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _service = service;
         }

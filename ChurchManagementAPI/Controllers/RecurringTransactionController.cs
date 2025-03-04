@@ -1,15 +1,20 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class RecurringTransactionController : ManagementAuthorizedController
+    public class RecurringTransactionController : ManagementAuthorizedController<RecurringTransactionController>
     {
         private readonly IRecurringTransactionService _service;
 
-        public RecurringTransactionController(IRecurringTransactionService service)
+        public RecurringTransactionController(IRecurringTransactionService service,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<RecurringTransactionController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _service = service;
         }
@@ -47,7 +52,7 @@ namespace ChurchManagementAPI.Controllers
             return NoContent();
         }
 
-        [HttpPost("create-or-update")]       
+        [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<RecurringTransactionDto> requests)
         {
             var createdEntries = await _service.AddOrUpdateAsync(requests);

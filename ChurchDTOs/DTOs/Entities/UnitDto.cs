@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchDTOs.DTOs.Entities
 {
-    public class UnitDto
+    public class UnitDto:IParishEntity
     {
         public string? Action { get; set; } // INSERT or UPDATE
         public int UnitId { get; set; }

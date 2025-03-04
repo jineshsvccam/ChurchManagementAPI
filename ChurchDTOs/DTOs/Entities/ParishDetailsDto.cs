@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ChurchDTOs.DTOs.Utils;
 
 
 namespace ChurchDTOs.DTOs.Entities
 {
-    public class ParishDetailsDto
+    public class ParishDetailsDto : IParishEntity
     {
         public int ParishId { get; set; }
         public required string ParishName { get; set; }
@@ -30,7 +26,7 @@ namespace ChurchDTOs.DTOs.Entities
         public ICollection<FinancialYearDto>? FinancialYears { get; set; }
     }
 
-    public class ParishDto
+    public class ParishDto : IParishEntity
     {
         public int ParishId { get; set; }
         public required string ParishName { get; set; }

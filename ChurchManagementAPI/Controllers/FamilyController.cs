@@ -1,89 +1,80 @@
 ﻿using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class FamilyController : ManagementAuthorizedController
+    public class FamilyController : ManagementAuthorizedController<FamilyController>
     {
         private readonly IFamilyService _familyService;
-        private readonly ILogger<FamilyController> _logger;
 
-        public FamilyController(IFamilyService familyService, ILogger<FamilyController> logger)
+        public FamilyController(
+            IFamilyService familyService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<FamilyController> logger)
+            : base(httpContextAccessor, context, logger)
         {
-            _familyService = familyService;
-            _logger = logger;
+            _familyService = familyService ?? throw new ArgumentNullException(nameof(familyService));
         }
 
-        [HttpGet]       
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<FamilyDto>>> GetFamilies([FromQuery] int? parishId, [FromQuery] int? unitId, [FromQuery] int? familyId)
         {
-            _logger.LogInformation("Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}", parishId, unitId, familyId);
             var families = await _familyService.GetFamiliesAsync(parishId, unitId, familyId);
             return Ok(families);
         }
 
-        [HttpGet("{id}")]      
+        [HttpGet("{id}")]
         public async Task<ActionResult<FamilyDto>> GetById(int id)
         {
-            _logger.LogInformation("Fetching family with Id: {FamilyId}", id);
             var family = await _familyService.GetByIdAsync(id);
             if (family == null)
             {
-                _logger.LogWarning("Family with Id {FamilyId} not found.", id);
                 return NotFound($"Family with Id {id} not found.");
             }
             return Ok(family);
         }
 
-        [HttpPost]       
+        [HttpPost]
         public async Task<ActionResult<FamilyDto>> Create([FromBody] FamilyDto familyDto)
         {
             var createdFamily = await _familyService.AddAsync(familyDto);
             return CreatedAtAction(nameof(GetById), new { id = createdFamily.FamilyId }, createdFamily);
         }
 
-        [HttpPut("{id}")]      
+        [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] FamilyDto familyDto)
         {
-            _logger.LogInformation("Updating family with Id: {FamilyId}", id);
-
             if (id != familyDto.FamilyId)
             {
-                _logger.LogWarning("Family Id mismatch. Path Id: {PathId}, Body Id: {BodyId}", id, familyDto.FamilyId);
                 return BadRequest("Family ID in the request body does not match the URL parameter.");
             }
 
             var updatedFamily = await _familyService.UpdateAsync(familyDto);
             if (updatedFamily == null)
             {
-                _logger.LogWarning("Family with Id {FamilyId} not found for update.", id);
                 return NotFound($"Family with Id {id} not found.");
             }
 
-            _logger.LogInformation("Successfully updated family with Id {FamilyId}", id);
             return Ok(updatedFamily);
         }
 
-        [HttpDelete("{id}")]        
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            _logger.LogInformation("Deleting family with Id: {FamilyId}", id);
             await _familyService.DeleteAsync(id);
-            _logger.LogInformation("Successfully deleted family with Id {FamilyId}", id);
             return NoContent();
         }
 
-        [HttpPost("create-or-update")]       
+        [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<FamilyDto> requests)
         {
-            _logger.LogInformation("Creating or updating {FamilyCount} families.", requests.Count());
             var createdFamilies = await _familyService.AddOrUpdateAsync(requests);
             if (createdFamilies.Any())
             {
-                _logger.LogInformation("Successfully created/updated {FamilyCount} families.", createdFamilies.Count());
                 return CreatedAtAction(nameof(GetFamilies), createdFamilies);
             }
             return Ok();

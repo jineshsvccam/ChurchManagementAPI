@@ -1,27 +1,35 @@
 ﻿using ChurchContracts.ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-  
-    public class BankController : ManagementAuthorizedController
+    public class BankController : ManagementAuthorizedController<BankController>
     {
         private readonly IBankService _bankService;
 
-        public BankController(IBankService bankService)
+        public BankController(
+            IBankService bankService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<BankController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _bankService = bankService;
         }
 
+        // This endpoint accepts a parishId in the query, which will be validated by the action filter.
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BankDto>>> GetBanks([FromQuery] int? parishId, [FromQuery] int? bankId)
+        public async Task<ActionResult<IEnumerable<BankDto>>> GetBanks([FromQuery] int parishId, [FromQuery] int? bankId)
         {
             var banks = await _bankService.GetBanksAsync(parishId, bankId);
             return Ok(banks);
         }
 
+        // This endpoint does not accept a parishId parameter.
+        // The filter will validate the returned BankDto (if it implements IParishEntity).
         [HttpGet("{id}")]
         public async Task<ActionResult<BankDto>> GetById(int id)
         {
@@ -42,10 +50,8 @@ namespace ChurchManagementAPI.Controllers
             }
 
             var createdBank = await _bankService.AddAsync(bank);
-
             return CreatedAtAction(nameof(GetById), new { id = createdBank.BankId }, createdBank);
         }
-
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, BankDto bank)
