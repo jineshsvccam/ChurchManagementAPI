@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class FamilyController : ManagementAuthorizedController<FamilyController>
+   // [ApiExplorerSettings(IgnoreApi = false)]
+    public class FamilyController : ManagementAuthorizedTrialController
     {
         private readonly IFamilyService _familyService;
 
@@ -15,7 +16,7 @@ namespace ChurchManagementAPI.Controllers
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
             ILogger<FamilyController> logger)
-            : base(httpContextAccessor, context, logger)
+           // : base(httpContextAccessor, context, logger)
         {
             _familyService = familyService ?? throw new ArgumentNullException(nameof(familyService));
         }

@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class RecurringTransactionController : ManagementAuthorizedController<RecurringTransactionController>
+   // [ApiExplorerSettings(IgnoreApi = false)]
+    public class RecurringTransactionController : ManagementAuthorizedTrialController
     {
         private readonly IRecurringTransactionService _service;
 
@@ -14,7 +15,7 @@ namespace ChurchManagementAPI.Controllers
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
             ILogger<RecurringTransactionController> logger)
-            : base(httpContextAccessor, context, logger)
+           // : base(httpContextAccessor, context, logger)
         {
             _service = service;
         }

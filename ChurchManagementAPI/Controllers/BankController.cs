@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
+    [ApiExplorerSettings(IgnoreApi = false)]
     public class BankController : ManagementAuthorizedController<BankController>
     {
         private readonly IBankService _bankService;

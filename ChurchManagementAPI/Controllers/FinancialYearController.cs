@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class FinancialYearController : ManagementAuthorizedController<FinancialYearController>
+   // [ApiExplorerSettings(IgnoreApi = false)]
+    public class FinancialYearController : ManagementAuthorizedTrialController
     {
         private readonly IFinancialYearService _financialYearService;
 
@@ -14,7 +15,7 @@ namespace ChurchManagementAPI.Controllers
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
             ILogger<FinancialYearController> logger)
-            : base(httpContextAccessor, context, logger)
+            //: base(httpContextAccessor, context, logger)
         {
             _financialYearService = financialYearService;
         }

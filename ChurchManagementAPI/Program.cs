@@ -15,6 +15,7 @@ using ChurchServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -200,9 +201,13 @@ builder.Services.AddEndpointsApiExplorer(); // Add Endpoints API Explorer
 builder.Services.AddMemoryCache(); // Enable MemoryCache
 
 // Swagger configuration
+// Swagger configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ChurchManagementAPI", Version = "v1" });
+
+    // Add support for annotations (optional, requires Swashbuckle.AspNetCore.Annotations)
+    c.EnableAnnotations(); // This line requires the package and a using directive (see below)
 
     // Add the JWT authorization header to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -234,7 +239,7 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            new string[] { }
         },
         {
             new OpenApiSecurityScheme
@@ -245,13 +250,30 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "User-ID"
                 }
             },
-            new string[] {}
+            new string[] { }
         }
     };
     c.AddSecurityRequirement(securityRequirement);
-});
 
-builder.Services.AddLogging();
+    //// Optional: Custom filter to exclude abstract controllers
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        if (apiDesc.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
+        {
+            return !controllerActionDescriptor.ControllerTypeInfo.IsAbstract;
+        }
+        return true;
+    });
+
+    // Optional: Log Swagger generation issues for debugging
+    //c.DocumentFilter<SwaggerDebugFilter>(); // Define this filter as shown previously if needed
+});
+// Add logging with console output
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.SetMinimumLevel(LogLevel.Debug); // Set to Debug for more detailed logs
+});
 
 var app = builder.Build();
 

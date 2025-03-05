@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class UnitController : ManagementAuthorizedController<UnitController>
+  //  [ApiExplorerSettings(IgnoreApi = false)]
+    public class UnitController : ManagementAuthorizedTrialController
     {
         private readonly IUnitService _unitService;
 
@@ -15,7 +16,7 @@ namespace ChurchManagementAPI.Controllers
              IHttpContextAccessor httpContextAccessor,
              ApplicationDbContext context,
              ILogger<UnitController> logger)
-             : base(httpContextAccessor, context, logger)
+            // : base(httpContextAccessor, context, logger)
         {
             _unitService = unitService;
         }

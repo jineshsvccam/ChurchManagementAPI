@@ -8,7 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChurchManagementAPI.Controllers
 {
 
-    public class ReportsController : ManagementAuthorizedController<ReportsController>
+  //  [ApiExplorerSettings(IgnoreApi = false)]
+    public class ReportsController : ManagementAuthorizedTrialController
     {
         private readonly ILedgerService _ledgerService;
         private readonly IBankConsolidatedStatementService _bankService;
@@ -35,7 +36,8 @@ namespace ChurchManagementAPI.Controllers
             IKudishikaReportService kudishikaReportService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<ReportsController> logger) : base(httpContextAccessor, context,logger)
+            ILogger<ReportsController> logger) 
+            //: base(httpContextAccessor, context,logger)
 
         {
             _ledgerService = ledgerService;

@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChurchManagementAPI.Controllers
 {
 
-    public class TransactionController : ManagementAuthorizedController<TransactionController>
+   // [ApiExplorerSettings(IgnoreApi = false)]
+    public class TransactionController : ManagementAuthorizedTrialController
     {
         private readonly ITransactionService _transactionService;
 
@@ -15,7 +16,7 @@ namespace ChurchManagementAPI.Controllers
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
             ILogger<TransactionController> logger)
-            : base(httpContextAccessor, context, logger)
+           // : base(httpContextAccessor, context, logger)
         {
             _transactionService = transactionService;
         }

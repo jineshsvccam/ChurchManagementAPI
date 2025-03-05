@@ -1,14 +1,17 @@
-﻿using System.Collections;
-using ChurchCommon.Utils;
+﻿using ChurchCommon.Utils;
 using ChurchData;
 using ChurchDTOs.DTOs.Utils;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
+using System.Collections;
+using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers.Base
 {
-    [ApiExplorerSettings(IgnoreApi = true)]
+   // [ApiExplorerSettings(IgnoreApi = true)] // Remove this attribute
     [Authorize(Policy = "ManagementPolicy")]
     [ApiController]
     [Route("api/[controller]")]
@@ -34,6 +37,7 @@ namespace ChurchManagementAPI.Controllers.Base
             return userParishId;
         }
 
+        [NonAction]
         public async Task ValidateParishIdAsync(int parishId)
         {
             var currentParishId = await GetCurrentParishIdAsync();
@@ -74,7 +78,6 @@ namespace ChurchManagementAPI.Controllers.Base
         [NonAction]
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            // Validate input parameters if "parishId" is provided.
             if (context.ActionArguments.TryGetValue("parishId", out var parishIdObj) && parishIdObj is int parishId)
             {
                 try
@@ -89,10 +92,8 @@ namespace ChurchManagementAPI.Controllers.Base
                 }
             }
 
-            // Proceed with action execution.
             var executedContext = await next();
 
-            // Validate output if it implements IParishEntity or is a collection of such objects.
             if (executedContext.Result is ObjectResult objectResult && objectResult.Value != null)
             {
                 try
