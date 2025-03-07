@@ -33,7 +33,10 @@ namespace ChurchCommon.Utils
         public static string Serialize<T>(T obj)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
-            return JsonConvert.SerializeObject(obj);
+            return JsonConvert.SerializeObject(obj, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            });
         }
     }
 }

@@ -72,6 +72,10 @@ namespace ChurchDTOs.DTOs.Utils
 
     public class AllTransactionReportDTO
     {
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
         public List<FinancialReportCustomDTO> Transactions { get; set; }
     }
 
@@ -94,15 +98,23 @@ namespace ChurchDTOs.DTOs.Utils
         public int FamilyId { get; set; }
         public decimal TotalPaid { get; set; }
         public decimal TotalReceived { get; set; }
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
         public List<FinancialReportCustomDTO> Transactions { get; set; }
 
     }
 
     public class KudishikalReportDTO
-    {
+    {      
         public int FamilyNumber { get; set; }
         public string FamilyName { get; set; }
         public int FamilyId { get; set; }
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
         public List<KudishikaDetails> KudishikaItems { get; set; }
 
     }
@@ -184,14 +196,15 @@ namespace ChurchDTOs.DTOs.Utils
         // For Family
         public int? FamilyId { get; set; }
         public string FamilyName { get; set; }
+        public int? FamilyNumber { get; set; }
 
         // For Bank
         public int? BankId { get; set; }
         public string BankName { get; set; }
 
         // For Parish
-        public int? ParishId { get; set; }
-        public string ParishName { get; set; }
+        //  public int? ParishId { get; set; }
+        //  public string ParishName { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

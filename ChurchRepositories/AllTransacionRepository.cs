@@ -46,6 +46,10 @@ namespace ChurchRepositories
                 
             return new AllTransactionReportDTO
             {
+                ParishId=parishId,
+                StartDate = startDate,
+                EndDate = endDate,
+                ReportName = "All Transactions",
                 Transactions = mappedTransactions
             };
         }

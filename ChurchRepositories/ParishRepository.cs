@@ -32,12 +32,12 @@ namespace ChurchRepositories
 
         public async Task<IEnumerable<Parish>> GetAllAsync()
         {
-            return await _context.Parishes.ToListAsync();           
+            return await _context.Parishes.ToListAsync();
         }
 
         public async Task<Parish?> GetByIdAsync(int id)
         {
-           // var user = await GetCurrentUserAsync();
+            // var user = await GetCurrentUserAsync();
             var parish = await _context.Parishes.FindAsync(id);
 
             //if (parish?.ParishId != user.ParishId)
@@ -73,7 +73,7 @@ namespace ChurchRepositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
+        public async Task<ParishDetailsBasicDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
         {
             //var user = await GetCurrentUserAsync();
             //if (parishId != user.ParishId)
@@ -81,62 +81,45 @@ namespace ChurchRepositories
 
             var parish = await _context.Parishes.FindAsync(parishId) ?? throw new KeyNotFoundException("Parish not found.");
 
-            var details = new ParishDetailsDto
+            var details = new ParishDetailsBasicDto
             {
                 ParishId = parish.ParishId,
                 ParishName = parish.ParishName,
-                ParishLocation = parish.ParishLocation,
-                Photo = parish.Photo,
-                Address = parish.Address,
-                Phone = parish.Phone,
-                Email = parish.Email,
-                Place = parish.Place,
-                Pincode = parish.Pincode,
-                VicarName = parish.VicarName,
-                DistrictId = parish.DistrictId,
-                Units = await _context.Units.Where(u => u.ParishId == parishId).Select(u => new UnitDto
+
+                Units = await _context.Units.Where(u => u.ParishId == parishId).Select(u => new UnitBasicDto
                 {
                     UnitId = u.UnitId,
-                    UnitName = u.UnitName,
-                    Description = u.Description,
-                    UnitPresident = u.UnitPresident,
-                    UnitSecretary = u.UnitSecretary
+                    UnitName = u.UnitName
+
                 }).ToListAsync(),
-                Families = await _context.Families.Where(f => f.ParishId == parishId).Select(f => new FamilyDto
+                Families = await _context.Families.Where(f => f.ParishId == parishId).Select(f => new FamilyBasicDto
                 {
                     FamilyId = f.FamilyId,
-                    FamilyName = f.FamilyName,
-                    Address = f.Address,
-                    ContactInfo = f.ContactInfo,
-                    Category = f.Category,
+                    FamilyName = string.Concat(f.HeadName, " ", f.FamilyName),
                     FamilyNumber = f.FamilyNumber,
-                    Status = f.Status,
-                    HeadName = f.HeadName,
-                    JoinDate = f.JoinDate ?? DateTime.MinValue
+                    UnitId=f.UnitId
+
                 }).ToListAsync(),
-                TransactionHeads = await _context.TransactionHeads.Where(th => th.ParishId == parishId).Select(th => new TransactionHeadDto
+                TransactionHeads = await _context.TransactionHeads.Where(th => th.ParishId == parishId).Select(th => new TransactionHeadBasicDto
                 {
                     HeadId = th.HeadId,
                     HeadName = th.HeadName,
                     Type = th.Type,
-                    Description = th.Description
+                    Aramanapct = th.Aramanapct,
+                    Ordr = th.Ordr
                 }).ToListAsync(),
-                Banks = await _context.Banks.Where(b => b.ParishId == parishId).Select(b => new BankDto
+                Banks = await _context.Banks.Where(b => b.ParishId == parishId).Select(b => new BankBasicDto
                 {
                     BankId = b.BankId,
-                    BankName = b.BankName,
-                    AccountNumber = b.AccountNumber,
-                    OpeningBalance = b.OpeningBalance,
-                    CurrentBalance = b.CurrentBalance
+                    BankName = b.BankName
                 }).ToListAsync(),
-                FinancialYears = await _context.FinancialYears.Where(fy => fy.ParishId == parishId).Select(fy => new FinancialYearDto
+                FinancialYears = await _context.FinancialYears.Where(fy => fy.ParishId == parishId).Select(fy => new FinancialYearBasicDto
                 {
                     FinancialYearId = fy.FinancialYearId,
                     StartDate = fy.StartDate,
                     EndDate = fy.EndDate,
-                    IsLocked = fy.IsLocked,
-                    LockDate = fy.LockDate,
-                    Description = fy.Description
+                    IsLocked = fy.IsLocked
+
                 }).ToListAsync(),
                 FamilyMembers = includeFamilyMembers ? await _context.FamilyMembers.Where(fm => _context.Families.Where(f => f.ParishId == parishId).Select(f => f.FamilyId).Contains(fm.FamilyId)).Select(fm => new FamilyMemberDto
                 {
@@ -146,7 +129,7 @@ namespace ChurchRepositories
                     FirstName = fm.FirstName,
                     LastName = fm.LastName,
                     DateOfBirth = fm.DateOfBirth,
-                    Gender = fm.Gender.ToString()                   
+                    Gender = fm.Gender.ToString()
                 }).ToListAsync() : new List<FamilyMemberDto>()
             };
 

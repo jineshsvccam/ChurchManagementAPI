@@ -10,7 +10,7 @@ namespace ChurchContracts
         Task<Parish> AddAsync(Parish parish);
         Task UpdateAsync(Parish parish);
         Task DeleteAsync(int id);
-        Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false);
+        Task<ParishDetailsBasicDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false);
     }
 
 }

@@ -24,5 +24,10 @@ namespace ChurchDTOs.DTOs.Entities
         public string UnitName { get; set; }
         public List<FamilySimpleDto> Families { get; set; }
     }
+    public class UnitBasicDto
+    {
+        public int UnitId { get; set; }
+        public string UnitName { get; set; }
+    }
 
 }

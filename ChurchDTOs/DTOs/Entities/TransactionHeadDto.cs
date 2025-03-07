@@ -20,4 +20,12 @@ namespace ChurchDTOs.DTOs.Entities
         public string? HeadNameMl { get; set; }
     }
 
+    public class TransactionHeadBasicDto
+    {
+        public int HeadId { get; set; }
+        public string HeadName { get; set; } = string.Empty;
+        public string? Type { get; set; }
+        public double? Aramanapct { get; set; }
+        public string? Ordr { get; set; }
+    }
 }

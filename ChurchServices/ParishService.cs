@@ -81,11 +81,11 @@ namespace ChurchServices
             await _parishRepository.DeleteAsync(id);
         }
 
-        public async Task<ParishDetailsDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
+        public async Task<ParishDetailsBasicDto> GetParishDetailsAsync(int parishId, bool includeFamilyMembers = false)
         {
             _logger.LogInformation("Fetching parish details for ID {ParishId}.", parishId);
             var parishDetails = await _parishRepository.GetParishDetailsAsync(parishId, includeFamilyMembers);
-            return _mapper.Map<ParishDetailsDto>(parishDetails);
+            return parishDetails;
         }
 
         private async Task LoadDummyDataAsync(int parishId)

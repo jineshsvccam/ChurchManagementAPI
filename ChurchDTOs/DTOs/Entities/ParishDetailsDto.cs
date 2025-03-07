@@ -51,4 +51,19 @@ namespace ChurchDTOs.DTOs.Entities
         public List<UnitSimpleDto> Units { get; set; }
     }
 
+    public class ParishDetailsBasicDto : IParishEntity
+    {
+        public int ParishId { get; set; }
+        public required string ParishName { get; set; }      
+
+        public ICollection<UnitBasicDto>? Units { get; set; }
+        public ICollection<FamilyBasicDto>? Families { get; set; }
+        public ICollection<TransactionHeadBasicDto>? TransactionHeads { get; set; }
+        public ICollection<BankBasicDto>? Banks { get; set; }
+        public ICollection<TransactionDto>? Transactions { get; set; }
+        public ICollection<FamilyMemberDto>? FamilyMembers { get; set; }
+        public ICollection<FinancialYearBasicDto>? FinancialYears { get; set; }
+    }
+
+
 }

@@ -15,4 +15,11 @@ namespace ChurchDTOs.DTOs.Entities
         public decimal CurrentBalance { get; set; }
         public int ParishId { get; set; }
     }
+
+    public class BankBasicDto
+    {
+        public int BankId { get; set; }
+        public string BankName { get; set; }
+     
+    }
 }

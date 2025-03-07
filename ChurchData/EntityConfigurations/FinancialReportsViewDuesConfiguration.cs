@@ -29,6 +29,7 @@ namespace ChurchData.EntityConfigurations
             builder.Property(e => e.UnitId).HasColumnName("unitid");
             builder.Property(e => e.UnitName).HasColumnName("unitname");
             builder.Property(e => e.FamilyNumber).HasColumnName("familynumber");
+            builder.Property(e => e.BillName).HasColumnName("billname");
         }
     }
 }

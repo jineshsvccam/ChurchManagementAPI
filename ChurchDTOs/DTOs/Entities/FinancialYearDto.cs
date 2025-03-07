@@ -12,4 +12,11 @@ namespace ChurchDTOs.DTOs.Entities
         public DateTime? LockDate { get; set; }
         public string? Description { get; set; }
     }
+    public class FinancialYearBasicDto
+    {
+        public int FinancialYearId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsLocked { get; set; }
+    }
 }

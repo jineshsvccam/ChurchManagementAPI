@@ -83,7 +83,7 @@ namespace ChurchManagementAPI.Controllers
         }
 
         [HttpGet("{parishId}/details")]
-        public async Task<ActionResult<ParishDetailsDto>> GetParishDetails(int parishId, [FromQuery] bool includeFamilyMembers = false)
+        public async Task<ActionResult<ParishDetailsBasicDto>> GetParishDetails(int parishId, [FromQuery] bool includeFamilyMembers = false)
         {
             _logger.LogInformation("Fetching parish details for ID {ParishId}. IncludeFamilyMembers: {IncludeFamilyMembers}", parishId, includeFamilyMembers);
             var parishDetails = await _parishService.GetParishDetailsAsync(parishId, includeFamilyMembers);

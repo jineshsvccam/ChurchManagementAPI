@@ -141,9 +141,13 @@ namespace ChurchServices
                 throw new InvalidOperationException("Transactions for this financial year are locked and cannot be modified.");
             }
 
+            // Store the original CreatedBy value
+            var originalCreatedBy = existingTransaction.CreatedBy;
+
             var transaction = _mapper.Map<Transaction>(transactionDto);
             transaction.UpdatedBy = UserHelper.GetCurrentUserIdGuid(_httpContextAccessor);
             transaction.UpdatedAt = DateTime.UtcNow;
+            transaction.CreatedBy = originalCreatedBy;
 
             var updatedTransaction = await _transactionRepository.UpdateAsync(transaction);
             return _mapper.Map<TransactionDto>(updatedTransaction);

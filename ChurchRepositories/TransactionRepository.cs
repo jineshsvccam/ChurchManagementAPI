@@ -90,6 +90,7 @@ namespace ChurchRepositories
             await _context.Transactions.AddAsync(transaction);
             await _context.SaveChangesAsync();
             await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "INSERT", userId, null, Extensions.Serialize(transaction));
+            _context.Entry(transaction).State = EntityState.Detached;
             return transaction;
         }
 

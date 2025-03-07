@@ -73,17 +73,17 @@ namespace ChurchData.Mappings
             {
                 var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
                 return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.BankName : null;
-            }))
-            .ForMember(dest => dest.ParishId, opt => opt.MapFrom((src, dest, destMember, context) =>
-            {
-                var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
-                return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishId : (int?)null;
-            }))
-            .ForMember(dest => dest.ParishName, opt => opt.MapFrom((src, dest, destMember, context) =>
-            {
-                var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
-                return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
             }));
+            //.ForMember(dest => dest.ParishId, opt => opt.MapFrom((src, dest, destMember, context) =>
+            //{
+            //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+            //    return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishId : (int?)null;
+            //}));
+            //.ForMember(dest => dest.ParishName, opt => opt.MapFrom((src, dest, destMember, context) =>
+            //{
+            //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+            //    return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
+            //}));
 
             //dues table
             CreateMap<FinancialReportsViewDues, FinancialReportCustomDTO>()
@@ -116,17 +116,17 @@ namespace ChurchData.Mappings
          {
              var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
              return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.BankName : null;
-         }))
-         .ForMember(dest => dest.ParishId, opt => opt.MapFrom((src, dest, destMember, context) =>
-         {
-             var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
-             return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishId : (int?)null;
-         }))
-         .ForMember(dest => dest.ParishName, opt => opt.MapFrom((src, dest, destMember, context) =>
-         {
-             var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
-             return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
          }));
+         //.ForMember(dest => dest.ParishId, opt => opt.MapFrom((src, dest, destMember, context) =>
+         //{
+         //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+         //    return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishId : (int?)null;
+         //}));
+         //.ForMember(dest => dest.ParishName, opt => opt.MapFrom((src, dest, destMember, context) =>
+         //{
+         //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+         //    return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
+         //}));
 
 
             //for notice board

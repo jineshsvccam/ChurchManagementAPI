@@ -158,6 +158,10 @@ namespace ChurchRepositories
                 FamilyId = firstitem.FamilyId,
                 FamilyNumber = familyNumber,
                 FamilyName = firstitem.FamilyName,
+                ParishId = parishId,
+                StartDate = startDate,
+                EndDate = endDate,
+                ReportName = "Kudishika Report",
                 KudishikaItems = kudishikaDetailsList
             };
         }

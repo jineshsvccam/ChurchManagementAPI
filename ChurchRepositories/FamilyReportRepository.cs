@@ -27,8 +27,9 @@ namespace ChurchRepositories
         {
             // Query the FinancialReportsView for the given parish and family number.
             var familyReportList = await _context.FinancialReportsView
-                .Where(r => r.ParishId == parishId && r.FamilyNumber == familyNumber)
-                .ToListAsync();
+                                 .Where(r => r.ParishId == parishId && r.FamilyNumber == familyNumber)
+                                 .OrderBy(r => r.TrDate) // Orders by TrDate in ascending order
+                                 .ToListAsync();
 
             // If no transactions are found, return null.
             if (familyReportList == null || familyReportList.Count == 0)
@@ -54,7 +55,11 @@ namespace ChurchRepositories
                 FamilyName = firstEntry.FamilyName,
                 FamilyId = firstEntry.FamilyId,
                 TotalPaid = totalPaid,
-                TotalReceived = totalReceived,  
+                TotalReceived = totalReceived,
+                ParishId = parishId,
+                StartDate = firstEntry.TrDate,
+                EndDate = familyReportList.Last().TrDate,
+                ReportName = "Family Report",
                 Transactions = mappedTransactions
             };
 
