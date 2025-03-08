@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using System.Diagnostics;
+using ChurchCommon.Utils;
 
 class Program
 {
@@ -9,6 +10,20 @@ class Program
 
         try
         {
+            AESEncryptionHelper aESEncryptionHelper = new AESEncryptionHelper(null);
+            string secretKey = "my32byteSecretKey1234567890abcd";
+            string originalText = "jiness";
+            Console.WriteLine("Original Text: " + originalText);
+
+            // Encrypt the original text
+            string cipherText = aESEncryptionHelper.EncryptString(originalText, secretKey);
+            cipherText = "U2FsdGVkX1/VxZPobs8ueWwzayouYias2VPLLYdr6gU=";
+            Console.WriteLine("Encrypted Text: " + cipherText);
+
+            // Decrypt the generated ciphertext
+            //string decryptedText = aESEncryptionHelper.DecryptString(cipherText, secretKey);
+            //Console.WriteLine("Decrypted Text: " + decryptedText);
+
             string accessDbPath = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
             Console.WriteLine($"Access DB Path: {accessDbPath}");
 

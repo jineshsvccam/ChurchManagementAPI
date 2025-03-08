@@ -1,4 +1,5 @@
-﻿using ChurchDTOs.DTOs.Entities;
+﻿using ChurchCommon.Utils;
+using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
@@ -8,15 +9,23 @@ namespace ChurchManagementAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly AESEncryptionHelper _aesEncryptionHelper;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, AESEncryptionHelper aesEncryptionHelper)
         {
             _authService = authService;
+            _aesEncryptionHelper = aesEncryptionHelper;
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            var result = await _authService.AuthenticateUserAsync(loginDto.Username, loginDto.Password);
+            var key = _aesEncryptionHelper.Generate256BitKey();
+            //_aesEncryptionHelper.TestDecryption();
+            // Decrypt the username and password
+            string decryptedUsername = _aesEncryptionHelper.DecryptAES(loginDto.Username);
+            string decryptedPassword = _aesEncryptionHelper.DecryptAES(loginDto.Password);
+
+            var result = await _authService.AuthenticateUserAsync(decryptedUsername, decryptedPassword);
 
             if (!result.IsSuccess)
             {

@@ -136,6 +136,7 @@ builder.Services.AddScoped<IKudishikaReportService, KudishikaReportService>();
 
 builder.Services.AddScoped<IPublicRepository, PublicRepository>();
 builder.Services.AddScoped<IPublicService, PublicService>();
+builder.Services.AddTransient<AESEncryptionHelper>();
 
 
 // Register configuration settings
