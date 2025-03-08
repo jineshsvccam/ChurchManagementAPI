@@ -64,6 +64,26 @@ namespace ChurchManagementAPI.Controllers
             return Ok(transactionDto);
         }
 
+        [HttpDelete("multiple/{ids}")] 
+        public async Task<IActionResult> DeleteMultiples([FromRoute] string ids)
+        {
+            if (string.IsNullOrEmpty(ids))
+            {
+                return BadRequest("No transaction IDs provided.");
+            }
+
+            try
+            {
+                int[] idArray = ids.Split(',').Select(int.Parse).ToArray();
+                await _transactionService.DeleteAsync(idArray);
+                return NoContent();
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid ID format in the list.");
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

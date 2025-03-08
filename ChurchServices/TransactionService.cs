@@ -7,6 +7,8 @@ using AutoMapper;
 using ChurchCommon.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
+using System;
 
 namespace ChurchServices
 {
@@ -176,6 +178,65 @@ namespace ChurchServices
 
             await _transactionRepository.DeleteAsync(id);
             _logger.LogInformation("Transaction with id {id} deleted.", id);
+        }
+
+        public async Task DeleteAsync(int[] ids)
+        {
+            // Validation for array size
+            if (ids == null || ids.Length == 0)
+            {
+                throw new ArgumentException("Transaction IDs array cannot be null or empty.");
+            }
+
+            if (ids.Length > 10)
+            {
+                throw new ArgumentException("Cannot delete more than 10 transactions at once.");
+            }
+
+            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+
+            // Get all transactions at once instead of one-by-one
+            var transactions = await _transactionRepository.GetByIdsAsync(ids);
+
+            // Check if all requested transactions were found
+            if (transactions.Count != ids.Length)
+            {
+                var foundIds = transactions.Select(t => t.TransactionId).ToHashSet();
+                var missingIds = ids.Where(id => !foundIds.Contains(id));
+                throw new InvalidOperationException($"Some transactions were not found: {string.Join(", ", missingIds)}");
+            }
+
+            // Validate parish permissions for all transactions
+            var unauthorizedTransactions = transactions.Where(t => t.ParishId != userParishId).ToList();
+            if (unauthorizedTransactions.Any())
+            {
+                throw new UnauthorizedAccessException(
+                    $"You do not have permission to delete transactions: {string.Join(", ", unauthorizedTransactions.Select(t => t.TransactionId))}");
+            }
+
+            // Get financial years for all transaction dates at once
+            var transactionDates = transactions.Select(t => t.TrDate).Distinct().ToList();
+            var financialYears = await _financialYearRepository.GetFinancialYearsByDatesAsync((int)userParishId, transactionDates);
+
+            // Check if any financial years are locked
+            foreach (var transaction in transactions)
+            {
+                var financialYear = financialYears.FirstOrDefault(fy =>
+                    fy.ParishId == transaction.ParishId &&
+                    fy.StartDate <= transaction.TrDate &&
+                    fy.EndDate >= transaction.TrDate);
+
+                if (financialYear == null || financialYear.IsLocked)
+                {
+                    throw new InvalidOperationException(
+                        $"Transaction {transaction.TransactionId} cannot be deleted as its financial year is locked.");
+                }
+            }
+
+            // Delete all transactions in one go
+            await _transactionRepository.DeleteMultipleAsync(ids);
+
+            _logger.LogInformation("Transactions with ids {ids} deleted.", string.Join(", ", ids));
         }
     }
 }

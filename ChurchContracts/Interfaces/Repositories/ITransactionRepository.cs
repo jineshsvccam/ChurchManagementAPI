@@ -10,5 +10,8 @@ namespace ChurchContracts
         Task<Transaction> AddAsync(Transaction transaction);
         Task<Transaction> UpdateAsync(Transaction transaction);
         Task DeleteAsync(int id);
+
+        Task<List<Transaction>> GetByIdsAsync(int[] ids);
+        Task DeleteMultipleAsync(int[] ids);
     }
 }

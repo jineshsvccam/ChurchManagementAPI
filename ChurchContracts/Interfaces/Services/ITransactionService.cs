@@ -8,6 +8,7 @@ namespace ChurchContracts
         Task<TransactionDto?> GetByIdAsync(int id);
         Task<IEnumerable<TransactionDto>> AddOrUpdateAsync(IEnumerable<TransactionDto> requests);
         Task<TransactionDto> UpdateAsync(TransactionDto transaction);
+        Task DeleteAsync(int[] id);
         Task DeleteAsync(int id);
         Task<TransactionDto> AddAsync(TransactionDto transaction);
     }

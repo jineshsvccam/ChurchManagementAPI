@@ -27,7 +27,7 @@ namespace ChurchRepositories
         public async Task<PagedResult<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize)
         {
             var cacheKey = $"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}";
-           // _cache.Remove($"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}");
+            // _cache.Remove($"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}");
 
 
             if (!_cache.TryGetValue(cacheKey, out PagedResult<Transaction> transactions))
@@ -125,6 +125,55 @@ namespace ChurchRepositories
             else
             {
                 throw new KeyNotFoundException("Transaction not found");
+            }
+        }
+
+        public async Task<List<Transaction>> GetByIdsAsync(int[] ids)
+        {
+            return await _context.Transactions
+                .Where(t => ids.Contains(t.TransactionId))
+                .ToListAsync();
+        }
+        public async Task DeleteMultipleAsync(int[] ids)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // Fetch the transactions to delete
+                    var transactions = await _context.Transactions
+                        .Where(t => ids.Contains(t.TransactionId))
+                        .ToListAsync();
+
+                    // Verify that we found all requested IDs
+                    if (transactions.Count() != ids.Length)
+                    {
+                        var foundIds = transactions.Select(t => t.TransactionId).ToHashSet();
+                        var missingIds = ids.Where(id => !foundIds.Contains(id));
+                        throw new InvalidOperationException(
+                            $"Some transactions were not found for deletion: {string.Join(", ", missingIds)}");
+                    }
+
+                    // Delete all transactions
+                    _context.Transactions.RemoveRange(transactions);
+                    int deletedCount = await _context.SaveChangesAsync();
+
+                    // Verify that all records were actually deleted
+                    if (deletedCount != ids.Length)
+                    {
+                        throw new InvalidOperationException(
+                            $"Expected to delete {ids.Length} transactions, but only {deletedCount} were deleted.");
+                    }
+
+                    // Commit the transaction if everything succeeded
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    // Roll back the transaction on any failure
+                    await transaction.RollbackAsync();
+                    throw; // Re-throw the exception for the caller to handle
+                }
             }
         }
 

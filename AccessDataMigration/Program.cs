@@ -1,9 +1,5 @@
-﻿\   using System;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Threading.Tasks;
-using ChurchData;
 
 class Program
 {

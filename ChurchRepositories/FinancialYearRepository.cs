@@ -34,6 +34,17 @@ namespace ChurchRepositories
             return await _context.FinancialYears
                 .FirstOrDefaultAsync(fy => fy.ParishId == parishId && fy.StartDate <= utcDate && fy.EndDate >= utcDate);
         }
+        public async Task<List<FinancialYear>> GetFinancialYearsByDatesAsync(int parishId, List<DateTime> dates)
+        {
+            // Convert all dates to UTC using the same logic as GetFinancialYearByDateAsync
+            var utcDates = dates.Select(date => date.ToUniversalTime()).ToList();
+
+            return await _context.FinancialYears
+                .Where(fy => fy.ParishId == parishId &&
+                            utcDates.Any(d => d >= fy.StartDate && d <= fy.EndDate))
+                .Distinct()  // Add Distinct in case date ranges overlap with multiple financial years
+                .ToListAsync();
+        }
 
 
         public async Task<FinancialYear?> GetByIdAsync(int financialYearId)

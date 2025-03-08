@@ -7,6 +7,7 @@ namespace ChurchContracts
     public interface IFinancialYearRepository
     {
         Task<FinancialYear?> GetFinancialYearByDateAsync(int parishId, DateTime date);
+        Task<List<FinancialYear>> GetFinancialYearsByDatesAsync(int parishId, List<DateTime> dates);
         Task<FinancialYear?> GetByIdAsync(int financialYearId);
         Task<FinancialYear> AddAsync(FinancialYear financialYear);
         Task<FinancialYear> UpdateAsync(FinancialYear financialYear);
