@@ -78,7 +78,14 @@ namespace ChurchDTOs.DTOs.Utils
         public string ReportName { get; set; }
         public List<FinancialReportCustomDTO> Transactions { get; set; }
     }
-
+    public class AllTransactionReportGroupedDTO
+    {
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
+        public List<FinancialReportCustomDTO> Transactions { get; set; }
+    }
     public class AramanaReportDTO
     {
         public List<AramanaDetails> AramanaDetails { get; set; }
@@ -205,6 +212,30 @@ namespace ChurchDTOs.DTOs.Utils
         // For Parish
         //  public int? ParishId { get; set; }
         //  public string ParishName { get; set; }
+    }
+
+    public class FinancialReportSummaryDTO
+    {
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
+
+        public List<VRGroupedDTO> Income { get; set; } = new List<VRGroupedDTO>();
+        public List<VRGroupedDTO> Expense { get; set; } = new List<VRGroupedDTO>();
+        public List<VRGroupedDTO> BankTransfers { get; set; } = new List<VRGroupedDTO>();
+        public List<VRGroupedDTO> BulkEntry { get; set; } = new List<VRGroupedDTO>();
+    }
+
+    public class VRGroupedDTO
+    {
+        public string VrNo { get; set; }
+        public DateTime Date { get; set; }
+        public string? BillName { get; set; }
+        public int? FamilyNumber { get; set; }
+        public decimal Amount { get; set; }
+        public int Count { get; set; }
+        public List<FinancialReportCustomDTO> Details { get; set; } = new List<FinancialReportCustomDTO>();
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

@@ -19,11 +19,13 @@ namespace ChurchManagementAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            var key = _aesEncryptionHelper.Generate256BitKey();
-            //_aesEncryptionHelper.TestDecryption();
+            // Normal Password
+            string decryptedUsername = loginDto.Username;
+            string decryptedPassword = loginDto.Password;
+
             // Decrypt the username and password
-            string decryptedUsername = _aesEncryptionHelper.DecryptAES(loginDto.Username);
-            string decryptedPassword = _aesEncryptionHelper.DecryptAES(loginDto.Password);
+            //string decryptedUsername = _aesEncryptionHelper.DecryptAES(loginDto.Username);
+            //string decryptedPassword = _aesEncryptionHelper.DecryptAES(loginDto.Password);
 
             var result = await _authService.AuthenticateUserAsync(decryptedUsername, decryptedPassword);
 
@@ -58,7 +60,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(new { Message = "User registered successfully.", UserId = user.Id });
         }
 
-      
+
     }
 
 

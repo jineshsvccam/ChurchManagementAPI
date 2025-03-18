@@ -256,7 +256,8 @@ public List<TransactionDto> ExportTransactions(string accessDbPath, string table
                     IncomeAmount = Convert.ToDecimal(reader["Credit"]),
                     ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
                     Description = reader["Remarks"].ToString(),
-                    ParishId = ParishId
+                    ParishId = ParishId,
+                    BillName= reader["MemName"].ToString()
                 };
 
                 transactions.Add(transaction);

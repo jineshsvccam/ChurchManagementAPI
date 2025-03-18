@@ -58,11 +58,15 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        policy => policy.WithOrigins("http://localhost:5173") // Allow only this frontend
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials());
+        policy => policy.WithOrigins(
+                "http://localhost:5173",  // Local development
+                "https://salmon-meadow-05386b900.6.azurestaticapps.net" // Deployed frontend
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()); // Only needed for cookies/auth headers
 });
+
 
 // JSON serialization settings
 builder.Services.AddControllers()

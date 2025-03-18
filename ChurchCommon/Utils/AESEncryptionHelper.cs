@@ -19,7 +19,7 @@ namespace ChurchCommon.Utils
 
         public AESEncryptionHelper(IConfiguration configuration)
         {
-             _secretKey = configuration.GetSection("Encryption")["SecretKey"];
+           //  _secretKey = configuration.GetSection("Encryption")["SecretKey"];
            // _iv = configuration.GetSection("Encryption")["Iv"];
 
 

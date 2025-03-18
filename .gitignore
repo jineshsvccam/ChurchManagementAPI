@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /ChurchManagementAPI/Controllers/zh-Hant
 /ChurchManagementAPI/.config
+/ChurchManagementAPI/Properties/ServiceDependencies/finchurch - Web Deploy
+/ChurchManagementAPI/Properties

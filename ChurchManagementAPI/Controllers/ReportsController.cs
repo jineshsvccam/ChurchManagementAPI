@@ -122,6 +122,18 @@ namespace ChurchManagementAPI.Controllers
             return Ok(allTransactionReport);
         }
 
+        [HttpGet("allTransactionsGrouped")]
+        public async Task<ActionResult<FinancialReportSummaryDTO>> GetAllTransactionsGrouped(
+           [FromQuery] int parishId,
+           [FromQuery] DateTime startDate,
+           [FromQuery] DateTime endDate,
+           [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
+        {
+            // await ValidateParishIdAsync(parishId);
+            var allTransactionReport = await _allTransactionsService.GetAllTransactionGroupedAsync(parishId, startDate, endDate, customizationOption);
+            return Ok(allTransactionReport);
+        }
+
         [HttpGet("aramanaReport")]
         public async Task<ActionResult<AramanaReportDTO>> GetAramanaReport(
             [FromQuery] int parishId,

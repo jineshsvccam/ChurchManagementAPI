@@ -10,37 +10,25 @@ class Program
 
         try
         {
-            AESEncryptionHelper aESEncryptionHelper = new AESEncryptionHelper(null);
-            string secretKey = "my32byteSecretKey1234567890abcd";
-            string originalText = "jiness";
-            Console.WriteLine("Original Text: " + originalText);
-
-            // Encrypt the original text
-            string cipherText = aESEncryptionHelper.EncryptString(originalText, secretKey);
-            cipherText = "U2FsdGVkX1/VxZPobs8ueWwzayouYias2VPLLYdr6gU=";
-            Console.WriteLine("Encrypted Text: " + cipherText);
-
-            // Decrypt the generated ciphertext
-            //string decryptedText = aESEncryptionHelper.DecryptString(cipherText, secretKey);
-            //Console.WriteLine("Decrypted Text: " + decryptedText);
 
             string accessDbPath = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
             Console.WriteLine($"Access DB Path: {accessDbPath}");
 
             // Define base URL
-            string baseUrl = "http://localhost:8080";
+             string baseUrl = "http://localhost:8080";
+           // string baseUrl = "https://finchurch-dce8defbh3duere4.canadacentral-01.azurewebsites.net";
             string authurl = $"{baseUrl}/Auth/login";
             string unitApiUrl = $"{baseUrl}/api/Unit";
             string familydueUrl = $"{baseUrl}/api/FamilyDues";
             string familyContributionUrl = $"{baseUrl}/api/FamilyContribution";
             string contributionsettingurl = $"{baseUrl}/api/ContributionSettings";
-         
+
             string transactionHeadsGetUrl = $"{baseUrl}/api/TransactionHead";
             string familyApiGetUrl = $"{baseUrl}/api/Family";
             string bankApiGetUrl = $"{baseUrl}/api/Bank";
 
             string transactionHeadsUrl = $"{baseUrl}/api/TransactionHead/create-or-update";
-            string familyApiUrl = $"{baseUrl}/api/Family/create-or-update";           
+            string familyApiUrl = $"{baseUrl}/api/Family/create-or-update";
             string bankApiUrl = $"{baseUrl}/api/Bank/create-or-update";
             string transactionApiUrlbulk = $"{baseUrl}/api/Transaction/create-or-update";
 
@@ -53,10 +41,10 @@ class Program
             bool processTransactionHeads = false;
             bool processFamilies = false;
             bool processBanks = false;
-            bool processTransactions = false;
+            bool processTransactions = true;
             bool processFamilyDue = false;
             bool processFamilyContribution = false;
-            bool processContributionSetting = true;
+            bool processContributionSetting = false;
 
             Console.WriteLine("Boolean flags set...");
 
@@ -71,6 +59,10 @@ class Program
             // *** NEW: Call the auth endpoint to retrieve the token and set the Authorization header ***
             string username = "jiness";
             string password = "January@23";
+            AESEncryptionHelper aESEncryptionHelper = new AESEncryptionHelper(null);
+            //password = aESEncryptionHelper.EncryptString(password, "my32byteSecretKey1234567890abcd");
+            //username = aESEncryptionHelper.EncryptString(username, "my32byteSecretKey1234567890abcd");
+
             await apiService.AuthenticateAsync(authurl, username, password);
 
             dataExporter.ParishId = 31;
@@ -109,20 +101,20 @@ class Program
                 var banks = dataExporter.ExportBanks(accessDbPath, "Bank");
                 await apiService.ImportDataAsync(banks, bankApiUrl);
             }
-            if(processFamilyDue)
+            if (processFamilyDue)
             {
                 Console.WriteLine("Processing FamilyDue...");
                 var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
                 var familyNames = await apiService.GetFamiliesAsync(familyApiGetUrl);
-                var familyDues = dataExporter.ExportFamilyDues(accessDbPath, "openkudi",headNames,familyNames);
-              
+                var familyDues = dataExporter.ExportFamilyDues(accessDbPath, "openkudi", headNames, familyNames);
+
                 await apiService.ImportItemsOnebyOne(familyDues, familydueUrl);
             }
             if (processContributionSetting)
             {
                 Console.WriteLine("Processing ContributionSettings...");
                 var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
-               
+
                 var contributionsettings = dataExporter.ExportContributionsSettings(accessDbPath, "kudishika", headNames);
 
                 await apiService.ImportItemsOnebyOne(contributionsettings, contributionsettingurl);
@@ -135,10 +127,11 @@ class Program
 
                 // Start the stopwatch
                 var stopwatch = Stopwatch.StartNew();
-                bool isbulkinsertrequired = true;  
+                bool isbulkinsertrequired = false;
 
                 var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
                 var familyNames = await apiService.GetFamiliesAsync(familyApiGetUrl);
+                bankApiGetUrl= $"{baseUrl}/api/Bank?parishId={dataExporter.ParishId}";
                 var bankNames = await apiService.GetBanksAsync(bankApiGetUrl);
 
                 var transactions = dataExporter.ExportTransactions(accessDbPath, "DailyData", headNames, familyNames, bankNames);
@@ -168,11 +161,11 @@ class Program
                 }
                 else
                 {
-                    var batches = dataExporter.SplitList(transactions,250);
+                    var batches = dataExporter.SplitList(transactions, 250);
                     foreach (var batch in batches)
                     {
                         await apiService.ImportDataAsync(batch, transactionApiUrlbulk);
-                    }                   
+                    }
                 }
 
                 // Stop the stopwatch and print the elapsed time

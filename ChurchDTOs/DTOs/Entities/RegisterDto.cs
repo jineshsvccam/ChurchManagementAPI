@@ -24,7 +24,7 @@ namespace ChurchDTOs.DTOs.Entities
         public int ParishId { get; set; }
 
         [Required]
-        public int FamilyId { get; set; }
+        public int? FamilyId { get; set; }
     }
     public class LoginDto
     {

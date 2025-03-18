@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChurchCommon", "ChurchCommo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChurchDTOs", "ChurchDTOs\ChurchDTOs.csproj", "{6BC18090-8829-4154-8879-D49307F3F05D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForChecks", "ForChecks\ForChecks.csproj", "{3227F82F-E754-497B-B65A-E700EE9E91B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{6BC18090-8829-4154-8879-D49307F3F05D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BC18090-8829-4154-8879-D49307F3F05D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BC18090-8829-4154-8879-D49307F3F05D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3227F82F-E754-497B-B65A-E700EE9E91B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3227F82F-E754-497B-B65A-E700EE9E91B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3227F82F-E754-497B-B65A-E700EE9E91B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3227F82F-E754-497B-B65A-E700EE9E91B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -60,6 +60,12 @@ namespace ChurchContracts
             DateTime? startDate,
             DateTime? endDate,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+        Task<FinancialReportSummaryDTO> GetAllTransactionGroupedAsync(
+                int parishId,
+                DateTime? startDate,
+                DateTime? endDate,
+                FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+
     }
     public interface IAramanaReportRepository
     {
@@ -139,6 +145,13 @@ namespace ChurchContracts
                    DateTime? startDate,
                    DateTime? endDate,
                    FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+
+        Task<FinancialReportSummaryDTO> GetAllTransactionGroupedAsync(
+                  int parishId,
+                  DateTime? startDate,
+                  DateTime? endDate,
+                  FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both);
+
 
     }
     public interface IAramanaReportService
