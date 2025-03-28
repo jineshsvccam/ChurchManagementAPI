@@ -2,6 +2,7 @@
 using ChurchData;
 using ChurchDTOs.DTOs.Utils;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,8 +19,7 @@ namespace ChurchManagementAPI.Controllers
         private readonly INoticeBoardService _noticeBoardService;
         private readonly IAllTransactionsService _allTransactionsService;
         private readonly IAramanaReportService _aramanaReportService;
-        private readonly IFamilyReportService _familyReportService;
-        private readonly IKudishikaReportService _kudishikaReportService;
+       
 
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ApplicationDbContext _context;
@@ -47,8 +47,7 @@ namespace ChurchManagementAPI.Controllers
             _noticeBoardService = noticeBoardService;
             _allTransactionsService = allTransactionsService;
             _aramanaReportService = aramanaReportService;
-            _familyReportService = familyReportService;
-            _kudishikaReportService = kudishikaReportService;
+          
         }
 
         [HttpGet("ledger")]
@@ -144,24 +143,6 @@ namespace ChurchManagementAPI.Controllers
             return Ok(aramanareport);
         }
 
-        [HttpGet("familyReport")]
-        public async Task<ActionResult<FamilyReportDTO>> GetFamilyReport(
-           [FromQuery] int parishId,
-           [FromQuery] int familyNumber)
-        {
-            var familyReport = await _familyReportService.GetFamilyReportAsync(parishId, familyNumber);
-            return Ok(familyReport);
-        }
-
-        [HttpGet("kudishikaReport")]
-        public async Task<ActionResult<FamilyReportDTO>> GetKudishikaReport(
-          [FromQuery] int parishId,
-          [FromQuery] int familyNumber,
-          [FromQuery] DateTime startDate,
-          [FromQuery] DateTime endDate)
-        {
-            var familyReport = await _kudishikaReportService.GetKudishikaReportAsync(parishId, familyNumber, startDate, endDate);
-            return Ok(familyReport);
-        }
+      
     }
 }

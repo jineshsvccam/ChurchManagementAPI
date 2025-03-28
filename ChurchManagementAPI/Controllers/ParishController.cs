@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-    public class ParishController : AdminAuthorizedController
+    public class ParishController : ManagementAuthorizedTrialController
     {
         private readonly IParishService _parishService;
         private readonly IMapper _mapper;

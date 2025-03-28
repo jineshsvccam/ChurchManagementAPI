@@ -41,8 +41,8 @@ namespace ChurchManagementAPI.Controllers
                 FullName = result.FullName,
                 ParishId = result.ParishId,
                 ParishName = result.ParishName,
-                FamilyId = result.FamilyId,
-                FamilyName = result.FamilyName,
+                FamilyId = result?.FamilyId,
+                FamilyName = result?.FamilyName,
                 Roles = result.Roles
             });
         }
