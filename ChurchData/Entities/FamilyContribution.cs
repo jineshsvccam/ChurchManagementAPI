@@ -20,5 +20,12 @@ namespace ChurchData
         public decimal IncomeAmount { get; set; }
         public decimal ExpenseAmount { get; set; }
         public string? Description { get; set; }
+
+        // Newly added columns
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Ensures UTC time for consistency
+        public Guid CreatedBy { get; set; } // UUID (non-nullable)
+        public DateTime? UpdatedAt { get; set; } // Nullable, updated only on changes
+        public Guid? UpdatedBy { get; set; } // Nullable, updated only on changes
+        public string? BillName { get; set; }
     }
 }

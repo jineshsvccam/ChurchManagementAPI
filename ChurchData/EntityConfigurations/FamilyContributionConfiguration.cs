@@ -24,6 +24,33 @@ namespace YourNamespace.Data.Configurations
             builder.Property(fc => fc.IncomeAmount).HasColumnName("income_amount").HasDefaultValue(0);
             builder.Property(fc => fc.ExpenseAmount).HasColumnName("expense_amount").HasDefaultValue(0);
             builder.Property(fc => fc.Description).HasColumnName("description");
+            builder.Property(fc => fc.BillName).HasColumnName("bill_name");
+
+            // New Columns Configuration
+            builder.Property(t => t.CreatedAt)
+                   .HasColumnName("created_at")
+                   .HasColumnType("timestamp with time zone")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .IsRequired();
+
+            builder.Property(t => t.CreatedBy)
+                   .HasColumnName("created_by")
+                   .IsRequired();
+
+            builder.Property(t => t.UpdatedAt)
+                   .HasColumnName("updated_at")
+                   .HasColumnType("timestamp with time zone")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .IsRequired(false);
+
+            builder.Property(t => t.UpdatedBy)
+                   .HasColumnName("updated_by")
+                   .IsRequired(false);
+
+            builder.Property(t => t.BillName)
+                   .HasColumnName("bill_name")
+                   .HasMaxLength(255);
+
 
             // Constraints (Check Constraints)
             builder.HasCheckConstraint("contribution_expense_amount_check", "expense_amount >= 0");
@@ -50,6 +77,16 @@ namespace YourNamespace.Data.Configurations
                    .WithMany()
                    .HasForeignKey(fc => fc.ParishId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<User>() // Assuming User entity is available
+              .WithMany()
+              .HasForeignKey(t => t.CreatedBy)
+              .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne<User>() // Assuming User entity is available
+                   .WithMany()
+                   .HasForeignKey(t => t.UpdatedBy)
+                   .OnDelete(DeleteBehavior.NoAction);
 
             // Uncomment this if ContributionSettings mapping is required
             // builder.HasOne<ContributionSettings>()

@@ -302,6 +302,7 @@ public List<FamilyContributionDto> ExportTransactionsJE(string accessDbPath, str
                     ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
                     Description = reader["Remarks"].ToString(),
                     ParishId = ParishId
+                   // BillName = reader["MemName"].ToString()
                 };
 
                 transactions.Add(transaction);

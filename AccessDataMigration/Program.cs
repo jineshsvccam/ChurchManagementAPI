@@ -33,6 +33,7 @@ class Program
             string transactionApiUrlbulk = $"{baseUrl}/api/Transaction/create-or-update";
 
             string transactionApiUrl = $"{baseUrl}/api/Transaction";
+          
 
             Console.WriteLine("API URLs set...");
 
@@ -41,9 +42,9 @@ class Program
             bool processTransactionHeads = false;
             bool processFamilies = false;
             bool processBanks = false;
-            bool processTransactions = true;
+            bool processTransactions = false;
             bool processFamilyDue = false;
-            bool processFamilyContribution = false;
+            bool processFamilyContribution = true;
             bool processContributionSetting = false;
 
             Console.WriteLine("Boolean flags set...");
@@ -183,6 +184,7 @@ class Program
 
                 var headNames = await apiService.GetHeadsNamesAsync(transactionHeadsGetUrl);
                 var familyNames = await apiService.GetFamiliesAsync(familyApiGetUrl);
+                bankApiGetUrl = $"{baseUrl}/api/Bank?parishId={dataExporter.ParishId}";
                 var bankNames = await apiService.GetBanksAsync(bankApiGetUrl);
 
                 var transactions = dataExporter.ExportTransactionsJE(accessDbPath, "DailyData", headNames, familyNames, bankNames);

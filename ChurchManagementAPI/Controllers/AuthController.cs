@@ -16,6 +16,7 @@ namespace ChurchManagementAPI.Controllers
             _authService = authService;
             _aesEncryptionHelper = aesEncryptionHelper;
         }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {

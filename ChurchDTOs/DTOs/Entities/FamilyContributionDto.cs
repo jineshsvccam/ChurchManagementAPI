@@ -19,5 +19,6 @@ namespace ChurchDTOs.DTOs.Entities
         public decimal IncomeAmount { get; set; }
         public decimal ExpenseAmount { get; set; }
         public string? Description { get; set; }
+        public string? BillName { get; set; }
     }
 }
