@@ -15,8 +15,8 @@ class Program
             Console.WriteLine($"Access DB Path: {accessDbPath}");
 
             // Define base URL
-             string baseUrl = "http://localhost:8080";
-           // string baseUrl = "https://finchurch-dce8defbh3duere4.canadacentral-01.azurewebsites.net";
+            // string baseUrl = "http://localhost:8080";
+           string baseUrl = "https://finchurch-dce8defbh3duere4.canadacentral-01.azurewebsites.net";
             string authurl = $"{baseUrl}/Auth/login";
             string unitApiUrl = $"{baseUrl}/api/Unit";
             string familydueUrl = $"{baseUrl}/api/FamilyDues";
@@ -43,8 +43,8 @@ class Program
             bool processFamilies = false;
             bool processBanks = false;
             bool processTransactions = false;
-            bool processFamilyDue = false;
-            bool processFamilyContribution = true;
+            bool processFamilyDue = true;
+            bool processFamilyContribution = false;
             bool processContributionSetting = false;
 
             Console.WriteLine("Boolean flags set...");
@@ -66,7 +66,7 @@ class Program
 
             await apiService.AuthenticateAsync(authurl, username, password);
 
-            dataExporter.ParishId = 31;
+            dataExporter.ParishId = 1;
 
             Console.WriteLine("Instances created...");
 
