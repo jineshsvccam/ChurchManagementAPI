@@ -28,18 +28,32 @@ namespace ChurchRepositories
              DateTime? startDate,
              DateTime? endDate)
         {
+            var family = await _context.Families
+              .Where(f => f.ParishId == parishId && f.FamilyNumber == familyNumber)
+              .FirstOrDefaultAsync();
+
+            if (family == null)
+            {
+                // Handle the case where no dues are found for the family.
+                throw new InvalidOperationException("Family Not found");
+            }
 
             // Normalize dates to UTC if provided.
-            DateTime? startUtc = startDate.HasValue
+            DateTime? startUtc = startDate.HasValue && startDate != DateTime.MinValue
                 ? (startDate.Value.Kind == DateTimeKind.Unspecified
                     ? DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc)
                     : startDate.Value)
-                : (DateTime?)null;
-            DateTime? endUtc = endDate.HasValue
+                : await _context.FinancialReportsView
+                                .Where(r => r.ParishId == parishId && r.FamilyId == family.FamilyId)
+                                .OrderBy(r => r.TrDate)
+                                .Select(r => (DateTime?)r.TrDate.ToUniversalTime())
+                                .FirstOrDefaultAsync();
+
+            DateTime? endUtc = endDate.HasValue && endDate != DateTime.MinValue
                 ? (endDate.Value.Kind == DateTimeKind.Unspecified
                     ? DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc)
                     : endDate.Value)
-                : (DateTime?)null;
+                : DateTime.UtcNow;
 
             // 1. Retrieve eligible Kudishika heads from TransactionHeads.
             var kudishikaHeads = await _context.TransactionHeads
@@ -58,11 +72,10 @@ namespace ChurchRepositories
                 .Where(r => r.ParishId == parishId && r.FamilyNumber == familyNumber)
                 .ToListAsync();
 
-            var firstitem = dues.FirstOrDefault();
+            // 4. Retrieve opening balances from FamilyDues for this family.         
 
-            // 4. Retrieve opening balances from FamilyDues for this family.
             var familyDues = await _context.FamilyDues
-                .Where(fd => fd.ParishId == parishId && fd.FamilyId == firstitem.FamilyId)
+                .Where(fd => fd.ParishId == parishId && fd.FamilyId == family.FamilyId)
                 .ToListAsync();
 
             var openingBalanceDict = familyDues.ToDictionary(fd => fd.HeadId, fd => fd.OpeningBalance);
@@ -77,7 +90,7 @@ namespace ChurchRepositories
                 // Calculate additional dues and payments BEFORE the start date.
                 decimal additionalDues = 0m;
                 decimal additionalPayments = 0m;
-                if (startDate.HasValue)
+                if (startUtc.HasValue)
                 {
                     additionalDues = await _context.FinancialReportsViewDues
                         .Where(d => d.ParishId == parishId
@@ -88,7 +101,7 @@ namespace ChurchRepositories
 
                     additionalPayments = await _context.FinancialReportsView
                         .Where(p => p.ParishId == parishId
-                                 && p.FamilyNumber  == familyNumber
+                                 && p.FamilyNumber == familyNumber
                                  && p.HeadId == head.HeadId
                                  && p.TrDate < startUtc.Value)
                         .SumAsync(p => (decimal?)p.IncomeAmount) ?? 0m;
@@ -99,26 +112,26 @@ namespace ChurchRepositories
                 // For the report period, sum payments and dues.
                 decimal totalPaid = payments
                     .Where(p => p.HeadId == head.HeadId
-                             && ( p.TrDate >= startUtc.Value)
-                             && ( p.TrDate <= endUtc.Value))
+                             && (p.TrDate >= startUtc.Value)
+                             && (p.TrDate <= endUtc.Value))
                     .Sum(p => p.IncomeAmount);
 
                 decimal totalDue = dues
                     .Where(d => d.HeadId == head.HeadId
-                             && ( d.TrDate >= startUtc.Value)
-                             && ( d.TrDate <= endUtc.Value))
+                             && (d.TrDate >= startUtc.Value)
+                             && (d.TrDate <= endUtc.Value))
                     .Sum(d => d.ExpenseAmount);
 
                 // 5. Merge transactions from payments and dues (for the report period) and order by date.
                 var periodPayments = payments
                     .Where(p => p.HeadId == head.HeadId
-                             && ( p.TrDate >= startUtc.Value)
-                             && ( p.TrDate <= endUtc.Value));
+                             && (p.TrDate >= startUtc.Value)
+                             && (p.TrDate <= endUtc.Value));
 
                 var periodDues = dues
                     .Where(d => d.HeadId == head.HeadId
-                             && ( d.TrDate >= startUtc.Value)
-                             && ( d.TrDate <= endUtc.Value));
+                             && (d.TrDate >= startUtc.Value)
+                             && (d.TrDate <= endUtc.Value));
 
                 // 6. Map the combined transactions using AutoMapper.
 
@@ -155,9 +168,9 @@ namespace ChurchRepositories
 
             return new KudishikalReportDTO
             {
-                FamilyId = firstitem.FamilyId,
+                FamilyId = family.FamilyId,
                 FamilyNumber = familyNumber,
-                FamilyName = firstitem.FamilyName,
+                FamilyName = family.FamilyName,
                 ParishId = parishId,
                 StartDate = startDate,
                 EndDate = endDate,
