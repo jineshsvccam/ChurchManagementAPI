@@ -9,7 +9,7 @@ namespace ChurchContracts
     #region Repositories Interfaces
     public interface ILedgerRepository
     {
-        Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
+        Task<LedgerReportDTO> GetLedgerAsync(
             int parishId,
             DateTime? startDate,
             DateTime? endDate,
@@ -95,7 +95,7 @@ namespace ChurchContracts
     #region Services Interfaces
     public interface ILedgerService
     {
-        Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
+        Task<LedgerReportDTO> GetLedgerAsync(
          int parishId,
          DateTime? startDate,
          DateTime? endDate,

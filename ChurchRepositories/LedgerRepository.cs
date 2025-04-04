@@ -17,7 +17,7 @@ namespace ChurchRepositories
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
+        public async Task<LedgerReportDTO> GetLedgerAsync(
                                  int parishId,
                                  DateTime? startDate,
                                  DateTime? endDate,
@@ -68,11 +68,15 @@ namespace ChurchRepositories
 
             var report = new LedgerReportDTO
             {
+                ParishId = parishId,
+                StartDate = startDate,
+                EndDate = endDate,
+                ReportName = "Ledger",
                 Heads = groupedTransactions,
                 Transactions = includeTransactions ? mappedTransactions : new List<FinancialReportCustomDTO>()
             };
 
-            return new List<LedgerReportDTO> { report };
+            return report;
         }
     }
 }

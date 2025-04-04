@@ -13,6 +13,11 @@ namespace ChurchDTOs.DTOs.Utils
 {
     public class LedgerReportDTO
     {
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
+
         public List<HeadDTO> Heads { get; set; }
         public List<FinancialReportCustomDTO> Transactions { get; set; }
     }
@@ -28,6 +33,11 @@ namespace ChurchDTOs.DTOs.Utils
 
     public class BankStatementConsolidatedDTO
     {
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
+        public decimal CurrentBalance { get; set; }
         public List<BankDTO> Banks { get; set; } = new List<BankDTO>();
         public List<FinancialReportCustomDTO> Transactions { get; set; } = new List<FinancialReportCustomDTO>();
     }
@@ -43,6 +53,11 @@ namespace ChurchDTOs.DTOs.Utils
 
     public class TrialBalanceDTO
     {
+        public int ParishId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string ReportName { get; set; }
+
         public decimal OpeningBalance { get; set; }
         public decimal ClosingBalance { get; set; }
         public List<BankDTO> OpeningDetails { get; set; } = new List<BankDTO>();

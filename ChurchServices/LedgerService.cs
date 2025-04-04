@@ -12,7 +12,7 @@ namespace ChurchServices
             _ledgerRepository = ledgerRepository;
         }
 
-        public async Task<IEnumerable<LedgerReportDTO>> GetLedgerAsync(
+        public async Task<LedgerReportDTO> GetLedgerAsync(
         int parishId, DateTime? startDate, DateTime? endDate, bool includeTransactions = false, FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
             // Validation: StartDate and EndDate are required if includeTransactions is true

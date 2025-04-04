@@ -62,10 +62,15 @@ namespace ChurchRepositories
                 endDate,
                 includeTransactions,
                 customizationOption);
-            var ledgerReport = ledgerReports.FirstOrDefault();
+            var ledgerReport = ledgerReports;
 
             var trialBalance = new TrialBalanceDTO
             {
+                ParishId = parishId,
+                StartDate = startDate,
+                EndDate = endDate,
+                ReportName = "Trial Balance",
+
                 OpeningBalance = openingBalance,
                 ClosingBalance = closingBalance,
                 OpeningDetails = openingBankStatement.Banks,

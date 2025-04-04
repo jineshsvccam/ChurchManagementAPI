@@ -89,6 +89,11 @@ namespace ChurchRepositories
 
             return new BankStatementConsolidatedDTO
             {
+                ParishId = parishId,
+                StartDate = startDate,
+                EndDate = endDate,
+                ReportName = "Bank Statement",             
+                CurrentBalance = bankStatements.Sum(b => b.Balance),
                 Banks = bankStatements,
                 Transactions = mappedTransactions
             };
