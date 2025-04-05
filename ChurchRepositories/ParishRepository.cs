@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using ChurchDTOs.DTOs.Entities;
+using Npgsql;
+using System.Data;
+using Dapper;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ChurchRepositories
 {
@@ -81,6 +85,8 @@ namespace ChurchRepositories
 
             var parish = await _context.Parishes.FindAsync(parishId) ?? throw new KeyNotFoundException("Parish not found.");
 
+            var lastTransaction = await GetLastTransactionDetailAsync(parishId);
+
             var details = new ParishDetailsBasicDto
             {
                 ParishId = parish.ParishId,
@@ -130,10 +136,48 @@ namespace ChurchRepositories
                     LastName = fm.LastName,
                     DateOfBirth = fm.DateOfBirth,
                     Gender = fm.Gender.ToString()
-                }).ToListAsync() : new List<FamilyMemberDto>()
+                }).ToListAsync() : new List<FamilyMemberDto>(),
+                LastTransactionDetail= lastTransaction
             };
 
             return details;
+        }
+
+        public async Task<LastTransactionDetail> GetLastTransactionDetailAsync(int parishId)
+        {
+            var connection = _context.Database.GetDbConnection();
+            try
+            {            
+
+                // Make sure the connection is open
+                if (connection.State != ConnectionState.Open)
+                    await connection.OpenAsync();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("p_parish_id", parishId, DbType.Int32, ParameterDirection.Input);
+                parameters.Add("last_receipt_no", dbType: DbType.String, direction: ParameterDirection.Output, size: 50);
+                parameters.Add("last_voucher_no", dbType: DbType.String, direction: ParameterDirection.Output, size: 50);
+                parameters.Add("last_bank_vr_no", dbType: DbType.String, direction: ParameterDirection.Output, size: 50);
+
+                await connection.ExecuteAsync("get_last_receipt_voucher_bank", parameters, commandType: CommandType.StoredProcedure);
+
+                return new LastTransactionDetail
+                {
+                    LastIncomeReceiptNo = parameters.Get<string>("last_receipt_no"),
+                    LastExpenseVoucherNo = parameters.Get<string>("last_voucher_no"),
+                    LastContraVoucherNo = parameters.Get<string>("last_bank_vr_no")
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                    await connection.CloseAsync();
+            }
+            
         }
     }
 }

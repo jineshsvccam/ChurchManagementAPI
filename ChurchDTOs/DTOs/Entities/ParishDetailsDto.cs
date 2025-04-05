@@ -50,6 +50,12 @@ namespace ChurchDTOs.DTOs.Entities
         public int DistrictId { get; set; }
         public List<UnitSimpleDto> Units { get; set; }
     }
+    public class LastTransactionDetail
+    {
+        public string LastIncomeReceiptNo { get; set; }
+        public string LastExpenseVoucherNo { get; set; }
+        public string LastContraVoucherNo { get; set; }
+    }
 
     public class ParishDetailsBasicDto : IParishEntity
     {
@@ -63,6 +69,7 @@ namespace ChurchDTOs.DTOs.Entities
         public ICollection<TransactionDto>? Transactions { get; set; }
         public ICollection<FamilyMemberDto>? FamilyMembers { get; set; }
         public ICollection<FinancialYearBasicDto>? FinancialYears { get; set; }
+        public LastTransactionDetail LastTransactionDetail { get; set; }
     }
 
 
