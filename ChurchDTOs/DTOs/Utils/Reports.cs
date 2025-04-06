@@ -129,7 +129,7 @@ namespace ChurchDTOs.DTOs.Utils
     }
 
     public class KudishikalReportDTO
-    {      
+    {
         public int FamilyNumber { get; set; }
         public string FamilyName { get; set; }
         public int FamilyId { get; set; }
@@ -259,5 +259,93 @@ namespace ChurchDTOs.DTOs.Utils
         IdsOnly,    // Only IDs will be included (names will be null)
         NamesOnly,  // Only names will be included (IDs will be null)
         Both        // Both IDs and names will be included
+    }
+    public class PivotReportDto
+    {
+        public int HeadId { get; set; }
+        public string HeadName { get; set; }      
+
+        // Index 0 = Apr, 1 = May, ..., 11 = Mar
+        public decimal[] MonthlyAmounts { get; set; } = new decimal[12];
+
+        public decimal Total { get; set; }
+    }
+    public class PivotReportResult
+    {
+        public int ParishId { get; set; }
+        public int FiscalYear { get; set; }
+        public string Type { get; set; } = string.Empty; 
+        public int[] HeadIds { get; set; } = Array.Empty<int>();
+        public string ReportName { get; set; } = string.Empty;
+
+        public List<PivotReportDto> Data { get; set; } = new();
+    }
+
+    public class FiscalYearData
+    {
+        public int Year { get; set; }
+        public decimal[] MonthlyAmounts { get; set; } = new decimal[12];
+        public decimal Total { get; set; }
+    }
+
+    public class SingleHeadFiscalReportDto
+    {
+        public int HeadId { get; set; }
+        public string HeadName { get; set; }
+        public string Type { get; set; }
+        public int ParishId { get; set; }      
+        public string ReportName { get; set; }
+
+        public List<FiscalYearData> FiscalYears { get; set; } = new();
+    }
+
+    public class MonthlyFiscalReportResponse
+    {
+        public int ParishId { get; set; }
+        public int StartYear { get; set; }
+        public int EndYear { get; set; }
+        public string ReportName { get; set; }
+        public List<FiscalYearIncomeExpenseData> FiscalYears { get; set; } = new();
+    }
+    public class FiscalYearIncomeExpenseData
+    {
+        public int Year { get; set; }
+
+        // Index 0 = Apr, 11 = Mar
+        public MonthlyIncomeExpense[] MonthlyData { get; set; } = new MonthlyIncomeExpense[12];
+
+        public decimal TotalIncome { get; set; }
+        public decimal TotalExpense { get; set; }
+    }
+    public class MonthlyIncomeExpense
+    {
+        public decimal Income { get; set; }
+        public decimal Expense { get; set; }
+    }
+   
+    public class RawMonthlyFiscalReport
+    {
+        public int Fyear { get; set; }
+
+        public decimal Apr { get; set; }
+        public decimal May { get; set; }
+        public decimal Jun { get; set; }
+        public decimal Jul { get; set; }
+        public decimal Aug { get; set; }
+        public decimal Sep { get; set; }
+        public decimal Oct { get; set; }
+        public decimal Nov { get; set; }
+        public decimal Dec { get; set; }
+        public decimal Jan { get; set; }
+        public decimal Feb { get; set; }
+        public decimal Mar { get; set; }
+
+        public decimal Total { get; set; }
+
+    }
+    public class RawPivotReport : RawMonthlyFiscalReport
+    {
+        public int HeadId { get; set; }
+        public string HeadName { get; set; }
     }
 }

@@ -90,6 +90,31 @@ namespace ChurchContracts
             DateTime? endDate);
     }
 
+    public interface IPivotReportRepository
+    {
+        Task<PivotReportResult> GetPivotReportAsync(
+            int parishId,
+            int financialYear,
+            string type, // "Income" or "Expense"
+            int[] headIds);
+    }
+    public interface ISingleHeadFiscalReportRepository
+    {
+        Task<SingleHeadFiscalReportDto> GetSingleHeadFiscalReportAsync(
+            int parishId,
+            int headId,
+            string type, // "Income" or "Expense"
+            int startFiscalYear,
+            int endFiscalYear);
+    }
+    public interface IMonthlyFiscalReportRepository
+    {
+        Task<MonthlyFiscalReportResponse> GetMonthlyFiscalReportAsync(
+            int parishId,
+            int startFiscalYear,
+            int endFiscalYear);
+    }
+
     #endregion
 
     #region Services Interfaces
@@ -174,6 +199,30 @@ namespace ChurchContracts
             int familyNumber,
             DateTime? startDate,
             DateTime? endDate);
+    }
+    public interface IPivotReportService
+    {
+        Task<PivotReportResult> GetPivotReportAsync(
+            int parishId,
+            int financialYear,
+            string type,
+            int[] headIds);
+    }
+    public interface ISingleHeadFiscalReportService
+    {
+        Task<SingleHeadFiscalReportDto> GetSingleHeadFiscalReportAsync(
+            int parishId,
+            int headId,
+            string type,
+            int startFiscalYear,
+            int endFiscalYear);
+    }
+    public interface IMonthlyFiscalReportService
+    {
+        Task<MonthlyFiscalReportResponse> GetMonthlyFiscalReportAsync(
+            int parishId,
+            int startFiscalYear,
+            int endFiscalYear);
     }
     #endregion
 }

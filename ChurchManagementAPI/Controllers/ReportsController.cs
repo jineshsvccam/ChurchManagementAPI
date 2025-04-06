@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChurchManagementAPI.Controllers
 {
 
-  //  [ApiExplorerSettings(IgnoreApi = false)]
+    //  [ApiExplorerSettings(IgnoreApi = false)]
     public class ReportsController : ManagementAuthorizedTrialController
     {
         private readonly ILedgerService _ledgerService;
@@ -19,7 +19,11 @@ namespace ChurchManagementAPI.Controllers
         private readonly INoticeBoardService _noticeBoardService;
         private readonly IAllTransactionsService _allTransactionsService;
         private readonly IAramanaReportService _aramanaReportService;
-       
+
+        private readonly IPivotReportService _pivotReportService;
+        private readonly ISingleHeadFiscalReportService _singleHeadFiscalReportService;
+        private readonly IMonthlyFiscalReportService _monthlyFiscalReportService;
+
 
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ApplicationDbContext _context;
@@ -34,10 +38,13 @@ namespace ChurchManagementAPI.Controllers
             IAramanaReportService aramanaReportService,
             IFamilyReportService familyReportService,
             IKudishikaReportService kudishikaReportService,
+            IPivotReportService pivotReportService,
+            ISingleHeadFiscalReportService singleHeadFiscalReportService,
+            IMonthlyFiscalReportService monthlyFiscalReportService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<ReportsController> logger) 
-            //: base(httpContextAccessor, context,logger)
+            ILogger<ReportsController> logger)
+        //: base(httpContextAccessor, context,logger)
 
         {
             _ledgerService = ledgerService;
@@ -47,7 +54,11 @@ namespace ChurchManagementAPI.Controllers
             _noticeBoardService = noticeBoardService;
             _allTransactionsService = allTransactionsService;
             _aramanaReportService = aramanaReportService;
-          
+
+            _pivotReportService = pivotReportService;
+            _singleHeadFiscalReportService = singleHeadFiscalReportService;
+            _monthlyFiscalReportService = monthlyFiscalReportService;
+
         }
 
         [HttpGet("ledger")]
@@ -116,7 +127,7 @@ namespace ChurchManagementAPI.Controllers
              [FromQuery] DateTime endDate,
              [FromQuery] FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
-           // await ValidateParishIdAsync(parishId);
+            // await ValidateParishIdAsync(parishId);
             var allTransactionReport = await _allTransactionsService.GetAllTransactionAsync(parishId, startDate, endDate, customizationOption);
             return Ok(allTransactionReport);
         }
@@ -143,6 +154,38 @@ namespace ChurchManagementAPI.Controllers
             return Ok(aramanareport);
         }
 
-      
+        [HttpGet("pivot-report")]
+        public async Task<ActionResult<List<PivotReportResult>>> GetPivotReport(
+            [FromQuery] int parishId,
+            [FromQuery] int year,
+            [FromQuery] string type, // "Income" or "Expense"
+            [FromQuery] int[] headIds)
+        {
+            var result = await _pivotReportService.GetPivotReportAsync(parishId, year, type, headIds);
+            return Ok(result);
+        }
+
+        [HttpGet("single-head-fiscal-report")]
+        public async Task<ActionResult<SingleHeadFiscalReportDto>> GetSingleHeadFiscalReport(
+            [FromQuery] int parishId,
+            [FromQuery] int headId,
+            [FromQuery] string type, // "Income" or "Expense"
+            [FromQuery] int startYear,
+            [FromQuery] int endYear)
+        {
+            var result = await _singleHeadFiscalReportService.GetSingleHeadFiscalReportAsync(parishId, headId, type, startYear, endYear);
+            return Ok(result);
+        }
+
+        [HttpGet("monthly-fiscal-report")]
+        public async Task<ActionResult<MonthlyFiscalReportResponse>> GetMonthlyFiscalReport(
+            [FromQuery] int parishId,          
+            [FromQuery] int startYear,
+            [FromQuery] int endYear)
+        {
+            var result = await _monthlyFiscalReportService.GetMonthlyFiscalReportAsync(parishId, startYear, endYear);
+            return Ok(result);
+        }
+
     }
 }

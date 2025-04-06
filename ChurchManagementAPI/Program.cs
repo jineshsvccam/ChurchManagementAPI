@@ -138,6 +138,17 @@ builder.Services.AddScoped<IFamilyReportService, FamilyReportService>();
 builder.Services.AddScoped<IKudishikaReportRepository, KudishikaReportRepository>();
 builder.Services.AddScoped<IKudishikaReportService, KudishikaReportService>();
 
+builder.Services.AddScoped<PivotReportService>(); // Register the concrete type first
+
+builder.Services.AddScoped<IPivotReportService>(sp => sp.GetRequiredService<PivotReportService>());
+builder.Services.AddScoped<ISingleHeadFiscalReportService>(sp => sp.GetRequiredService<PivotReportService>());
+builder.Services.AddScoped<IMonthlyFiscalReportService>(sp => sp.GetRequiredService<PivotReportService>());
+
+
+builder.Services.AddScoped<IPivotReportRepository, PivotReportRepository>();
+builder.Services.AddScoped<ISingleHeadFiscalReportRepository, PivotReportRepository>();
+builder.Services.AddScoped<IMonthlyFiscalReportRepository, PivotReportRepository>();
+
 builder.Services.AddScoped<IPublicRepository, PublicRepository>();
 builder.Services.AddScoped<IPublicService, PublicService>();
 builder.Services.AddTransient<AESEncryptionHelper>();
