@@ -76,7 +76,7 @@ namespace ChurchRepositories
                 OpeningDetails = openingBankStatement.Banks,
                 ClosingDetails = closingBankStatement.Banks,
                 Heads = ledgerReport?.Heads,
-                Transactions = ledgerReport?.Transactions ?? new List<FinancialReportCustomDTO>()
+                Transactions =  new List<FinancialReportCustomDTO>()
             };
             return trialBalance;
         }

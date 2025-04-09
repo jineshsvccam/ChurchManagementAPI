@@ -16,7 +16,12 @@ namespace ChurchRepositories
             _context = context;
         }
 
-        public async Task<PivotReportResult> GetPivotReportAsync(int parishId, int year, string type, int[] headIds)
+        public async Task<PivotReportResult> GetPivotReportAsync(
+             int parishId,
+             int year,
+             string type,
+             int[]? headIds = null,
+             int? headCount = null)
         {
             var connection = _context.Database.GetDbConnection();
             try
@@ -25,26 +30,32 @@ namespace ChurchRepositories
                     await connection.OpenAsync();
 
                 var rawRows = await connection.QueryAsync<RawPivotReport>(
-                    @"SELECT * FROM public.get_pivot_report(@in_parish_id, @in_fyear, @in_type, @in_head_ids)",
+                    @"SELECT * FROM public.get_pivot_report(@in_parish_id, @in_fyear, @in_type, @in_head_ids, @in_head_count)",
                     new
                     {
                         in_parish_id = parishId,
                         in_fyear = year,
                         in_type = type,
-                        in_head_ids = headIds
+                        in_head_ids = headIds,
+                        in_head_count = headCount
                     });
 
-                var resultData = rawRows.Select(r => new PivotReportDto
-                {
-                    HeadId = r.HeadId,
-                    HeadName = r.HeadName,                   
-                    MonthlyAmounts = new decimal[]
+                var resultData = rawRows
+                    .Select(r => new PivotReportDto
                     {
-                        r.Apr, r.May, r.Jun, r.Jul, r.Aug, r.Sep,
-                        r.Oct, r.Nov, r.Dec, r.Jan, r.Feb, r.Mar
-                    },
-                    Total = r.Total
-                }).ToList();
+                        HeadId = r.HeadId,
+                        HeadName = r.HeadName,
+                        MonthlyAmounts = new decimal[]
+                        {
+                    r.Apr, r.May, r.Jun, r.Jul, r.Aug, r.Sep,
+                    r.Oct, r.Nov, r.Dec, r.Jan, r.Feb, r.Mar
+                        },
+                        Total = r.Total,
+                        Percentage = r.Percentage
+                    })
+                    .OrderBy(r => r.HeadName == "Others" ? 1 : 0)
+                    .ThenByDescending(r => r.Percentage)
+                    .ToList();
 
                 var result = new PivotReportResult
                 {

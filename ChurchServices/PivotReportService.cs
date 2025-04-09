@@ -19,7 +19,7 @@ namespace ChurchServices
             _monthlyFiscalReportRepository = monthlyFiscalReportRepository;
         }
 
-        public async Task<PivotReportResult> GetPivotReportAsync(int parishId, int year, string type, int[] headIds)
+        public async Task<PivotReportResult> GetPivotReportAsync(int parishId, int year, string type, int[]? headIds = null, int? headCount = null)
         {
             return await _pivotReportRepository.GetPivotReportAsync(parishId, year, type, headIds);
         }

@@ -159,9 +159,10 @@ namespace ChurchManagementAPI.Controllers
             [FromQuery] int parishId,
             [FromQuery] int year,
             [FromQuery] string type, // "Income" or "Expense"
-            [FromQuery] int[] headIds)
+            [FromQuery] int[] headIds=null,
+            [FromQuery] int? headCount=null)
         {
-            var result = await _pivotReportService.GetPivotReportAsync(parishId, year, type, headIds);
+            var result = await _pivotReportService.GetPivotReportAsync(parishId, year, type, headIds, headCount);
             return Ok(result);
         }
 

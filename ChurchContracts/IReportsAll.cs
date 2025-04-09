@@ -96,7 +96,8 @@ namespace ChurchContracts
             int parishId,
             int financialYear,
             string type, // "Income" or "Expense"
-            int[] headIds);
+             int[]? headIds = null,
+             int? headCount = null);
     }
     public interface ISingleHeadFiscalReportRepository
     {
@@ -206,7 +207,8 @@ namespace ChurchContracts
             int parishId,
             int financialYear,
             string type,
-            int[] headIds);
+             int[]? headIds = null,
+             int? headCount = null);
     }
     public interface ISingleHeadFiscalReportService
     {

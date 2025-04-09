@@ -17,9 +17,11 @@ namespace ChurchDTOs.DTOs.Utils
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string ReportName { get; set; }
-
+        public decimal TotalIncome { get; set; }     // New
+        public decimal TotalExpense { get; set; }    // New
+        public decimal Balance { get; set; }         // New
         public List<HeadDTO> Heads { get; set; }
-        public List<FinancialReportCustomDTO> Transactions { get; set; }
+       
     }
     public class HeadDTO
     {
@@ -28,6 +30,9 @@ namespace ChurchDTOs.DTOs.Utils
         public decimal IncomeAmount { get; set; }
         public decimal ExpenseAmount { get; set; }
         public decimal Balance { get; set; }
+        public decimal IncomePercentage { get; set; }   
+        public decimal ExpensePercentage { get; set; }   
+        public List<FinancialReportCustomDTO> Transactions { get; set; }
     }
 
 
@@ -269,6 +274,7 @@ namespace ChurchDTOs.DTOs.Utils
         public decimal[] MonthlyAmounts { get; set; } = new decimal[12];
 
         public decimal Total { get; set; }
+        public decimal Percentage { get; set; }
     }
     public class PivotReportResult
     {
@@ -347,5 +353,6 @@ namespace ChurchDTOs.DTOs.Utils
     {
         public int HeadId { get; set; }
         public string HeadName { get; set; }
+        public decimal Percentage { get; set; }
     }
 }
