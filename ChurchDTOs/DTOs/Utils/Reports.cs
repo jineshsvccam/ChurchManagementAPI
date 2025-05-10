@@ -44,7 +44,7 @@ namespace ChurchDTOs.DTOs.Utils
         public string ReportName { get; set; }
         public decimal CurrentBalance { get; set; }
         public List<BankDTO> Banks { get; set; } = new List<BankDTO>();
-        public List<FinancialReportCustomDTO> Transactions { get; set; } = new List<FinancialReportCustomDTO>();
+       
     }
     public class BankDTO
     {
@@ -54,6 +54,7 @@ namespace ChurchDTOs.DTOs.Utils
         public decimal OpeningBalance { get; set; }
         public decimal ClosingBalance { get; set; }
         public decimal Balance { get; set; }
+        public List<BankFinancialReportCustomDTO> Transactions { get; set; } = new List<BankFinancialReportCustomDTO>();
     }
 
     public class TrialBalanceDTO
@@ -81,7 +82,9 @@ namespace ChurchDTOs.DTOs.Utils
         public string BankName { get; set; }
         public double OpeningBalance { get; set; }
         public double ClosingBalance { get; set; }
-        public List<FinancialReportCustomDTO> Statements { get; set; }
+      //
+      //public List<FinancialReportCustomDTO> Statements { get; set; }
+        public List<BankFinancialReportCustomDTO> Statements { get; set; } = new List<BankFinancialReportCustomDTO>();
     }
 
     public class NoticeBoardDTO
@@ -232,6 +235,12 @@ namespace ChurchDTOs.DTOs.Utils
         // For Parish
         //  public int? ParishId { get; set; }
         //  public string ParishName { get; set; }
+    }
+
+    public class BankFinancialReportCustomDTO: FinancialReportCustomDTO
+    {
+        public int Odr { get; set; }
+        public decimal RunningBalance { get; set; }
     }
 
     public class FinancialReportSummaryDTO

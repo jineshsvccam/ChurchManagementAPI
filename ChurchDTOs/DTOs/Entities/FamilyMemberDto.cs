@@ -9,6 +9,7 @@ namespace ChurchDTOs.DTOs.Entities
         public int FamilyId { get; set; }
         public int? ParishId { get; set; }
         public int? UnitId { get; set; }
+        public string UnitName { get; set; }
         public int FamilyNumber { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -16,11 +17,15 @@ namespace ChurchDTOs.DTOs.Entities
         public string Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int? Age { get; set; }
-        public string MaritalStatus { get; set; }
+        public string? MaritalStatus { get; set; }
         public bool ActiveMember { get; set; }
-        public string MemberStatus { get; set; }
+        public string? MemberStatus { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        public string? MobilePhone { get; set; }
+        public int? ParentId { get; set; }
+        public string? FamilyName { get; set; }
 
         // Nested collections / related objects
         public ICollection<FamilyMemberContactsDto> Contacts { get; set; } = new List<FamilyMemberContactsDto>();

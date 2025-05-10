@@ -170,7 +170,7 @@ namespace ChurchData.EntityConfigurations
                 entity.Property(e => e.LeftReason).HasColumnName("left_reason");
                 entity.Property(e => e.JoinDate).HasColumnName("join_date");
                 entity.Property(e => e.LeftDate).HasColumnName("left_date");
-                entity.Property(e => e.BurialPlace).HasColumnName("burial_place").HasMaxLength(20);
+                entity.Property(e => e.BurialPlace).HasColumnName("burial_place").HasMaxLength(20).HasConversion<string>(); 
                 entity.Property(e => e.DeathDate).HasColumnName("death_date");
                 entity.HasOne(e => e.Member).WithOne(m => m.Lifecycle).HasForeignKey<FamilyMemberLifecycle>(e => e.MemberId).OnDelete(DeleteBehavior.Cascade);
             });

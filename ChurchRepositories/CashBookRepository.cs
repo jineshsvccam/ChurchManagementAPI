@@ -111,7 +111,8 @@ namespace ChurchRepositories
             }
             double openingBalance = Convert.ToDouble(bank.OpeningBalance) + additionalOpening;
 
-            // Calculate the additional amount from transactions up to the end date for closing balance.
+            // Calculate
+            // the additional amount from transactions up to the end date for closing balance.
             double additionalClosing = 0;
             if (endUtc.HasValue)
             {
@@ -121,12 +122,67 @@ namespace ChurchRepositories
             }
             double closingBalance = Convert.ToDouble(bank.OpeningBalance) + additionalClosing;
 
+            // Build the ordered transactions with Odr and RunningBalance
+            var orderedTransactions = new List<BankFinancialReportCustomDTO>();
+            int order = 1;
+            decimal runningBalance = (decimal)openingBalance;
+
+            // Add Opening Balance row explicitly
+            orderedTransactions.Add(new BankFinancialReportCustomDTO
+            {
+                TransactionId = 0,
+                TrDate = startUtc ?? DateTime.MinValue,
+                VrNo = "OB",
+                TransactionType = "Opening Balance",
+                IncomeAmount = 0,
+                ExpenseAmount = 0,
+                Description = "Opening Balance",
+                BillName = null,
+                HeadId = null,
+                HeadName = null,
+                FamilyId = null,
+                FamilyName = null,
+                FamilyNumber = null,
+                BankId = bank.BankId,
+                BankName = bank.BankName,
+                Odr = order++,
+                RunningBalance = runningBalance
+            });
+
+            // Sort the mapped transactions by date (and maybe by ID if needed for exact order)
+            foreach (var t in mappedTransactions.OrderBy(t => t.TrDate).ThenBy(t => t.TransactionId))
+            {
+                var item = new BankFinancialReportCustomDTO
+                {
+                    TransactionId = t.TransactionId,
+                    TrDate = t.TrDate,
+                    VrNo = t.VrNo,
+                    TransactionType = t.TransactionType,
+                    IncomeAmount = t.IncomeAmount,
+                    ExpenseAmount = t.ExpenseAmount,
+                    Description = t.Description,
+                    BillName = t.BillName,
+                    HeadId = t.HeadId,
+                    HeadName = t.HeadName,
+                    FamilyId = t.FamilyId,
+                    FamilyName = t.FamilyName,
+                    FamilyNumber = t.FamilyNumber,
+                    BankId = t.BankId,
+                    BankName = t.BankName,
+                    Odr = order++,
+                    RunningBalance = runningBalance + t.IncomeAmount - t.ExpenseAmount
+                };
+
+                runningBalance = item.RunningBalance;
+                orderedTransactions.Add(item);
+            }
+
             return new CashBookDetailDTO
             {
                 BankName = currentBankName,
                 OpeningBalance = openingBalance,
                 ClosingBalance = closingBalance,
-                Statements = mappedTransactions
+                Statements = orderedTransactions
             };
         }
 

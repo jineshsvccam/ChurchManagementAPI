@@ -55,7 +55,7 @@ namespace ChurchRepositories
             
         }
 
-        public async Task<IEnumerable<FamilyMember>> GetFamilyMembersFilteredAsync(FamilyMemberFilterRequest filterRequest)
+        public async Task<IEnumerable<FamilyMember>> GetFamilyMembersFilteredAsync(int parishId, int? familyId, FamilyMemberFilterRequest filterRequest)
         {
             IQueryable<FamilyMember> query = _context.FamilyMembers
                 .Include(fm => fm.Contacts)

@@ -18,7 +18,7 @@ namespace ChurchContracts
 
         // Data retrieval for approved family members
         Task<FamilyMember> GetFamilyMemberByIdAsync(int memberId);
-        Task<IEnumerable<FamilyMember>> GetFamilyMembersFilteredAsync(FamilyMemberFilterRequest filterRequest);
+        Task<IEnumerable<FamilyMember>> GetFamilyMembersFilteredAsync(int parishId, int? familyId, FamilyMemberFilterRequest filterRequest);
 
         Task<IEnumerable<FamilyMember>> GetAllFamilyMembersAsync(int? parishId, int? familyId);
     }

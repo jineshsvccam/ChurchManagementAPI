@@ -1,5 +1,7 @@
 ﻿using System.Configuration;
+using System.Data;
 using System.Data.OleDb;
+using System.Text.Json;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 
@@ -213,113 +215,251 @@ public class AccessDataExporter
                         contributionSettings.Add(due);
                     }
 
-                
+
+                }
             }
         }
-    }
 
         return contributionSettings;
     }
 
 
-public List<TransactionDto> ExportTransactions(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
-{
-    // Create case-insensitive dictionaries
-    var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
-    var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
-    var bankNameLookupInsensitive = new Dictionary<string, int>(bankNameLookup, StringComparer.OrdinalIgnoreCase);
-
-    string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-    var transactions = new List<TransactionDto>();
-
-    using (OleDbConnection conn = new OleDbConnection(connString))
+    public List<TransactionDto> ExportTransactions(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
     {
-        conn.Open();
-        using (OleDbCommand cmd = new OleDbCommand($"SELECT {tableName}.* FROM {tableName} where CB<>\"JE\"", conn))
-        using (OleDbDataReader reader = cmd.ExecuteReader())
+        // Create case-insensitive dictionaries
+        var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
+        var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
+        var bankNameLookupInsensitive = new Dictionary<string, int>(bankNameLookup, StringComparer.OrdinalIgnoreCase);
+
+        string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
+        var transactions = new List<TransactionDto>();
+
+        using (OleDbConnection conn = new OleDbConnection(connString))
         {
-            while (reader.Read())
+            conn.Open();
+            using (OleDbCommand cmd = new OleDbCommand($"SELECT {tableName}.* FROM {tableName} where CB<>\"JE\"", conn))
+            using (OleDbDataReader reader = cmd.ExecuteReader())
             {
-                var transactionType = reader["Type"].ToString();
-                transactionType = transactionType == "Receipt" ? "Income" : "Expense";
-
-                var transaction = new TransactionDto
+                while (reader.Read())
                 {
-                    Action = "INSERT",
-                    TransactionId = Convert.ToInt32(reader["ID"]),
-                    TrDate = Convert.ToDateTime(reader["VRDate"]),
-                    VrNo = reader["VRNo"].ToString(),
-                    TransactionType = transactionType,
-                    HeadId = headNameLookupInsensitive.TryGetValue(reader["Head"].ToString(), out int headId) ? headId : 0,
-                    FamilyId = familyNameLookupInsensitive.TryGetValue(reader["Hno"].ToString(), out int familyId) ? familyId : 0,
-                    BankId = bankNameLookupInsensitive.TryGetValue(reader["CB"].ToString(), out int bankId) ? bankId : 0,
-                    IncomeAmount = Convert.ToDecimal(reader["Credit"]),
-                    ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
-                    Description = reader["Remarks"].ToString(),
-                    ParishId = ParishId,
-                    BillName= reader["MemName"].ToString()
-                };
+                    var transactionType = reader["Type"].ToString();
+                    transactionType = transactionType == "Receipt" ? "Income" : "Expense";
 
-                transactions.Add(transaction);
+                    var transaction = new TransactionDto
+                    {
+                        Action = "INSERT",
+                        TransactionId = Convert.ToInt32(reader["ID"]),
+                        TrDate = Convert.ToDateTime(reader["VRDate"]),
+                        VrNo = reader["VRNo"].ToString(),
+                        TransactionType = transactionType,
+                        HeadId = headNameLookupInsensitive.TryGetValue(reader["Head"].ToString(), out int headId) ? headId : 0,
+                        FamilyId = familyNameLookupInsensitive.TryGetValue(reader["Hno"].ToString(), out int familyId) ? familyId : 0,
+                        BankId = bankNameLookupInsensitive.TryGetValue(reader["CB"].ToString(), out int bankId) ? bankId : 0,
+                        IncomeAmount = Convert.ToDecimal(reader["Credit"]),
+                        ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
+                        Description = reader["Remarks"].ToString(),
+                        ParishId = ParishId,
+                        BillName = reader["MemName"].ToString()
+                    };
+
+                    transactions.Add(transaction);
+                }
             }
         }
+
+        return transactions;
     }
 
-    return transactions;
-}
-
-public List<FamilyContributionDto> ExportTransactionsJE(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
-{
-    // Create case-insensitive dictionaries
-    var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
-    var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
-    var bankNameLookupInsensitive = new Dictionary<string, int>(bankNameLookup, StringComparer.OrdinalIgnoreCase);
-
-    string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
-    var transactions = new List<FamilyContributionDto>();
-
-    using (OleDbConnection conn = new OleDbConnection(connString))
+    public List<FamilyContributionDto> ExportTransactionsJE(string accessDbPath, string tableName, Dictionary<string, int> headNameLookup, Dictionary<string, int> familyNameLookup, Dictionary<string, int> bankNameLookup)
     {
-        conn.Open();
-        using (OleDbCommand cmd = new OleDbCommand($"SELECT {tableName}.* FROM {tableName} where CB=\"JE\"", conn))
-        using (OleDbDataReader reader = cmd.ExecuteReader())
+        // Create case-insensitive dictionaries
+        var headNameLookupInsensitive = new Dictionary<string, int>(headNameLookup, StringComparer.OrdinalIgnoreCase);
+        var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
+        var bankNameLookupInsensitive = new Dictionary<string, int>(bankNameLookup, StringComparer.OrdinalIgnoreCase);
+
+        string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
+        var transactions = new List<FamilyContributionDto>();
+
+        using (OleDbConnection conn = new OleDbConnection(connString))
         {
-            while (reader.Read())
+            conn.Open();
+            using (OleDbCommand cmd = new OleDbCommand($"SELECT {tableName}.* FROM {tableName} where CB=\"JE\"", conn))
+            using (OleDbDataReader reader = cmd.ExecuteReader())
             {
-                var transactionType = reader["Type"].ToString();
-                transactionType = transactionType == "Receipt" ? "Income" : "Expense";
-
-                var transaction = new FamilyContributionDto
+                while (reader.Read())
                 {
-                    ContributionId = Convert.ToInt32(reader["ID"]),
-                    TransactionDate = Convert.ToDateTime(reader["VRDate"]),
-                    VoucherNumber = reader["VRNo"].ToString(),
-                    TransactionType = transactionType,
-                    HeadId = headNameLookupInsensitive.TryGetValue(reader["Head"].ToString(), out int headId) ? headId : 0,
-                    FamilyId = familyNameLookupInsensitive.TryGetValue(reader["Hno"].ToString(), out int familyId) ? familyId : 0,
-                    BankId = bankNameLookupInsensitive.TryGetValue(reader["CB"].ToString(), out int bankId) ? bankId : 0,
-                    IncomeAmount = Convert.ToDecimal(reader["Credit"]),
-                    ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
-                    Description = reader["Remarks"].ToString(),
-                    ParishId = ParishId,
-                    BillName = reader["MemName"].ToString()
-                };
+                    var transactionType = reader["Type"].ToString();
+                    transactionType = transactionType == "Receipt" ? "Income" : "Expense";
 
-                transactions.Add(transaction);
+                    var transaction = new FamilyContributionDto
+                    {
+                        ContributionId = Convert.ToInt32(reader["ID"]),
+                        TransactionDate = Convert.ToDateTime(reader["VRDate"]),
+                        VoucherNumber = reader["VRNo"].ToString(),
+                        TransactionType = transactionType,
+                        HeadId = headNameLookupInsensitive.TryGetValue(reader["Head"].ToString(), out int headId) ? headId : 0,
+                        FamilyId = familyNameLookupInsensitive.TryGetValue(reader["Hno"].ToString(), out int familyId) ? familyId : 0,
+                        BankId = bankNameLookupInsensitive.TryGetValue(reader["CB"].ToString(), out int bankId) ? bankId : 0,
+                        IncomeAmount = Convert.ToDecimal(reader["Credit"]),
+                        ExpenseAmount = Convert.ToDecimal(reader["Debit"]),
+                        Description = reader["Remarks"].ToString(),
+                        ParishId = ParishId,
+                        BillName = reader["MemName"].ToString()
+                    };
+
+                    transactions.Add(transaction);
+                }
             }
         }
+
+        return transactions;
     }
 
-    return transactions;
-}
 
-public List<List<T>> SplitList<T>(List<T> source, int batchSize)
-{
-    var batches = new List<List<T>>();
-    for (int i = 0; i < source.Count; i += batchSize)
+    public List<PendingFamilyMemberRequestDto> ExportFamilyMembers(string accessDbPath, string tableName, Dictionary<string, int> unitNameLookup, Dictionary<string, int> familyNameLookup)
     {
-        batches.Add(source.GetRange(i, Math.Min(batchSize, source.Count - i)));
+        try
+        {
+            var familyNameLookupInsensitive = new Dictionary<string, int>(familyNameLookup, StringComparer.OrdinalIgnoreCase);
+            var unitNameLookupInsensitive = new Dictionary<string, int>(unitNameLookup, StringComparer.OrdinalIgnoreCase);
+
+            string connString = ConfigurationManager.ConnectionStrings["AccessConnectionString"].ConnectionString;
+            var familyMembers = new List<PendingFamilyMemberRequestDto>();
+
+            using (OleDbConnection conn = new OleDbConnection(connString))
+            {
+                conn.Open();
+                using (OleDbCommand cmd = new OleDbCommand($"SELECT * FROM [{tableName}]", conn))
+                using (OleDbDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int familyId = familyNameLookupInsensitive.TryGetValue(reader["Houseno"].ToString(), out int fid) ? fid : 0;
+                        int? unitId = unitNameLookupInsensitive.TryGetValue(reader["Unit"].ToString(), out int uid) ? uid : 0;
+
+                        var familyMember = new FamilyMemberDto
+                        {
+                            FamilyId = familyId,
+                            ParishId=ParishId,
+                            UnitId = unitId,
+                            FamilyNumber = Convert.ToInt32(reader["Houseno"]),
+                            FirstName = reader["FirstName"].ToString(),
+                            LastName = reader["LastName"].ToString(),
+                            Nickname = reader["ChildName"].ToString(),
+                            Gender = reader["Gender"].ToString(),
+                            DateOfBirth = DateTime.TryParse(reader["Dob"].ToString(), out var dob) ? dob : null,
+                            MaritalStatus = !string.IsNullOrEmpty(reader["MDate"].ToString()) ? "Married" : "Single",
+                            ActiveMember = true,
+                            MemberStatus = reader["Member"].ToString() == "Yes" ? "Alive" : "Left",
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+
+                            Contacts = new List<FamilyMemberContactsDto>
+                        {
+                            new FamilyMemberContactsDto
+                            {
+                                AddressLine2 = reader["Add2"].ToString(),
+                                AddressLine3 = reader["Add3"].ToString(),
+                                PostOffice = reader["PO"].ToString(),
+                                PinCode = reader["Pin"].ToString(),
+                                LandPhone = reader["Landphone"].ToString(),
+                                MobilePhone = reader["Mobile"].ToString(),
+                                Email = reader["Email"].ToString(),
+                                FacebookProfile = reader["Facebook"].ToString(),
+                                GeoLocation = reader["Location"].ToString()
+                            }
+                        },
+                            Identity = new FamilyMemberIdentityDto
+                            {
+                                AadharNumber = "test Aadhar",
+                                PassportNumber = "testPassport",
+                                DrivingLicense = "testdl",
+                                VoterId = "testvoter"
+                            },
+                            Occupation = new FamilyMemberOccupationDto
+                            {
+                                Qualification = reader["Quali"].ToString(),
+                                StudentOrEmployee = "Unemployed",
+                                ClassOrWork = reader["CW"].ToString(),
+                                SchoolOrWorkplace = "Unemployed",
+                                SundaySchoolClass = "TestSun"
+                            },
+                            Sacraments = new FamilyMemberSacramentsDto
+                            {
+                                BaptismalName = "BapName",
+                                BaptismDate = DateTime.UtcNow,
+                                MarriageDate = null,
+                                MooronDate = null,
+                                MooronInOurChurch = false,
+                                MarriageInOurChurch = true,
+                                BaptismInOurChurch = false
+                            },
+                            Relations = new List<FamilyMemberRelationsDto>
+                        {
+                            new FamilyMemberRelationsDto
+                            {
+                                FatherName = "father test",
+                                MotherName = "mother test",
+                                SpouseId = 0,
+                                ParentId = 0
+                            }
+                        },
+                            Files = new FamilyMemberFilesDto
+                            {
+                                MarriageFileNo = "MfileNo",
+                                BaptismFileNo = "BfileNo",
+                                DeathFileNo = "DfileNo",
+                                JoinFileNo = "JfileNo",
+                                MooronFileNo = "MooronFileNo",
+                                CommonCellNo = "CommonCellNo"
+                            },
+                            Lifecycle = new FamilyMemberLifecycleDto
+                            {
+                                CommonCell = false,
+                                LeftReason = "leftreason",
+                                JoinDate = null,
+                                LeftDate = null,
+                                BurialPlace = "CommonCell",
+                                DeathDate = null
+                            }
+                        };
+
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        };
+
+                        var json = JsonSerializer.SerializeToElement(familyMember, options);
+
+                     //   var json = JsonSerializer.SerializeToElement(familyMember);
+
+                        var pending = new PendingFamilyMemberRequestDto
+                        {
+                            FamilyId = familyId,
+                            ParishId = ParishId,
+                            SubmittedBy = Guid.Parse("bc27673d-f3c7-4e05-9613-628697099840"), 
+                            Payload = json
+                        };
+
+                        familyMembers.Add(pending);
+                    }
+                }
+            }
+
+            return familyMembers;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
-    return batches;
-}
+    public List<List<T>> SplitList<T>(List<T> source, int batchSize)
+    {
+        var batches = new List<List<T>>();
+        for (int i = 0; i < source.Count; i += batchSize)
+        {
+            batches.Add(source.GetRange(i, Math.Min(batchSize, source.Count - i)));
+        }
+        return batches;
+    }
 }

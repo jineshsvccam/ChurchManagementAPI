@@ -10,7 +10,7 @@ namespace ChurchContracts
 
         // Data retrieval endpoints
         Task<ServiceResponse<FamilyMemberDto>> GetFamilyMemberByIdAsync(int memberId);
-        Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetFamilyMembersFilteredAsync(FamilyMemberFilterRequest filterRequest);
+        Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetFamilyMembersFilteredAsync(int parishId, int? familyId,  FamilyMemberFilterRequest filterRequest);
 
         // New method for retrieving all family members
         Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetAllFamilyMembersAsync(int? parishId, int? familyId);

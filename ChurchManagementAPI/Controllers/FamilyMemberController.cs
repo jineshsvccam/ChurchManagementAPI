@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchManagementAPI.Controllers
 {
-  
+
     public class FamilyMemberController : FamilyMemberAuthorizedController
     {
         private readonly IFamilyMemberService _familyMemberService;
@@ -51,9 +51,9 @@ namespace ChurchManagementAPI.Controllers
 
         // POST filter: returns filtered list of family members with selected columns
         [HttpPost("filter")]
-        public async Task<IActionResult> GetFamilyMembersFiltered([FromBody] FamilyMemberFilterRequest filterRequest)
+        public async Task<IActionResult> GetFamilyMembersFiltered([FromQuery] int parishId, [FromQuery] int? familyId, [FromBody] FamilyMemberFilterRequest filterRequest)
         {
-            var response = await _familyMemberService.GetFamilyMembersFilteredAsync(filterRequest);
+            var response = await _familyMemberService.GetFamilyMembersFilteredAsync(parishId, familyId, filterRequest);
             if (!response.Success)
             {
                 return BadRequest(response.Message);

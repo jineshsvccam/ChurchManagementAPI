@@ -21,7 +21,7 @@ namespace ChurchServices
 
         public async Task<PivotReportResult> GetPivotReportAsync(int parishId, int year, string type, int[]? headIds = null, int? headCount = null)
         {
-            return await _pivotReportRepository.GetPivotReportAsync(parishId, year, type, headIds);
+            return await _pivotReportRepository.GetPivotReportAsync(parishId, year, type, headIds,headCount);
         }
 
         public async Task<SingleHeadFiscalReportDto> GetSingleHeadFiscalReportAsync(int parishId, int headId, string type, int startYear, int endYear)

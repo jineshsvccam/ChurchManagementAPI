@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Diagnostics;
 using ChurchCommon.Utils;
+using ChurchData;
 
 class Program
 {
@@ -33,7 +34,8 @@ class Program
             string transactionApiUrlbulk = $"{baseUrl}/api/Transaction/create-or-update";
 
             string transactionApiUrl = $"{baseUrl}/api/Transaction";
-          
+            string familyMemberApiUrl = $"{baseUrl}/api/FamilyMember/submit";
+
 
             Console.WriteLine("API URLs set...");
 
@@ -42,10 +44,13 @@ class Program
             bool processTransactionHeads = false;
             bool processFamilies = false;
             bool processBanks = false;
-            bool processTransactions = true;
+            bool processTransactions = false;
             bool processFamilyDue = false;
             bool processFamilyContribution = false;
             bool processContributionSetting = false;
+
+            bool processFamilyMembers = true;
+
 
             Console.WriteLine("Boolean flags set...");
 
@@ -225,6 +230,17 @@ class Program
                 stopwatch.Stop();
                 Console.WriteLine("Data imported successfully!");
                 Console.WriteLine($"Time taken: {stopwatch.Elapsed.TotalSeconds} seconds.");
+            }
+
+            if(processFamilyMembers)
+            {
+                Console.WriteLine("Processing FamilyMembers...");
+                var unitNames = await apiService.GetUnitNamesAsync(unitApiUrl);
+                var families = await apiService.GetFamiliesAsync(familyApiGetUrl);
+
+                var familyMembers = dataExporter.ExportFamilyMembers(accessDbPath, "Family_Details", unitNames, families);
+              
+                await apiService.ImportItemsOnebyOne(familyMembers, familyMemberApiUrl);
             }
         }
         catch (Exception ex)
