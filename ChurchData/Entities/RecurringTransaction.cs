@@ -19,6 +19,9 @@ namespace ChurchData
         public int ParishId { get; set; }
 
         [Required]
+        public string BillName { get; set; } = string.Empty;
+
+        [Required]
         [Column(TypeName = "numeric(15,2)")]
         public decimal IncomeAmount { get; set; }
     }

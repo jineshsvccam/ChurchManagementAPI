@@ -63,5 +63,20 @@ namespace ChurchManagementAPI.Controllers
             }
             return Ok();
         }
+
+        [HttpDelete("by-parish-head")]
+        public async Task<IActionResult> DeleteByParishAndHead([FromQuery] int parishId, [FromQuery] int headId)
+        {
+            try
+            {
+                int deletedCount = await _service.DeleteByParishAndHeadAsync(parishId, headId);
+                return Ok(new { Message = $"{deletedCount} recurring transaction(s) deleted." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+        }
+
     }
 }

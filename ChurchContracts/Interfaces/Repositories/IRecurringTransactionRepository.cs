@@ -14,5 +14,7 @@ namespace ChurchContracts
         Task<RecurringTransaction> AddAsync(RecurringTransaction recurringTransaction);
         Task<RecurringTransaction> UpdateAsync(RecurringTransaction recurringTransaction);
         Task DeleteAsync(int id);
+        Task<int> DeleteByParishAndHeadAsync(int parishId, int headId);
+
     }
 }

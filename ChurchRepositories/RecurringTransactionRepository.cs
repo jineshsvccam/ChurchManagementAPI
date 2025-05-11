@@ -64,5 +64,22 @@ namespace ChurchRepositories
                 throw new KeyNotFoundException("Recurring Transaction not found");
             }
         }
+        public async Task<int> DeleteByParishAndHeadAsync(int parishId, int headId)
+        {
+            var transactionsToDelete = await _context.RecurringTransactions
+                .Where(rt => rt.ParishId == parishId && rt.HeadId == headId)
+                .ToListAsync();
+
+            if (!transactionsToDelete.Any())
+            {
+                throw new KeyNotFoundException($"No recurring transactions found for ParishId={parishId} and HeadId={headId}");
+            }
+
+            _context.RecurringTransactions.RemoveRange(transactionsToDelete);
+            await _context.SaveChangesAsync();
+
+            return transactionsToDelete.Count;
+        }
+
     }
 }

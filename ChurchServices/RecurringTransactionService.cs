@@ -75,6 +75,9 @@ namespace ChurchServices
             }
             return _mapper.Map<IEnumerable<RecurringTransactionDto>>(processedEntries);
         }
-
+        public async Task<int> DeleteByParishAndHeadAsync(int parishId, int headId)
+        {
+            return await _repository.DeleteByParishAndHeadAsync(parishId, headId);
+        }
     }
 }

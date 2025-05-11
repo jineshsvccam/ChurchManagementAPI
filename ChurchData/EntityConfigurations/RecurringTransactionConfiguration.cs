@@ -15,6 +15,11 @@ namespace ChurchData.Configurations
             builder.Property(e => e.HeadId).HasColumnName("head_id");
             builder.Property(e => e.FamilyId).HasColumnName("family_id");
             builder.Property(e => e.ParishId).HasColumnName("parish_id");
+          builder.Property(e => e.BillName)
+                   .IsRequired()
+                   .HasMaxLength(100)
+                   .HasColumnName("billname");
+
             builder.Property(e => e.IncomeAmount).HasColumnName("income_amount");
 
             // Foreign Key Constraints
