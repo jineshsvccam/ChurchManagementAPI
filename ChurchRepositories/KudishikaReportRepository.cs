@@ -26,7 +26,8 @@ namespace ChurchRepositories
              int parishId,
              int familyNumber,
              DateTime? startDate,
-             DateTime? endDate)
+             DateTime? endDate,
+            bool istransactionrequired = true)
         {
             var family = await _context.Families
               .Where(f => f.ParishId == parishId && f.FamilyNumber == familyNumber)
@@ -160,7 +161,7 @@ namespace ChurchRepositories
                     TotalPaid = totalPaid,
                     TotalDues = totalDue,
                     ClosingBalance = computedOpeningBalance + totalDue - totalPaid,
-                    Transactions = combinedTransactions
+                    Transactions = istransactionrequired == true ? combinedTransactions : new List<FinancialReportCustomDTO>()
                 };
 
                 kudishikaDetailsList.Add(kudishikaDetail);

@@ -34,9 +34,10 @@ namespace ChurchManagementAPI.Controllers
           [FromQuery] int parishId,
           [FromQuery] int familyNumber,
           [FromQuery] DateTime startDate,
-          [FromQuery] DateTime endDate)
+          [FromQuery] DateTime endDate,
+          [FromQuery] bool istransactionrequired = true)
         {
-            var familyReport = await _kudishikaReportService.GetKudishikaReportAsync(parishId, familyNumber, startDate, endDate);
+            var familyReport = await _kudishikaReportService.GetKudishikaReportAsync(parishId, familyNumber, startDate, endDate, istransactionrequired);
             return Ok(familyReport);
         }
     }

@@ -87,7 +87,8 @@ namespace ChurchContracts
             int parishId,
             int familyNumber,
             DateTime? startDate,
-            DateTime? endDate);
+            DateTime? endDate,
+            bool istransactionrequired = true);
     }
 
     public interface IPivotReportRepository
@@ -199,7 +200,8 @@ namespace ChurchContracts
             int parishId,
             int familyNumber,
             DateTime? startDate,
-            DateTime? endDate);
+            DateTime? endDate,
+            bool istransactionrequired = true);
     }
     public interface IPivotReportService
     {

@@ -197,12 +197,12 @@ namespace ChurchServices
         public async Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetFamilyMembersFilteredAsync(int parishId, int? familyId, FamilyMemberFilterRequest filterRequest)
         {
 
-            var (userRole, userParishId, userFamilyId) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+            //var (userRole, userParishId, userFamilyId) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
 
-            if (parishId != userParishId)
-            {
-                throw new UnauthorizedAccessException("You do not have permission to view directory for this parish.");
-            }
+            //if (parishId != userParishId)
+            //{
+            //    throw new UnauthorizedAccessException("You do not have permission to view directory for this parish.");
+            //}
 
 
             var units = await _context.Units
@@ -228,10 +228,10 @@ namespace ChurchServices
                 members = members.Where(m => m.FamilyId == familyId).ToList();
             }
 
-            if (userRole == "FamilyMember")
-            {
-                members = members.Where(m => m.FamilyId == userFamilyId).ToList();
-            }
+            //if (userRole == "FamilyMember")
+            //{
+            //    members = members.Where(m => m.FamilyId == userFamilyId).ToList();
+            //}
 
             var dtos = members.Select(member => MapFamilyMemberToDto(member, units, families, filterRequest.Fields)).ToList();
 

@@ -8,7 +8,7 @@ using ChurchDTOs.DTOs.Utils;
 
 namespace ChurchServices
 {
-    public class KudishikaReportService: IKudishikaReportService
+    public class KudishikaReportService : IKudishikaReportService
     {
         private readonly IKudishikaReportRepository _kudishikaReportRepository;
 
@@ -17,9 +17,9 @@ namespace ChurchServices
             _kudishikaReportRepository = kudishikaReportRepository;
         }
 
-        public async Task<KudishikalReportDTO> GetKudishikaReportAsync(int parishId, int familyNumber, DateTime? startDate, DateTime? endDate)
+        public async Task<KudishikalReportDTO> GetKudishikaReportAsync(int parishId, int familyNumber, DateTime? startDate, DateTime? endDate, bool istransactionrequired = true)
         {
-            return await _kudishikaReportRepository.GetKudishikaReportAsync(parishId,familyNumber, startDate, endDate);
+            return await _kudishikaReportRepository.GetKudishikaReportAsync(parishId, familyNumber, startDate, endDate, istransactionrequired);
         }
     }
 }

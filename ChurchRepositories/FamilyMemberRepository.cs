@@ -1,4 +1,5 @@
-﻿using ChurchContracts;
+﻿using System.Linq;
+using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -79,6 +80,26 @@ namespace ChurchRepositories
             if (filterRequest.Filters.TryGetValue("FirstName", out string firstName))
             {
                 query = query.Where(fm => fm.FirstName.Contains(firstName));
+            }
+
+            // Filter by UnitID
+            if (filterRequest.Filters.TryGetValue("UnitId", out string unitId))
+            {
+                int unitid = Convert.ToInt16(unitId);
+                query = query.Where(fm => fm.UnitId== unitid);
+            }
+
+            // Filter by FamilyNumber
+            if (filterRequest.Filters.TryGetValue("FamilyNumber", out string familyNumber))
+            {
+                int fNumber = Convert.ToInt16(familyNumber);
+                query = query.Where(fm => fm.FamilyNumber == fNumber);
+            }
+
+            // Filter by MobileNumber
+            if (filterRequest.Filters.TryGetValue("MobileNumber", out string MobileNumber))
+            {
+                query = query.Where(fm => fm.Contacts.Any(w => w.MobilePhone == MobileNumber));
             }
 
             // You can add additional filters here as needed.

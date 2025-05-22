@@ -68,7 +68,7 @@ namespace ChurchManagementAPI.Controllers.Middleware
 
                     // Default case: Keep it as InternalServerError
             }
-
+//
             // Log full exception details including inner exceptions
             _logger.LogError(exception, "Exception Occurred: {ExceptionType} | Path: {RequestPath} | Message: {ErrorMessage}",
                 exception.GetType().Name, context.Request.Path, exception.Message);
