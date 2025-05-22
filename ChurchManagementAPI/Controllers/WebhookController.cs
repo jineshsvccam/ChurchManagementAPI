@@ -355,22 +355,159 @@ namespace ChurchManagementAPI.Controllers
                                     UserInfo userInfo = await GetUserInfoAsync(userMobile);
                                     if (userInfo != null)
                                     {
-                                        var families = await _familyRepository.GetFamiliesAsync(userInfo.ParishId, selectedUnitId, null);
+                                        var families = (await _familyRepository.GetFamiliesAsync(userInfo.ParishId, selectedUnitId, null)).ToList();
                                         if (families.Any())
                                         {
-                                            string result = $"🏡 Families in Unit '{listReplyTitle}':\n\n";
-                                            foreach (var family in families)
+                                            int pageSize = 9; // 9 families + 1 "Next Page" = 10
+                                            int page = 1;
+                                            if (UserState.TryGetValue(userMobile, out var famPageState) && famPageState.StartsWith("family_page_"))
                                             {
-                                                result += $"👥 {family.HeadName} + {family.FamilyName} ({family.FamilyNumber})\n";
+                                                int.TryParse(famPageState.Replace("family_page_", ""), out page);
                                             }
-                                            result += "\nReply with **'back'** to return to the main menu.";
-                                            await SendWhatsAppTextMessageAsync(userMobile, result);
+                                            var pagedFamilies = families.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                                            var rows = pagedFamilies.Select(f => new
+                                            {
+                                                id = $"family_{f.FamilyNumber}",
+                                                // WhatsApp row title max length is 24 chars
+                                                // Truncate if needed and remove extra spaces
+                                                title = $"{(f.HeadName + " " + f.FamilyName).Trim()}".Length > 24
+                                                    ? $"{(f.HeadName + " " + f.FamilyName).Trim().Substring(0, 22)}.."
+                                                    : $"{(f.HeadName + " " + f.FamilyName).Trim()}"
+                                            }).ToList();
+
+                                            // Add "Next Page" if there are more families
+                                            if (families.Count > page * pageSize)
+                                            {
+                                                rows.Add(new
+                                                {
+                                                    id = "family_next_page",
+                                                    title = "Next Page"
+                                                });
+                                            }
+
+                                            var sections = new List<object>
+                                            {
+                                                new
+                                                {
+                                                    title = $"Families {((page - 1) * pageSize + 1)}-{((page - 1) * pageSize + pagedFamilies.Count)}",
+                                                    rows = rows.ToArray()
+                                                }
+                                            };
+
+                                            var familypayload = new
+                                            {
+                                                messaging_product = "whatsapp",
+                                                to = userMobile,
+                                                type = "interactive",
+                                                interactive = new
+                                                {
+                                                    type = "list",
+                                                    header = new { type = "text", text = "Select a Family" },
+                                                    body = new { text = "Please choose a family from the list below:" },
+                                                    action = new
+                                                    {
+                                                        button = "Select Family",
+                                                        sections = sections
+                                                    }
+                                                }
+                                            };
+
+                                            await SendWhatsAppMessageAsync(familypayload);
+
+                                            // Save page state
+                                            UserState[userMobile] = $"family_page_{page}_unit_{selectedUnitId}";
                                         }
                                         else
                                         {
                                             await SendWhatsAppTextMessageAsync(userMobile, "❌ No families found in this unit.");
                                         }
                                     }
+                                }
+                                return Ok(new { status = "received" });
+                            }
+                            else if (listReplyId == "family_next_page")
+                            {
+                                // Pagination for families
+                                // Extract unit id from state
+                                int selectedUnitId = 0;
+                                int page = 1;
+                                if (UserState.TryGetValue(userMobile, out var famPageState) && famPageState.StartsWith("family_page_"))
+                                {
+                                    var parts = famPageState.Split("_unit_");
+                                    if (parts.Length == 2)
+                                    {
+                                        int.TryParse(parts[0].Replace("family_page_", ""), out page);
+                                        int.TryParse(parts[1], out selectedUnitId);
+                                    }
+                                }
+                                page++;
+                                UserState[userMobile] = $"family_page_{page}_unit_{selectedUnitId}";
+
+                                UserInfo userInfo = await GetUserInfoAsync(userMobile);
+                                if (userInfo != null)
+                                {
+                                    var families = (await _familyRepository.GetFamiliesAsync(userInfo.ParishId, selectedUnitId, null)).ToList();
+                                    int pageSize = 9;
+                                    var pagedFamilies = families.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                                    var rows = pagedFamilies.Select(f => new
+                                    {
+                                        id = $"family_{f.FamilyNumber}",
+                                        // WhatsApp row title max length is 24 chars
+                                        // Truncate if needed and remove extra spaces
+                                        title = $"{(f.HeadName + " " + f.FamilyName).Trim()}".Length > 24
+                                            ? $"{(f.HeadName + " " + f.FamilyName).Trim().Substring(0, 22)}.."
+                                            : $"{(f.HeadName + " " + f.FamilyName).Trim()}"
+                                    }).ToList();
+
+                                    if (families.Count > page * pageSize)
+                                    {
+                                        rows.Add(new
+                                        {
+                                            id = "family_next_page",
+                                            title = "Next Page"
+                                        });
+                                    }
+
+                                    var sections = new List<object>
+                                    {
+                                        new
+                                        {
+                                            title = $"Families {((page - 1) * pageSize + 1)}-{((page - 1) * pageSize + pagedFamilies.Count)}",
+                                            rows = rows.ToArray()
+                                        }
+                                    };
+
+                                    var familypayload = new
+                                    {
+                                        messaging_product = "whatsapp",
+                                        to = userMobile,
+                                        type = "interactive",
+                                        interactive = new
+                                        {
+                                            type = "list",
+                                            header = new { type = "text", text = "Select a Family" },
+                                            body = new { text = "Please choose a family from the list below:" },
+                                            action = new
+                                            {
+                                                button = "Select Family",
+                                                sections = sections
+                                            }
+                                        }
+                                    };
+
+                                    await SendWhatsAppMessageAsync(familypayload);
+                                    UserState[userMobile] = $"family_page_{page}_unit_{selectedUnitId}";
+                                }
+                                return Ok(new { status = "received" });
+                            }
+                            else if (listReplyId.StartsWith("family_"))
+                            {
+                                // Extract family number from listReplyId and call the handler
+                                if (int.TryParse(listReplyId.Replace("family_", ""), out int selectedFamilyNumber))
+                                {
+                                    await HandleFamilySelectionAsync(userMobile, selectedFamilyNumber);
                                 }
                                 return Ok(new { status = "received" });
                             }
@@ -418,28 +555,7 @@ namespace ChurchManagementAPI.Controllers
                         {
                             if (receivedText.Length >= 1 && int.TryParse(receivedText, out int number))
                             {
-                                UserInfo userInfo = await GetUserInfoAsync(userMobile);
-                                var familyMembers = await _familyMemberService.GetFamilyMembersFilteredAsync(userInfo.ParishId, number,
-                                    new FamilyMemberFilterRequest
-                                    {
-                                        Filters = new Dictionary<string, string> { { "ActiveMemberd", receivedText } }
-                                    });
-
-                                if (familyMembers.Data.Any())
-                                {
-                                    string responseMessage = $"🔎 Found {familyMembers.Data.Count()} members for family number '{receivedText}':\n\n";
-                                    foreach (var member in familyMembers.Data)
-                                    {
-                                        // Get last word from FamilyName
-                                        var lastWord = member.FamilyName?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "";
-                                        responseMessage += $"👤 {member.FirstName} {lastWord}: {member.MobilePhone}\n";
-                                    }
-                                    await SendWhatsAppTextMessageAsync(userMobile, responseMessage);
-                                }
-                                else
-                                {
-                                    await SendWhatsAppTextMessageAsync(userMobile, "❌ No records found for this family number.");
-                                }
+                                await HandleFamilySelectionAsync(userMobile, number);
                             }
                             else
                             {
@@ -532,7 +648,7 @@ namespace ChurchManagementAPI.Controllers
         private async Task SendWhatsAppMessageAsync(object payload)
         {
             string phoneNumberId = "576545658884985"; // Replace with your actual phone number ID
-            string accessToken = "EACNw4WbHROwBO9yc6HYZBCBZCeytSexBc3lIi01dsZBRK6K7ba299zrdRtAnLi9KpcSeiZAEPzOcaD1bh1IRAX3xRyKRo4wU1KryrFgjKpQYE7ZClK3zgQ7zWKvA0BZAJbu1zkMh34H65PeXEf2HZB5ZAZBKhG6EY70oBhlgJNP3d4LwTuXlGIjEdISZCgc26Hrx7FVscXvMwyfoq7Hpq7XCsZAMmXg8o0ZD";
+            string accessToken = "EACNw4WbHROwBOZCxI3TZCpeZByUitWc1oKGiZB9sKzCluBfDzn0ztA4q2OdDr1ZAJhUYu96orW0mGa31btNYUpLNJK64pd5mGhiUeKmk2ZBbkkA0QsWwpI3PP0AKeEiyq1hYZC0avATb9ZAnhztgWrRtOuiFpBYYaTeKU39948tXaHHyCIICDYEMEuMKln6KjcXIZC4jNBZARofMd5UmYgZCrHUuBwofPAZD";
 
             string url = $"https://graph.facebook.com/v19.0/{phoneNumberId}/messages";
 
@@ -741,6 +857,33 @@ namespace ChurchManagementAPI.Controllers
             public string FamilyName { get; set; }
         }
 
+
+        // Add this method inside your WebhookController class (anywhere before the closing brace)
+        private async Task HandleFamilySelectionAsync(string userMobile, int familyNumber)
+        {
+            UserInfo userInfo = await GetUserInfoAsync(userMobile);
+            var familyMembers = await _familyMemberService.GetFamilyMembersFilteredAsync(userInfo.ParishId, familyNumber,
+                new FamilyMemberFilterRequest
+                {
+                    Filters = new Dictionary<string, string> { { "ActiveMemberd", familyNumber.ToString() } }
+                });
+
+            if (familyMembers.Data.Any())
+            {
+                string responseMessage = $"🔎 Found {familyMembers.Data.Count()} members for family number '{familyNumber}':\n\n";
+                foreach (var member in familyMembers.Data)
+                {
+                    // Get last word from FamilyName
+                    var lastWord = member.FamilyName?.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "";
+                    responseMessage += $"👤 {member.FirstName} {lastWord}: {member.MobilePhone}\n";
+                }
+                await SendWhatsAppTextMessageAsync(userMobile, responseMessage);
+            }
+            else
+            {
+                await SendWhatsAppTextMessageAsync(userMobile, "❌ No records found for this family number.");
+            }
+        }
 
     }
 }

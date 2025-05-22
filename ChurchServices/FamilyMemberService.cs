@@ -225,7 +225,7 @@ namespace ChurchServices
             }
             if (familyId != null && familyId != 0)
             {
-                members = members.Where(m => m.FamilyId == familyId).ToList();
+                members = members.Where(m => m.FamilyNumber == familyId).ToList();
             }
 
             //if (userRole == "FamilyMember")
