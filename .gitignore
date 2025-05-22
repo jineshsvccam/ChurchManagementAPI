@@ -365,3 +365,4 @@ FodyWeavers.xsd
 /ChurchManagementAPI/.config
 /ChurchManagementAPI/Properties/ServiceDependencies/finchurch - Web Deploy
 /ChurchManagementAPI/Properties
+/ChurchManagementAPI/.vscode
