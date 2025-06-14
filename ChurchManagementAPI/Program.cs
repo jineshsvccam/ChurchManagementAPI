@@ -13,6 +13,7 @@ using ChurchManagementAPI.Controllers.Middleware;
 using ChurchRepositories;
 using ChurchServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -22,6 +23,10 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var logDir = Path.Combine(AppContext.BaseDirectory, "logs");
+if (!Directory.Exists(logDir))
+    Directory.CreateDirectory(logDir);
 
 // Read Serilog Enabled flag from appsettings.json
 var isLoggingEnabled = builder.Configuration.GetValue<bool>("Serilog:Enabled");
@@ -61,7 +66,9 @@ builder.Services.AddCors(options =>
         policy => policy.WithOrigins(
                 "http://localhost:5173",  // Local development
                 "https://salmon-meadow-05386b900.6.azurestaticapps.net",
-                "http://localhost:5001"
+                "http://localhost:5001",
+                "https://master.d6uhfax3swdgj.amplifyapp.com"
+
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
@@ -153,6 +160,9 @@ builder.Services.AddScoped<IMonthlyFiscalReportRepository, PivotReportRepository
 builder.Services.AddScoped<IPublicRepository, PublicRepository>();
 builder.Services.AddScoped<IPublicService, PublicService>();
 builder.Services.AddTransient<AESEncryptionHelper>();
+builder.Services.AddHttpClient<IWhatsAppMessageSender, WhatsAppMessageSender>();
+builder.Services.AddScoped<IWhatsAppBotService,WhatsAppBotService>();
+
 
 
 // Register configuration settings
@@ -211,6 +221,13 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin", "Secretary", "Trustee"));
     options.AddPolicy("FamilyMemberPolicy", policy =>
         policy.RequireRole("Admin", "Secretary", "Trustee", "FamilyMember"));
+});
+
+
+// Configure Kestrel to listen to the port from AWS
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "5000"));
 });
 
 builder.Services.AddControllers();
@@ -292,7 +309,19 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Debug); // Set to Debug for more detailed logs
 });
 
+// Configure forwarded headers for reverse proxy (e.g., AWS ALB)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear(); // Clears the known networks so it trusts all
+    options.KnownProxies.Clear();  // Clears the known proxies so it trusts all
+});
+
 var app = builder.Build();
+
+// Use forwarded headers before authentication
+app.UseForwardedHeaders();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -320,7 +349,11 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowSpecificOrigin");
 
 // ✅ Ensure authentication runs before middleware
-app.UseHttpsRedirection();
+// ✅ Enable HTTPS redirection only in dev/local
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -347,4 +380,21 @@ if (isLoggingEnabled)
 }
 
 app.MapControllers();
-app.Run();
+// Add health check endpoint
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
+// Run the application with logging
+try
+{
+    Log.Information("Starting up FinChurch API");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application failed to start");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+//app.Run();
