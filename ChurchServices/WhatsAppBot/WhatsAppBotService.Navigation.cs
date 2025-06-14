@@ -36,7 +36,7 @@ Just pick an option below, and I’ll take it from here! 😊";
                         { "menu_txns", "Transactions" }
                     }
                 );
-                UserState.Remove(userMobile); // Reset state on fresh "hi"
+                await _userState.ClearStateAsync(userMobile); // Reset state on fresh "hi"
             }
             else
             {
@@ -78,7 +78,7 @@ Just pick an option below, and I’ll take it from here! 😊";
                 sectionTitle
             );
 
-            UserState[userMobile] = $"unit_page_{page}";
+            await _userState.SetStateAsync(userMobile, $"unit_page_{page}", TimeSpan.FromMinutes(10));
         }
 
         public async Task SendFamilySelectionAsync(string userMobile, int selectedUnitId, int page)
@@ -113,7 +113,7 @@ Just pick an option below, and I’ll take it from here! 😊";
                 sectionTitle
             );
 
-            UserState[userMobile] = $"family_page_{page}_unit_{selectedUnitId}";
+            await _userState.SetStateAsync(userMobile, $"family_page_{page}_unit_{selectedUnitId}", TimeSpan.FromMinutes(10));
         }
 
     }

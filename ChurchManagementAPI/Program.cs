@@ -163,6 +163,11 @@ builder.Services.AddTransient<AESEncryptionHelper>();
 builder.Services.AddHttpClient<IWhatsAppMessageSender, WhatsAppMessageSender>();
 builder.Services.AddScoped<IWhatsAppBotService,ChurchServices.WhatsAppBot.WhatsAppBotService>();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IUserStateService, InMemoryUserStateService>();
+
+//builder.Services.AddStackExchangeRedisCache(...);
+//builder.Services.AddScoped<IUserStateService, RedisUserStateService>();
 
 
 // Register configuration settings

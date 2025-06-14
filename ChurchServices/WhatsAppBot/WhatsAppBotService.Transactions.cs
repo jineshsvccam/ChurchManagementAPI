@@ -55,7 +55,8 @@ namespace ChurchServices.WhatsAppBot
         }
         public async Task<bool> HandleTransactionOrYearAsync(string userMobile, string receivedText)
         {
-            if (UserState.TryGetValue(userMobile, out string txnState) && txnState == "txn")
+            var txnState = await _userState.GetStateAsync(userMobile);
+            if (txnState == "txn")
             {
                 UserInfo userInfo = await GetUserInfoAsync(userMobile);
                 if (userInfo == null)
@@ -97,7 +98,7 @@ namespace ChurchServices.WhatsAppBot
                     return true;
                 }
 
-                UserState.Remove(userMobile);
+                await _userState.ClearStateAsync(userMobile);
                 return true;
             }
             return false;

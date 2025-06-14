@@ -13,7 +13,9 @@ namespace ChurchServices.WhatsAppBot
 
         public async Task<bool> HandleNameSearchAsync(string userMobile, string receivedText)
         {
-            if (UserState.TryGetValue(userMobile, out string searchType) && searchType == "name")
+            var searchType = await _userState.GetStateAsync(userMobile);
+
+            if (searchType == "name")
             {
                 if (receivedText.Equals("back", StringComparison.OrdinalIgnoreCase))
                 {
@@ -101,7 +103,7 @@ namespace ChurchServices.WhatsAppBot
                 {
                     await _messageSender.SendTextMessageAsync(userMobile, "❌ Name must be at least 3 characters long. Please try again.");
                 }
-                UserState.Remove(userMobile);
+                await _userState.ClearStateAsync(userMobile);
                 return true;
             }
             return false;
@@ -110,7 +112,8 @@ namespace ChurchServices.WhatsAppBot
 
         public async Task<bool> HandleFamilyNumberSearchAsync(string userMobile, string receivedText)
         {
-            if (UserState.TryGetValue(userMobile, out string searchTypef) && searchTypef == "family")
+            var searchTypef = await _userState.GetStateAsync(userMobile);
+            if (searchTypef == "family")
             {
                 if (receivedText.Equals("back", StringComparison.OrdinalIgnoreCase))
                 {
@@ -127,7 +130,7 @@ namespace ChurchServices.WhatsAppBot
                 {
                     await _messageSender.SendTextMessageAsync(userMobile, "❌ Please enter a valid family number.");
                 }
-                UserState.Remove(userMobile);
+                await _userState.ClearStateAsync(userMobile);
                 return true;
             }
             return false;
@@ -144,7 +147,7 @@ namespace ChurchServices.WhatsAppBot
                     { "search_unit", "Unit Search" }
                 }
             );
-            UserState[userMobile] = "directory";
+            await _userState.SetStateAsync(userMobile, "directory", TimeSpan.FromMinutes(10));
         }
 
         public async Task HandleFamilySelectionAsync(string userMobile, int familyNumber)
@@ -203,6 +206,6 @@ namespace ChurchServices.WhatsAppBot
             throw new NotImplementedException();
         }
 
-      
+
     }
 }

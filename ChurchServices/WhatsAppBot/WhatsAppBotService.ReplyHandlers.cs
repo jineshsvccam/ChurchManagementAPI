@@ -17,8 +17,8 @@ namespace ChurchServices.WhatsAppBot
             if (buttonReplyId == null) return false;
             switch (buttonReplyId)
             {
-                case "menu_directory":
-                    UserState[userMobile] = "directory";
+                case "menu_directory":                   
+                    await _userState.SetStateAsync(userMobile, "directory", TimeSpan.FromMinutes(10));
                     await _messageSender.SendInteractiveMessageAsync(
                         userMobile,
                         "📌 Choose a search type:",
@@ -30,16 +30,17 @@ namespace ChurchServices.WhatsAppBot
                         }
                     );
                     break;
-                case "search_name":
-                    UserState[userMobile] = "name";
+                case "search_name":                    
+                    await _userState.SetStateAsync(userMobile, "name", TimeSpan.FromMinutes(10));
                     await _messageSender.SendTextMessageAsync(userMobile, "📌 Enter a name (at least 3 characters) to search.");
                     break;
                 case "search_family":
-                    UserState[userMobile] = "family";
+                    await _userState.SetStateAsync(userMobile, "family", TimeSpan.FromMinutes(10));
                     await _messageSender.SendTextMessageAsync(userMobile, "📌 Enter a family number to see all members.");
                     break;
                 case "search_unit":
-                    UserState[userMobile] = "unit_page_1";
+                   
+                    await _userState.SetStateAsync(userMobile, "unit_page_1", TimeSpan.FromMinutes(10));
                     await SendUnitSelectionAsync(userMobile);
                     break;
                 case "menu_dues":
@@ -47,7 +48,8 @@ namespace ChurchServices.WhatsAppBot
                     await SendFamilyDuesAsync(userMobile);
                     break;
                 case "menu_txns":
-                    UserState[userMobile] = "txn";
+                   
+                    await _userState.SetStateAsync(userMobile, "txn", TimeSpan.FromMinutes(10));
                     await _messageSender.SendTextMessageAsync(userMobile,
                         "📜 Previous Transactions:\n\n" +
                         "Reply with an option (e.g., `2023` or `10`) to get transactions by year or the last N transactions.");
@@ -66,12 +68,14 @@ namespace ChurchServices.WhatsAppBot
             if (listReplyId == "unit_next_page")
             {
                 int page = 1;
-                if (UserState.TryGetValue(userMobile, out var pageState) && pageState.StartsWith("unit_page_"))
+                var pageState = await _userState.GetStateAsync(userMobile);
+                if (pageState.StartsWith("unit_page_"))
                 {
                     int.TryParse(pageState.Replace("unit_page_", ""), out page);
                 }
                 page++;
-                UserState[userMobile] = $"unit_page_{page}";
+               
+                await _userState.SetStateAsync(userMobile, $"unit_page_{page}", TimeSpan.FromMinutes(10));
                 await SendUnitSelectionAsync(userMobile, page);
                 return true;
             }
@@ -86,7 +90,8 @@ namespace ChurchServices.WhatsAppBot
             else if (listReplyId == "family_next_page")
             {
                 int selectedUnitId = 0, page = 1;
-                if (UserState.TryGetValue(userMobile, out var famPageState) && famPageState.StartsWith("family_page_"))
+                var famPageState = await _userState.GetStateAsync(userMobile);
+                if (famPageState.StartsWith("family_page_"))
                 {
                     var parts = famPageState.Split("_unit_");
                     if (parts.Length == 2)
@@ -96,7 +101,7 @@ namespace ChurchServices.WhatsAppBot
                     }
                 }
                 page++;
-                UserState[userMobile] = $"family_page_{page}_unit_{selectedUnitId}";
+                await _userState.SetStateAsync(userMobile, $"family_page_{page}_unit_{selectedUnitId}", TimeSpan.FromMinutes(10));             
                 await SendFamilySelectionAsync(userMobile, selectedUnitId, page);
                 return true;
             }
@@ -146,8 +151,9 @@ namespace ChurchServices.WhatsAppBot
                 return false;
 
             // ✅ If user has no known state and no button reply, block
-            bool hasState = UserState.ContainsKey(userMobile)
-                || (UserState.TryGetValue(userMobile, out var st) && (st == "name" || st == "family" || st == "unit" || st == "txn"));
+            var validStates = new HashSet<string> { "name", "family", "unit", "txn" };
+            var st = await _userState.GetStateAsync(userMobile);
+            bool hasState = validStates.Contains(st ?? string.Empty);
 
             if (!hasState && string.IsNullOrEmpty(buttonReplyId))
             {

@@ -7,6 +7,7 @@ using ChurchContracts.Interfaces.Services;
 using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
 using ChurchDTOs.DTOs.Utils;
+using ChurchCommon.Utils;
 
 
 namespace ChurchServices.WhatsAppBot
@@ -20,7 +21,8 @@ namespace ChurchServices.WhatsAppBot
         private readonly IFamilyMemberService _familyMemberService;
         private readonly IWhatsAppMessageSender _messageSender;
 
-        private static Dictionary<string, string> UserState = new Dictionary<string, string>();
+      //  private static Dictionary<string, string> UserState = new Dictionary<string, string>();
+        private readonly IUserStateService _userState;
 
         public WhatsAppBotService(
             IKudishikaReportRepository kudishikaReportRepository,
@@ -28,7 +30,8 @@ namespace ChurchServices.WhatsAppBot
             IFamilyRepository familyRepository,
             IUnitRepository unitRepository,
             IFamilyMemberService familyMemberService,
-            IWhatsAppMessageSender messageSender)
+            IWhatsAppMessageSender messageSender,
+            IUserStateService userState)
         {
             _kudishikaReportRepository = kudishikaReportRepository;
             _familyReportRepository = familyReportRepository;
@@ -36,6 +39,7 @@ namespace ChurchServices.WhatsAppBot
             _unitRepository = unitRepository;
             _familyMemberService = familyMemberService;
             _messageSender = messageSender;
+            _userState = userState;
         }
 
         private async Task<UserInfo> GetUserInfoAsync(string mobileNumber)
@@ -52,73 +56,8 @@ namespace ChurchServices.WhatsAppBot
                 FirstName = dto.FirstName
             };
         }
-
-     
-        public string FormatTransactionReport(string title, List<FinancialReportCustomDTO> transactions, decimal totalPaid, TransactionReportStyle style = TransactionReportStyle.CompactBlock)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"{title}\n");
-
-            switch (style)
-            {
-                case TransactionReportStyle.Default:
-                    // Table Style
-                    sb.AppendLine("```");
-                    sb.AppendLine($"{title}\n");
-                    sb.AppendLine("Date       | Ref No  | Head         | Amount ");
-                    sb.AppendLine("-----------|---------|--------------|--------");
-
-                    foreach (var t in transactions)
-                    {
-                        string date = t.TrDate.ToString("yyyy-MM-dd").PadRight(10);
-                        string refNo = t.VrNo.Length > 8 ? t.VrNo.Substring(0, 8) : t.VrNo.PadRight(8);
-                        string head = t.HeadName.Length > 13 ? t.HeadName.Substring(0, 13) : t.HeadName.PadRight(13);
-                        string amount = $"₹{t.IncomeAmount:N2}".PadLeft(8);
-
-                        sb.AppendLine($"{date} | {refNo} | {head} | {amount}");
-                    }
-
-                    sb.AppendLine("```");
-                    break;
-
-                case TransactionReportStyle.CompactBlock:
-                    // Block Style with Emojis
-                    sb.AppendLine($"{title}\n");
-
-                    sb.AppendLine("```"); // Start monospaced block
-
-                    int i = 1;
-                    foreach (var t in transactions)
-                    {
-                        //sb.AppendLine($"{i}) 📅 Date: {t.TrDate:yyyy-MM-dd}");
-                        //sb.AppendLine($"   🧾 Ref: {t.VrNo}");
-                        //sb.AppendLine($"   🗂️ Head: {t.HeadName}");
-                        //sb.AppendLine($"   💸 Amount: ₹{t.IncomeAmount:N2}\n");
-                        //i++;
-
-                        string date = t.TrDate.ToString("yyyy-MM-dd").PadRight(11);     // 11 for date + spacing
-                        string head = t.HeadName.Length > 12 ? t.HeadName[..12] : t.HeadName.PadRight(12);
-
-                        string refNo = t.VrNo.Length > 10 ? t.VrNo[..10] : t.VrNo.PadRight(10);
-                        string amount = $"₹{t.IncomeAmount:N2}".PadRight(12);             // Right-align amount
-
-                        sb.AppendLine($"• {date}| {head}");
-                        sb.AppendLine($"  {refNo}| {amount}\n");
-
-                        i++;
-                    }
-                    sb.AppendLine("```"); // End monospaced block
-                    break;
-            }
-
-            sb.AppendLine($"\n💰 *Total Paid:* ₹{totalPaid:N2}\n");
-            sb.AppendLine("📌↩ *Type back to return to the previous menu.*");
-
-            return sb.ToString();
-        }
-
-      
-
+            
+    
 
         public Task SendFamilyConfirmationAsync(string userMobile, int familyNumber) => Task.CompletedTask;
         public Task<bool> HandleMemberDetailRequestAsync(string userMobile, string receivedText) => Task.FromResult(false);
