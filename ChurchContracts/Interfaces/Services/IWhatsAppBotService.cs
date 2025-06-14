@@ -14,7 +14,7 @@ namespace ChurchContracts.Interfaces.Services
 
         // Transaction-based logic
         Task<bool> HandleTransactionOrYearAsync(string userMobile, string receivedText);
-        string FormatTransactionReport(string title, List<FinancialReportCustomDTO> transactions, decimal totalPaid, TransactionReportStyle style = TransactionReportStyle.Default);
+       
 
         // Family dues
         Task SendFamilyDuesAsync(string userMobile);
@@ -22,7 +22,7 @@ namespace ChurchContracts.Interfaces.Services
         // Unit & family selection
         Task SendUnitSelectionAsync(string userMobile);
         Task SendFamilySelectionAsync(string userMobile, int page);
-        Task SendFamilyConfirmationAsync(string userMobile, int familyNumber);
+        //Task SendFamilyConfirmationAsync(string userMobile, int familyNumber);
 
 
         // Member detail request

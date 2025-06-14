@@ -161,7 +161,7 @@ builder.Services.AddScoped<IPublicRepository, PublicRepository>();
 builder.Services.AddScoped<IPublicService, PublicService>();
 builder.Services.AddTransient<AESEncryptionHelper>();
 builder.Services.AddHttpClient<IWhatsAppMessageSender, WhatsAppMessageSender>();
-builder.Services.AddScoped<IWhatsAppBotService,WhatsAppBotService>();
+builder.Services.AddScoped<IWhatsAppBotService,ChurchServices.WhatsAppBot.WhatsAppBotService>();
 
 
 
