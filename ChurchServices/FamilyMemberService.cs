@@ -503,6 +503,34 @@ namespace ChurchServices
             return dto;
         }
 
+        public async Task<UserInfo> ValidateUserWithMobile(string mobilenumber)
+        {
+            if (string.IsNullOrWhiteSpace(mobilenumber))
+            {
+                return null; // Handle invalid input
+            }
+            if (mobilenumber.StartsWith("91"))
+            {
+                mobilenumber = mobilenumber.Substring(2);
+            }
+            var familyMember = _context.FamilyMembers
+                .Include(fm => fm.Contacts)
+                .FirstOrDefault(fm => fm.Contacts.Any(c => c.MobilePhone == mobilenumber));
+
+            if (familyMember == null)
+            {
+                return null; // No family member found with the given mobile number
+            }
+
+            return new UserInfo
+            {
+                ParishId = familyMember.ParishId,
+                FamilyId = familyMember.FamilyId,
+                FamilyNumber = familyMember.FamilyNumber,
+                FamilyName =  "", 
+                FirstName = familyMember.FirstName
+            };
+        }
         // Helper method to ensure dto.Occupation is initialized
 
 

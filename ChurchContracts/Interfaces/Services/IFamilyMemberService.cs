@@ -14,5 +14,6 @@ namespace ChurchContracts
 
         // New method for retrieving all family members
         Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetAllFamilyMembersAsync(int? parishId, int? familyId);
+        Task<UserInfo> ValidateUserWithMobile(string mobilenumber);
     }
 }

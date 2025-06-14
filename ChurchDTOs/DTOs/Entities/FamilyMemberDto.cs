@@ -112,4 +112,13 @@ namespace ChurchDTOs.DTOs.Entities
         public string BurialPlace { get; set; }
         public DateTime? DeathDate { get; set; }
     }
+
+    public class UserInfo
+    {
+        public int? ParishId { get; set; }
+        public int FamilyId { get; set; }
+        public int FamilyNumber { get; set; }
+        public string FamilyName { get; set; }
+        public string FirstName { get; set; }
+    }
 }
