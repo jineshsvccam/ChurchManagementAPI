@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ChurchContracts.Interfaces.Services;
 
 namespace ChurchServices.WhatsAppBot
 {
@@ -38,14 +39,14 @@ namespace ChurchServices.WhatsAppBot
                     await _userState.SetStateAsync(userMobile, "family", TimeSpan.FromMinutes(10));
                     await _messageSender.SendTextMessageAsync(userMobile, "📌 Enter a family number to see all members.");
                     break;
-                case "search_unit":
-                   
+                case "search_unit":                   
                     await _userState.SetStateAsync(userMobile, "unit_page_1", TimeSpan.FromMinutes(10));
                     await SendUnitSelectionAsync(userMobile);
                     break;
-                case "menu_dues":
+                case "menu_dues":                   
+                    await _userState.SetStateAsync(userMobile, "dues", TimeSpan.FromMinutes(10));
                     await _messageSender.SendTextMessageAsync(userMobile, "📜 Retrieving Family Dues...");
-                    await SendFamilyDuesAsync(userMobile);
+                    await SendFamilyDuesAsync(userMobile, "Empty");
                     break;
                 case "menu_txns":
                    
@@ -83,6 +84,7 @@ namespace ChurchServices.WhatsAppBot
             {
                 if (int.TryParse(listReplyId.Replace("unit_", ""), out int selectedUnitId))
                 {
+                    await _userState.SetStateAsync(userMobile, "family", TimeSpan.FromMinutes(10));
                     await SendFamilySelectionAsync(userMobile, selectedUnitId, 1);
                 }
                 return true;
@@ -109,16 +111,14 @@ namespace ChurchServices.WhatsAppBot
             {
                 if (int.TryParse(listReplyId.Replace("family_", ""), out int selectedFamilyNumber))
                 {
+                    await _userState.SetStateAsync(userMobile, $"selected_family_{selectedFamilyNumber}", TimeSpan.FromMinutes(10));
+
                     await HandleFamilySelectionAsync(userMobile, selectedFamilyNumber);
                 }
                 return true;
             }
             return false;
         }
-
-
-
-
 
         public Task ParseInteractiveReplyAsync(object messageObj, Action<string, string, string, string> setValues)
         {
@@ -146,15 +146,16 @@ namespace ChurchServices.WhatsAppBot
 
         public async Task<bool> EnforceHiFirstMessageAsync(string userMobile, string receivedText, string buttonReplyId)
         {
-            // ✅ Allow 'Hi' to always go through
+            // ✅ Always allow 'hi'
             if (receivedText.Equals("hi", StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            // ✅ If user has no known state and no button reply, block
-            var validStates = new HashSet<string> { "name", "family", "unit", "txn" };
+            // ✅ Valid state prefixes
+            var validPrefixes = new[] { "name", "family", "unit", "txn", "dues", "directory", "selected_family" };
             var st = await _userState.GetStateAsync(userMobile);
-            bool hasState = validStates.Contains(st ?? string.Empty);
+            bool hasState = !string.IsNullOrEmpty(st) && validPrefixes.Any(prefix => st.StartsWith(prefix));
 
+            // ❌ No valid flow and no button reply
             if (!hasState && string.IsNullOrEmpty(buttonReplyId))
             {
                 await _messageSender.SendTextMessageAsync(userMobile, "👋 Please start by typing 'Hi' to proceed.");
@@ -163,7 +164,6 @@ namespace ChurchServices.WhatsAppBot
 
             return false;
         }
-
 
     }
 }

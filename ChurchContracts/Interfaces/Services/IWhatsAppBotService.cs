@@ -17,7 +17,7 @@ namespace ChurchContracts.Interfaces.Services
        
 
         // Family dues
-        Task SendFamilyDuesAsync(string userMobile);
+        Task<bool> SendFamilyDuesAsync(string userMobile, string receivedText);
 
         // Unit & family selection
         Task SendUnitSelectionAsync(string userMobile);
@@ -41,6 +41,7 @@ namespace ChurchContracts.Interfaces.Services
         Task HandleFamilySelectionAsync(string userMobile, int familyNumber);
         Task SendFamilySelectionAsync(string userMobile, int selectedUnitId, int page);
         Task DirectoryBackAsync(string userMobile);
+        Task RouteBackAsync(string userMobile);
 
         Task ParseInteractiveReplyAsync(object message, Action<string, string, string, string> setValues);
         Task<bool> EnforceHiFirstMessageAsync(string userMobile, string receivedText, string buttonReplyId);

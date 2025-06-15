@@ -10,31 +10,35 @@ namespace ChurchServices.WhatsAppBot
         // - SendUnitSelectionAsync (overload)
         // - SendFamilySelectionAsync (overload)
 
+        Dictionary<string, string> mainMenu = new Dictionary<string, string>
+               {
+                        { "menu_directory", "Directory" },
+                        { "menu_dues", "Family Dues" },
+                        { "menu_txns", "Transactions" }
+                };
+
+
         public async Task HandleHiFlowAsync(string userMobile)
         {
             UserInfo userInfo = await GetUserInfoAsync(userMobile);
 
             if (userInfo != null)
             {
-                string intro =
-$@"Hey {userInfo.FirstName}! 👋 I’m ChurchMate — your friendly guide from FinChurch.
-I can help you with:
+                string intro = $@"
+Hey {userInfo.FirstName}! 👋 I’m *ChurchMate* — your friendly guide from *FinChurch*.
 
-• Checking your church dues
-• Viewing past transactions
-• Searching the member directory with easy filters
+I can help you with:
+• 📌 Checking your church dues  
+• 🧾 Viewing past transactions  
+• 🔍 Searching the member directory with easy filters
 
 Just pick an option below, and I’ll take it from here! 😊";
+
 
                 await _messageSender.SendInteractiveMessageAsync(
                     userMobile,
                     intro,
-                    new Dictionary<string, string>
-                    {
-                        { "menu_directory", "Directory" },
-                        { "menu_dues", "Family Dues" },
-                        { "menu_txns", "Transactions" }
-                    }
+                    mainMenu
                 );
                 await _userState.ClearStateAsync(userMobile); // Reset state on fresh "hi"
             }
@@ -44,6 +48,15 @@ Just pick an option below, and I’ll take it from here! 😊";
             }
         }
 
+        public async Task MainMenuBackAsync(string userMobile)
+        {
+            await _messageSender.SendInteractiveMessageAsync(
+                userMobile,
+                "📌 Choose an item from below:",
+                mainMenu
+            );
+            await _userState.SetStateAsync(userMobile, "directory", TimeSpan.FromMinutes(10));
+        }
 
         public async Task SendUnitSelectionAsync(string userMobile)
         {
@@ -85,7 +98,7 @@ Just pick an option below, and I’ll take it from here! 😊";
         {
             var userInfo = await GetUserInfoAsync(userMobile);
             if (userInfo == null) return;
-
+           
             var families = (await _familyRepository.GetFamiliesAsync(userInfo.ParishId, selectedUnitId, null)).ToList();
             int pageSize = 9;
             var pagedFamilies = families.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -103,15 +116,19 @@ Just pick an option below, and I’ll take it from here! 😊";
             }
 
             string sectionTitle = $"Families {((page - 1) * pageSize + 1)}-{((page - 1) * pageSize + pagedFamilies.Count)}";
+            
+            var bodyText = "Please choose a family from the list below:";
+            bodyText += "\n" + await GetBackNoteAsync(userMobile);
 
             await _messageSender.SendListMessageAsync(
-                userMobile,
-                "Select a Family",
-                "Please choose a family from the list below:",
-                "Select Family",
-                rows,
-                sectionTitle
-            );
+                  userMobile,
+                  "Select a Family",
+                  bodyText,
+                  "Select Family",
+                  rows,
+                  sectionTitle
+              );
+
 
             await _userState.SetStateAsync(userMobile, $"family_page_{page}_unit_{selectedUnitId}", TimeSpan.FromMinutes(10));
         }

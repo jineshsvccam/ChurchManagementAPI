@@ -17,8 +17,7 @@ namespace ChurchServices.WhatsAppBot
             {
                 case TransactionReportStyle.Default:
                     // Table Style
-                    sb.AppendLine("```");
-                    sb.AppendLine($"{title}\n");
+                    sb.AppendLine("```");                  
                     sb.AppendLine("Date       | Ref No  | Head         | Amount ");
                     sb.AppendLine("-----------|---------|--------------|--------");
 
@@ -33,12 +32,12 @@ namespace ChurchServices.WhatsAppBot
                     }
 
                     sb.AppendLine("```");
+                    sb.AppendLine("\n📌↩️ Type *back* to return to the previous menu.");
                     break;
 
                 case TransactionReportStyle.CompactBlock:
                     // Block Style with Emojis
-                    sb.AppendLine($"{title}\n");
-
+                    
                     sb.AppendLine("```"); // Start monospaced block
 
                     int i = 1;

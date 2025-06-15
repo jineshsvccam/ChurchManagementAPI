@@ -19,8 +19,7 @@ namespace ChurchServices.WhatsAppBot
             {
                 if (receivedText.Equals("back", StringComparison.OrdinalIgnoreCase))
                 {
-                    await DirectoryBackAsync(userMobile);
-                    // Do NOT remove user state here, let DirectoryBackAsync set it to "directory"
+                    await RouteBackAsync(userMobile);
                     return true;
                 }
 
@@ -89,7 +88,7 @@ namespace ChurchServices.WhatsAppBot
                             }
                         }
 
-                        responseMessage += "\n\n📌↩️ Type *back* to return to the previous menu.";
+                        responseMessage += "\n\n" + await GetBackNoteAsync(userMobile);
 
                         await _messageSender.SendTextMessageAsync(userMobile, responseMessage);
 
@@ -103,7 +102,10 @@ namespace ChurchServices.WhatsAppBot
                 {
                     await _messageSender.SendTextMessageAsync(userMobile, "❌ Name must be at least 3 characters long. Please try again.");
                 }
-                await _userState.ClearStateAsync(userMobile);
+                // ⛔ Removed:
+                // await _userState.ClearStateAsync(userMobile);
+                // Keep user in 'name' flow until they type 'back'
+
                 return true;
             }
             return false;
@@ -117,8 +119,7 @@ namespace ChurchServices.WhatsAppBot
             {
                 if (receivedText.Equals("back", StringComparison.OrdinalIgnoreCase))
                 {
-                    await DirectoryBackAsync(userMobile);
-                    // Do NOT remove user state here, let DirectoryBackAsync set it to "directory"
+                    await RouteBackAsync(userMobile);
                     return true;
                 }
 
@@ -130,7 +131,7 @@ namespace ChurchServices.WhatsAppBot
                 {
                     await _messageSender.SendTextMessageAsync(userMobile, "❌ Please enter a valid family number.");
                 }
-                await _userState.ClearStateAsync(userMobile);
+              //  await _userState.ClearStateAsync(userMobile);
                 return true;
             }
             return false;
@@ -189,7 +190,7 @@ namespace ChurchServices.WhatsAppBot
                     responseMessage += $"🔹 {index}. {member.FirstName} {genderEmoji}\n📞 {phone}\n\n";
                     index++;
                 }
-
+                responseMessage += "\n\n" + await GetBackNoteAsync(userMobile);
                 await _messageSender.SendTextMessageAsync(userMobile, responseMessage);
             }
             else

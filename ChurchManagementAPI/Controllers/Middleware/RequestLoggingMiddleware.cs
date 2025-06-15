@@ -28,8 +28,8 @@ namespace ChurchManagementAPI.Controllers.Middleware
             var requestPath = $"{context.Request.Method} {context.Request.Path}{context.Request.QueryString}";
             var requestBody = await ReadRequestBodyAsync(context);
 
-            _logger.LogInformation("Incoming Request: {RequestPath} | User: {UserId} | IP: {IPAddress} | Body: {RequestBody}",
-                requestPath, userId, ipAddress, requestBody);
+            //_logger.LogInformation("Incoming Request: {RequestPath} | User: {UserId} | IP: {IPAddress} | Body: {RequestBody}",
+            //    requestPath, userId, ipAddress, requestBody);
 
             var originalResponseBodyStream = context.Response.Body;
             await using var responseBodyStream = new MemoryStream();
@@ -50,8 +50,8 @@ namespace ChurchManagementAPI.Controllers.Middleware
                         responseBody = responseBody.Substring(0, MaxResponseBodyLength) + "... [Truncated]";
                     }
 
-                    _logger.LogInformation("Response: {StatusCode} for {RequestPath} | Time Taken: {ElapsedMs} ms | Response Body: {ResponseBody}",
-                        context.Response.StatusCode, requestPath, stopwatch.ElapsedMilliseconds, responseBody);
+                    //_logger.LogInformation("Response: {StatusCode} for {RequestPath} | Time Taken: {ElapsedMs} ms | Response Body: {ResponseBody}",
+                    //    context.Response.StatusCode, requestPath, stopwatch.ElapsedMilliseconds, responseBody);
                 }
 
                 await responseBodyStream.CopyToAsync(originalResponseBodyStream);

@@ -52,10 +52,10 @@ namespace ChurchManagementAPI.Controllers
                 using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
                 {
                     string rawJson = await reader.ReadToEndAsync();
-                    Console.WriteLine($"🔍 Raw JSON Payload: {rawJson}");
+                 //   Console.WriteLine($"🔍 Raw JSON Payload: {rawJson}");
 
                     var payload = JsonConvert.DeserializeObject<WhatsAppWebhookPayload>(rawJson);
-                    Console.WriteLine($"✅ Parsed Payload: {JsonConvert.SerializeObject(payload, Formatting.Indented)}");
+                 //   Console.WriteLine($"✅ Parsed Payload: {JsonConvert.SerializeObject(payload, Formatting.Indented)}");
 
                     string userMobile = payload.Entry?.FirstOrDefault()?.Changes?.FirstOrDefault()?.Value?.Contacts?.FirstOrDefault()?.WaId;
                     Console.WriteLine($"📞 User Mobile: {userMobile}");
@@ -66,6 +66,14 @@ namespace ChurchManagementAPI.Controllers
                         string sender = message.From;
                         string receivedText = message.Text?.Body ?? "[no text]";
                         Console.WriteLine($"📩 Received Message from {sender}: {receivedText}");
+
+
+                        // Handle "back" globally
+                        if (receivedText.Equals("back", StringComparison.OrdinalIgnoreCase))
+                        {
+                            await _whatsAppBotService.RouteBackAsync(userMobile);
+                            return Ok(new { status = "received" });
+                        }
 
                         // Parse interactive replies (moved to service)
                         string buttonReplyId = null, buttonReplyTitle = null, listReplyId = null, listReplyTitle = null;
@@ -107,6 +115,11 @@ namespace ChurchManagementAPI.Controllers
                         // Handle transaction/year logic
                         if (await _whatsAppBotService.HandleTransactionOrYearAsync(userMobile, receivedText))
                             return Ok(new { status = "received" });
+
+                        // Handle "back" action if in dues state
+                        if (await _whatsAppBotService.SendFamilyDuesAsync(userMobile, receivedText))
+                            return Ok(new { status = "received" });
+
                     }
                     return Ok(new { status = "received" });
                 }
@@ -119,6 +132,6 @@ namespace ChurchManagementAPI.Controllers
         }
 
 
-       
+
     }
 }
