@@ -1,0 +1,53 @@
+name: Deploy ChurchManagementAPI to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build ChurchManagementAPI/ChurchManagementAPI.csproj -c Release --no-restore
+
+      - name: Publish
+        run: dotnet publish ChurchManagementAPI/ChurchManagementAPI.csproj -c Release -o publish
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "publish/*"
+          target: "/home/ec2-user/churchapi_publish"
+
+      - name: Restart API service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo systemctl stop churchapi
+
+            sudo rm -rf /var/www/churchapi/*
+            sudo cp -r /home/ec2-user/churchapi_publish/publish/* /var/www/churchapi/
+            sudo chown -R ec2-user:ec2-user /var/www/churchapi
+
+            sudo systemctl start churchapi
+            sudo systemctl status churchapi --no-pager
