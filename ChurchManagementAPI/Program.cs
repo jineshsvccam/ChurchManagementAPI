@@ -67,7 +67,9 @@ builder.Services.AddCors(options =>
                 "http://localhost:5173",  // Local development
                 "https://salmon-meadow-05386b900.6.azurestaticapps.net",
                 "http://localhost:5001",
-                "https://master.d6uhfax3swdgj.amplifyapp.com"
+                "https://master.d6uhfax3swdgj.amplifyapp.com",
+                "https://finchurch.com",
+                "https://www.finchurch.com"
 
             )
             .AllowAnyMethod()
