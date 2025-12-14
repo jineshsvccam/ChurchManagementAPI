@@ -26,10 +26,7 @@ jobs:
         run: dotnet build ChurchManagementAPI/ChurchManagementAPI.csproj -c Release --no-restore
 
       - name: Publish
-        run: dotnet publish ChurchManagementAPI/ChurchManagementAPI.csproj \
-          -c Release \
-          -o publish \
-          --no-build
+        run: dotnet publish ChurchManagementAPI/ChurchManagementAPI.csproj -c Release -o publish --no-build
 
       - name: Copy published files to EC2
         uses: appleboy/scp-action@v0.1.7
