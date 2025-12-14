@@ -69,7 +69,9 @@ builder.Services.AddCors(options =>
                 "http://localhost:5001",
                 "https://master.d6uhfax3swdgj.amplifyapp.com",
                 "https://finchurch.com",
-                "https://www.finchurch.com"
+                "https://www.finchurch.com",
+                "http://finchurch.com",
+                "http://www.finchurch.com"
 
             )
             .AllowAnyMethod()
