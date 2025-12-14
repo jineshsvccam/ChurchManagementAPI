@@ -390,7 +390,7 @@ if (isLoggingEnabled)
 
 app.MapControllers();
 // Add health check endpoint
-app.MapGet("/health", () => Results.Ok("Healthy"));
+app.MapGet("/health", () => Results.Ok("Healthy RUn"));
 
 // Run the application with logging
 try
