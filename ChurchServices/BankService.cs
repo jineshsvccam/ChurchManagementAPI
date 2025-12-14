@@ -39,12 +39,12 @@ namespace ChurchServices
 
             foreach (var request in requests)
             {
-                if (request.Action == "INSERT")
+                if (string.Equals(request.Action, "INSERT", StringComparison.OrdinalIgnoreCase))
                 {
                     var createdBank = await AddAsync(request);
                     createdBanks.Add(createdBank);
                 }
-                else if (request.Action == "UPDATE")
+                else if (string.Equals(request.Action, "UPDATE", StringComparison.OrdinalIgnoreCase))
                 {
                     var updatedBank = await UpdateAsync(request);
                     createdBanks.Add(updatedBank);
@@ -52,7 +52,7 @@ namespace ChurchServices
                 else
                 {
                     _logger.LogWarning("Invalid action specified: {Action}", request.Action);
-                    throw new ArgumentException("Invalid action specified");
+                    throw new ArgumentException($"Invalid action specified: {request.Action}");
                 }
             }
             return createdBanks;

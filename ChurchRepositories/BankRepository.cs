@@ -4,20 +4,19 @@ using ChurchData;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Logging;
 
 namespace ChurchRepositories
 {
     public class BankRepository : IBankRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<TransactionHeadRepository> _logger;
+        private readonly ILogger<BankRepository> _logger;
         private readonly LogsHelper _logsHelper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public BankRepository(ApplicationDbContext context,
                                  IHttpContextAccessor httpContextAccessor,
-                                ILogger<TransactionHeadRepository> logger,
+                                ILogger<BankRepository> logger,
                                  LogsHelper logsHelper)
         {
             _context = context;

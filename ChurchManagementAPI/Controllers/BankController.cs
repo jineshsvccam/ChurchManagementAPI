@@ -62,32 +62,51 @@ namespace ChurchManagementAPI.Controllers
                 return BadRequest();
             }
 
-            await _bankService.UpdateAsync(bank);
-            return Ok(bank);
+            try
+            {
+                await _bankService.UpdateAsync(bank);
+                return Ok(bank);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _bankService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _bankService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<BankDto> requests)
         {
+            if (requests == null || !requests.Any())
+            {
+                return BadRequest("Requests cannot be null or empty.");
+            }
+
             try
             {
                 var createdBanks = await _bankService.AddOrUpdateAsync(requests);
-                if (createdBanks.Any())
-                {
-                    return CreatedAtAction(nameof(GetBanks), createdBanks);
-                }
-                return Ok();
+                return Ok(createdBanks);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
             }
         }
     }
