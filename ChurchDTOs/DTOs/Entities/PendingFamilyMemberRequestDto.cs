@@ -45,7 +45,7 @@ namespace ChurchDTOs.DTOs.Entities
         [RegularExpression("^(Approved|Rejected)$", ErrorMessage = "ApprovalStatus must be either 'Approved' or 'Rejected'")]
         public string ApprovalStatus { get; set; }
 
-        public string RejectionReason { get; set; }
+        public string? RejectionReason { get; set; }
     }
 
     public class ServiceResponse

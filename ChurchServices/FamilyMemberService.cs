@@ -41,7 +41,7 @@ namespace ChurchServices
                 ActionType = "INSERT",
                 SubmittedData = requestDto.Payload,  // Payload is of type JsonElement
                 ApprovalStatus = "Pending",
-                SubmittedAt = DateTime.UtcNow
+                SubmittedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
             };
 
             await _familyMemberRepository.AddPendingActionAsync(pendingAction);
@@ -96,12 +96,14 @@ namespace ChurchServices
                 }
                 else if (approvalDto.ApprovalStatus == "Rejected")
                 {
-                    // Update the pending action status to Rejected
-                    pendingAction.ApprovalStatus = "Rejected";
-                    pendingAction.ApprovedBy = userid;
-                    pendingAction.ApprovedAt = DateTime.UtcNow;
-                    
-                    await _familyMemberRepository.UpdatePendingActionAsync(pendingAction);
+                    // Update only the specific fields using raw SQL to avoid DateTime issues
+                    await _context.Database.ExecuteSqlInterpolatedAsync(
+                        $@"UPDATE pending_family_member_actions 
+                           SET approval_status = 'Rejected', 
+                               approved_by = {userid}, 
+                               approved_at = NOW() 
+                           WHERE action_id = {approvalDto.ActionId}"
+                    );
 
                     return new ServiceResponse
                     {
