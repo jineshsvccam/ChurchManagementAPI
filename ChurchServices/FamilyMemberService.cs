@@ -59,16 +59,64 @@ namespace ChurchServices
             {
                 var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
                 var userid = UserHelper.GetCurrentUserIdGuid(_httpContextAccessor);
-                // Call the stored procedure, no need to pass action
-                int result = await _context.Database.ExecuteSqlInterpolatedAsync(
-                    $"SELECT ManageFamilyMemberApproval({approvalDto.ActionId}, {userid});"
-                );
 
-                return new ServiceResponse
+                // Get the pending action to verify it exists
+                var pendingAction = await _familyMemberRepository.GetPendingActionByIdAsync(approvalDto.ActionId);
+                if (pendingAction == null)
                 {
-                    Success = true,
-                    Message = $"Approval process completed successfully. Rows affected: {result}"
-                };
+                    return new ServiceResponse
+                    {
+                        Success = false,
+                        Message = "Pending action not found or already processed."
+                    };
+                }
+
+                // Verify parish authorization
+                if (pendingAction.ParishId != userParishId)
+                {
+                    return new ServiceResponse
+                    {
+                        Success = false,
+                        Message = "Unauthorized: You cannot approve actions from another parish."
+                    };
+                }
+
+                if (approvalDto.ApprovalStatus == "Approved")
+                {
+                    // Call the stored procedure for approval
+                    int result = await _context.Database.ExecuteSqlInterpolatedAsync(
+                        $"SELECT ManageFamilyMemberApproval({approvalDto.ActionId}, {userid});"
+                    );
+
+                    return new ServiceResponse
+                    {
+                        Success = true,
+                        Message = $"Family member approved successfully. Rows affected: {result}"
+                    };
+                }
+                else if (approvalDto.ApprovalStatus == "Rejected")
+                {
+                    // Update the pending action status to Rejected
+                    pendingAction.ApprovalStatus = "Rejected";
+                    pendingAction.ApprovedBy = userid;
+                    pendingAction.ApprovedAt = DateTime.UtcNow;
+                    
+                    await _familyMemberRepository.UpdatePendingActionAsync(pendingAction);
+
+                    return new ServiceResponse
+                    {
+                        Success = true,
+                        Message = "Family member request rejected successfully."
+                    };
+                }
+                else
+                {
+                    return new ServiceResponse
+                    {
+                        Success = false,
+                        Message = "Invalid approval status. Must be 'Approved' or 'Rejected'.",                        
+                    };
+                }
             }
             catch (Exception ex)
             {
