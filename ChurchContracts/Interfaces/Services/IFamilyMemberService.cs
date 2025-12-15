@@ -7,6 +7,7 @@ namespace ChurchContracts
         // Submission & Approval
         Task<ServiceResponse> SubmitFamilyMemberAsync(PendingFamilyMemberRequestDto requestDto);
         Task<ServiceResponse> ApproveFamilyMemberAsync(FamilyMemberApprovalDto approvalDto);
+        Task<ServiceResponse<IEnumerable<PendingFamilyMemberApprovalListDto>>> GetPendingApprovalListAsync(int parishId);
 
         // Data retrieval endpoints
         Task<ServiceResponse<FamilyMemberDto>> GetFamilyMemberByIdAsync(int memberId);

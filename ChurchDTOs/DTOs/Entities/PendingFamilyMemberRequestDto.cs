@@ -23,6 +23,19 @@ namespace ChurchDTOs.DTOs.Entities
         [Required]
         public JsonElement Payload { get; set; }
     }
+
+    public class PendingFamilyMemberApprovalListDto
+    {
+        public int ActionId { get; set; }
+        public int MemberId { get; set; }
+        public string ActionType { get; set; }
+        public int FamilyId { get; set; }
+        public int ParishId { get; set; }
+        public Guid SubmittedBy { get; set; }
+        public JsonElement SubmittedData { get; set; }
+        public DateTime SubmittedAt { get; set; }
+    }
+
     public class FamilyMemberApprovalDto
     {
         [Required]

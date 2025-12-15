@@ -12,6 +12,7 @@ namespace ChurchContracts
         Task<PendingFamilyMemberAction> AddPendingActionAsync(PendingFamilyMemberAction action);
         Task<PendingFamilyMemberAction> GetPendingActionByIdAsync(int actionId);
         Task UpdatePendingActionAsync(PendingFamilyMemberAction action);
+        Task<IEnumerable<PendingFamilyMemberAction>> GetPendingApprovalListAsync(int parishId);
 
         // Approved family member insertion
         Task<FamilyMember> InsertApprovedFamilyMemberAsync(FamilyMember familyMember);

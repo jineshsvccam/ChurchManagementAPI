@@ -37,6 +37,17 @@ namespace ChurchManagementAPI.Controllers
             return Ok(response);
         }
 
+        [HttpGet("pending-approvals")]
+        public async Task<IActionResult> GetPendingApprovalList([FromQuery] int parishId)
+        {
+            var response = await _familyMemberService.GetPendingApprovalListAsync(parishId);
+            if (!response.Success)
+            {
+                return BadRequest(response.Message);
+            }
+            return Ok(response);
+        }
+
         // GET by id: returns complete family member JSON
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFamilyMemberById(int id)

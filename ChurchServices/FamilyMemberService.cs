@@ -57,9 +57,11 @@ namespace ChurchServices
         {
             try
             {
+                var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+                var userid = UserHelper.GetCurrentUserIdGuid(_httpContextAccessor);
                 // Call the stored procedure, no need to pass action
                 int result = await _context.Database.ExecuteSqlInterpolatedAsync(
-                    $"SELECT ManageFamilyMemberApproval({approvalDto.ActionId}, {approvalDto.ApprovedBy});"
+                    $"SELECT ManageFamilyMemberApproval({approvalDto.ActionId}, {userid});"
                 );
 
                 return new ServiceResponse
@@ -78,6 +80,50 @@ namespace ChurchServices
             }
         }
 
+        public async Task<ServiceResponse<IEnumerable<PendingFamilyMemberApprovalListDto>>> GetPendingApprovalListAsync(int parishId)
+        {
+            try
+            {
+                var pendingActions = await _familyMemberRepository.GetPendingApprovalListAsync(parishId);
+
+                if (pendingActions == null || !pendingActions.Any())
+                {
+                    return new ServiceResponse<IEnumerable<PendingFamilyMemberApprovalListDto>>
+                    {
+                        Success = true,
+                        Data = new List<PendingFamilyMemberApprovalListDto>(),
+                        Message = "No pending approvals found."
+                    };
+                }
+
+                var dtos = pendingActions.Select(action => new PendingFamilyMemberApprovalListDto
+                {
+                    ActionId = action.ActionId,
+                    MemberId = action.MemberId,
+                    ActionType = action.ActionType,
+                    FamilyId = action.FamilyId,
+                    ParishId = action.ParishId,
+                    SubmittedBy = action.SubmittedBy,
+                    SubmittedData = action.SubmittedData,
+                    SubmittedAt = action.SubmittedAt
+                }).ToList();
+
+                return new ServiceResponse<IEnumerable<PendingFamilyMemberApprovalListDto>>
+                {
+                    Success = true,
+                    Data = dtos,
+                    Message = "Pending approval list retrieved successfully."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResponse<IEnumerable<PendingFamilyMemberApprovalListDto>>
+                {
+                    Success = false,
+                    Message = $"An error occurred: {ex.Message}"
+                };
+            }
+        }
 
         public async Task<ServiceResponse<FamilyMemberDto>> GetFamilyMemberByIdAsync(int memberId)
         {

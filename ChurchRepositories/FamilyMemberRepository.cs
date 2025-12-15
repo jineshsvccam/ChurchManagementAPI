@@ -34,6 +34,14 @@ namespace ChurchRepositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<IEnumerable<PendingFamilyMemberAction>> GetPendingApprovalListAsync(int parishId)
+        {
+            return await _context.PendingFamilyMemberActions
+                .Where(a => a.ParishId == parishId && a.ApprovalStatus == "Pending")
+                .OrderByDescending(a => a.SubmittedAt)
+                .ToListAsync();
+        }
+
         public async Task<FamilyMember> InsertApprovedFamilyMemberAsync(FamilyMember familyMember)
         {
             _context.FamilyMembers.Add(familyMember);
