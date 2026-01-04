@@ -112,7 +112,8 @@ namespace ChurchRepositories
                     HeadName = th.HeadName,
                     Type = th.Type,
                     Aramanapct = th.Aramanapct,
-                    Ordr = th.Ordr
+                    Ordr = th.Ordr,
+                    IsMandatory = th.IsMandatory
                 }).ToListAsync(),
                 Banks = await _context.Banks.Where(b => b.ParishId == parishId).Select(b => new BankBasicDto
                 {

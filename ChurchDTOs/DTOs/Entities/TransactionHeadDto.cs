@@ -27,5 +27,7 @@ namespace ChurchDTOs.DTOs.Entities
         public string? Type { get; set; }
         public double? Aramanapct { get; set; }
         public string? Ordr { get; set; }
+        public bool IsMandatory { get; set; }
+
     }
 }
