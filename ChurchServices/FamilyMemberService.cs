@@ -38,7 +38,7 @@ namespace ChurchServices
                 FamilyId = requestDto.FamilyId,
                 ParishId = requestDto.ParishId,
                 SubmittedBy = userid,
-                ActionType = "INSERT",
+                ActionType = requestDto.ActionType,
                 SubmittedData = requestDto.Payload,  // Payload is of type JsonElement
                 ApprovalStatus = "Pending",
                 SubmittedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)

@@ -16,8 +16,12 @@ namespace ChurchDTOs.DTOs.Entities
         [Required]
         public int ParishId { get; set; }
 
-        [Required]
+      
         public Guid SubmittedBy { get; set; }
+
+        [Required]
+        [RegularExpression("^(INSERT|UPDATE|DELETE)$", ErrorMessage = "ActionType must be either 'INSERT', 'UPDATE', or 'DELETE'")]
+        public string ActionType { get; set; }
 
         // The payload property represents the complete JSON data.
         [Required]
