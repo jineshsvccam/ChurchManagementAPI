@@ -16,7 +16,7 @@ namespace ChurchDTOs.DTOs.Entities
         [Required]
         public int ParishId { get; set; }
 
-      
+
         public Guid SubmittedBy { get; set; }
 
         [Required]

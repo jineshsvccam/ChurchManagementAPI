@@ -116,7 +116,7 @@ namespace ChurchServices
                     return new ServiceResponse
                     {
                         Success = false,
-                        Message = "Invalid approval status. Must be 'Approved' or 'Rejected'.",                        
+                        Message = "Invalid approval status. Must be 'Approved' or 'Rejected'.",
                     };
                 }
             }
@@ -623,7 +623,7 @@ namespace ChurchServices
                 ParishId = familyMember.ParishId,
                 FamilyId = familyMember.FamilyId,
                 FamilyNumber = familyMember.FamilyNumber,
-                FamilyName =  "", 
+                FamilyName = "",
                 FirstName = familyMember.FirstName
             };
         }
