@@ -2,6 +2,7 @@
 using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
+using ChurchRepositories.Queries;
 using Microsoft.Extensions.Logging;
 
 namespace ChurchServices
@@ -11,21 +12,36 @@ namespace ChurchServices
         private readonly IFamilyRepository _familyRepository;
         private readonly ILogger<FamilyService> _logger;
         private readonly IMapper _mapper;
-
-        public FamilyService(IFamilyRepository familyRepository, ILogger<FamilyService> logger, IMapper mapper)
+        private readonly IFamilyQueryRepository _familyQueryRepository;
+        public FamilyService(IFamilyRepository familyRepository, ILogger<FamilyService> logger, IMapper mapper, IFamilyQueryRepository familyQueryRepository)
         {
             _familyRepository = familyRepository;
             _logger = logger;
             _mapper = mapper;
+            _familyQueryRepository = familyQueryRepository;
         }
 
-        public async Task<IEnumerable<FamilyDto>> GetFamiliesAsync(int? parishId, int? unitId, int? familyId)
+        public async Task<IEnumerable<FamilyDto>> GetFamiliesAsync(
+     int? parishId, int? unitId, int? familyId)
         {
-            _logger.LogInformation("Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}", parishId, unitId, familyId);
-            var families = await _familyRepository.GetFamiliesAsync(parishId, unitId, familyId);
-            var familiesDto = _mapper.Map<IEnumerable<FamilyDto>>(families);
-            _logger.LogInformation("Fetched {Count} families", familiesDto.Count());
-            return familiesDto;
+            _logger.LogInformation(
+                "Fetching families with ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}",
+                parishId, unitId, familyId);
+
+            var familiesWithPhoto =
+                await _familyQueryRepository.GetFamiliesWithPhotoAsync(
+                    parishId, unitId, familyId);
+
+            var result = familiesWithPhoto.Select(x =>
+            {
+                var dto = _mapper.Map<FamilyDto>(x.Family);
+                dto.HasFamilyPhoto = x.HasFamilyPhoto;
+                dto.FamilyPhotoFileId = x.FamilyPhotoFileId;
+                return dto;
+            }).ToList();
+
+            _logger.LogInformation("Fetched {Count} families", result.Count);
+            return result;
         }
 
         public async Task<FamilyDto?> GetByIdAsync(int id)

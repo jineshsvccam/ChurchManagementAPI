@@ -11,7 +11,9 @@ using ChurchData.Mappings;
 using ChurchManagementAPI.Controllers.Base;
 using ChurchManagementAPI.Controllers.Middleware;
 using ChurchRepositories;
+using ChurchRepositories.Queries;
 using ChurchServices;
+using ChurchServices.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -166,6 +168,11 @@ builder.Services.AddScoped<IPublicService, PublicService>();
 builder.Services.AddTransient<AESEncryptionHelper>();
 builder.Services.AddHttpClient<IWhatsAppMessageSender, WhatsAppMessageSender>();
 builder.Services.AddScoped<IWhatsAppBotService,ChurchServices.WhatsAppBot.WhatsAppBotService>();
+builder.Services.AddScoped<IFamilyFileService, FamilyFileService>();
+builder.Services.AddScoped<IFamilyFileRepository, FamilyFileRepository>();
+builder.Services.AddScoped<IFileStorageService, S3StorageService>();
+builder.Services.AddScoped<IFamilyQueryRepository, FamilyQueryRepository>();
+
 
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IUserStateService, InMemoryUserStateService>();

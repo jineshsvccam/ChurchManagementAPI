@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ChurchData.Entities;
 using ChurchDTOs.DTOs.Entities;
 using ChurchDTOs.DTOs.Utils;
 
@@ -165,8 +166,8 @@ namespace ChurchData.Mappings
             .ForMember(dest => dest.VrNo, opt => opt.MapFrom(src => src.VrNo))
             .ForMember(dest => dest.IncomeAmount, opt => opt.MapFrom(src => src.IncomeAmount));
 
-
-
+            CreateMap<FamilyFile, FamilyFileDto>();
+            CreateMap<FamilyFileCreateDto, FamilyFile>();
         }
     }
 }

@@ -23,6 +23,9 @@ namespace ChurchDTOs.DTOs.Entities
         public string HeadName { get; set; } = string.Empty;
         public int ParishId { get; set; }
         public DateTime? JoinDate { get; set; }
+
+        public bool HasFamilyPhoto { get; set; }
+        public Guid? FamilyPhotoFileId { get; set; }
     }
 
     public class FamilySimpleDto

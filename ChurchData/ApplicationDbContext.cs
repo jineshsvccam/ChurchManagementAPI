@@ -1,10 +1,11 @@
 ﻿
+using ChurchData.Entities;
+using ChurchData.EntityConfigurations;
+using ChurchDTOs.DTOs.Utils;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using ChurchDTOs.DTOs.Utils;
-using ChurchData.EntityConfigurations;
 
 namespace ChurchData
 {
@@ -32,7 +33,7 @@ namespace ChurchData
         public DbSet<FamilyDue> FamilyDues { get; set; }
         public DbSet<FamilyContribution> FamilyContributions { get; set; }
         public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
-
+        public DbSet<FamilyFile> FamilyFiles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
