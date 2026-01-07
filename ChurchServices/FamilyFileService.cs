@@ -67,7 +67,7 @@ namespace ChurchServices
             _logger.LogInformation("Adding family file for FamilyId: {FamilyId}", createDto.FamilyId);
 
             var entity = _mapper.Map<FamilyFile>(createDto);
-            entity.Status = "Pending";
+            entity.Status = "Approved"; //To Do need to change later
 
             await _repository.AddAsync(entity);
             return _mapper.Map<FamilyFileDto>(entity);
