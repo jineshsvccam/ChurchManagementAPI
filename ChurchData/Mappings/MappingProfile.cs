@@ -2,6 +2,7 @@
 using ChurchData.Entities;
 using ChurchDTOs.DTOs.Entities;
 using ChurchDTOs.DTOs.Utils;
+using NetTopologySuite.Geometries;
 
 
 
@@ -16,13 +17,12 @@ namespace ChurchData.Mappings
             CreateMap<ContributionSettings, ContributionSettingsDto>().ReverseMap();
             CreateMap<Diocese, DioceseDto>().ReverseMap();
             CreateMap<District, DistrictDto>().ReverseMap();
-            CreateMap<Family, FamilyDto>().ReverseMap();
+          
             CreateMap<FamilyContribution, FamilyContributionDto>().ReverseMap();
             CreateMap<FamilyDue, FamilyDueDto>().ReverseMap();
             //family member 
             CreateMap<FinancialYear, FinancialYearDto>().ReverseMap();
-            CreateMap<Parish, ParishDetailsDto>().ReverseMap();
-            CreateMap<Parish, ParishDto>().ReverseMap();
+
             //pending family member action           
             CreateMap<RecurringTransaction, RecurringTransactionDto>().ReverseMap();
             CreateMap<Transaction, TransactionDto>().ReverseMap();
@@ -118,16 +118,16 @@ namespace ChurchData.Mappings
              var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
              return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.BankName : null;
          }));
-         //.ForMember(dest => dest.ParishId, opt => opt.MapFrom((src, dest, destMember, context) =>
-         //{
-         //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
-         //    return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishId : (int?)null;
-         //}));
-         //.ForMember(dest => dest.ParishName, opt => opt.MapFrom((src, dest, destMember, context) =>
-         //{
-         //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
-         //    return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
-         //}));
+            //.ForMember(dest => dest.ParishId, opt => opt.MapFrom((src, dest, destMember, context) =>
+            //{
+            //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+            //    return (option == FinancialReportCustomizationOption.IdsOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishId : (int?)null;
+            //}));
+            //.ForMember(dest => dest.ParishName, opt => opt.MapFrom((src, dest, destMember, context) =>
+            //{
+            //    var option = (FinancialReportCustomizationOption)context.Items["CustomizationOption"];
+            //    return (option == FinancialReportCustomizationOption.NamesOnly || option == FinancialReportCustomizationOption.Both) ? src.ParishName : null;
+            //}));
 
 
             //for notice board
@@ -168,6 +168,54 @@ namespace ChurchData.Mappings
 
             CreateMap<FamilyFile, FamilyFileDto>();
             CreateMap<FamilyFileCreateDto, FamilyFile>();
+
+            // Parish → DTO (Response)
+            CreateMap<Parish, ParishDto>()
+                .ForMember(dest => dest.Latitude,
+                    opt => opt.MapFrom(src => src.GeoLocation != null ? (decimal?)src.GeoLocation.Y : null))
+                .ForMember(dest => dest.Longitude,
+                    opt => opt.MapFrom(src => src.GeoLocation != null ? (decimal?)src.GeoLocation.X : null));
+
+            // DTO → Parish (Create / Update)
+            CreateMap<ParishDto, Parish>()
+                .ForMember(dest => dest.GeoLocation,
+                    opt => opt.MapFrom(src =>
+                        src.Latitude.HasValue && src.Longitude.HasValue
+                            ? new Point((double)src.Longitude.Value, (double)src.Latitude.Value) { SRID = 4326 }
+                            : null
+                    ));
+
+            CreateMap<Parish, ParishDetailsDto>()
+                .ForMember(dest => dest.Latitude,
+                    opt => opt.MapFrom(src => src.GeoLocation != null ? (decimal?)src.GeoLocation.Y : null))
+                .ForMember(dest => dest.Longitude,
+                    opt => opt.MapFrom(src => src.GeoLocation != null ? (decimal?)src.GeoLocation.X : null));
+
+            CreateMap<ParishDetailsDto, Parish>()
+                .ForMember(dest => dest.GeoLocation,
+                    opt => opt.MapFrom(src =>
+                        src.Latitude.HasValue && src.Longitude.HasValue
+                            ? new Point((double)src.Longitude.Value, (double)src.Latitude.Value) { SRID = 4326 }
+                            : null
+                    ));
+
+            // Family → DTO
+            CreateMap<Family, FamilyDto>()
+                .ForMember(dest => dest.Latitude,
+                    opt => opt.MapFrom(src => src.GeoLocation != null ? (decimal?)src.GeoLocation.Y : null))
+                .ForMember(dest => dest.Longitude,
+                    opt => opt.MapFrom(src => src.GeoLocation != null ? (decimal?)src.GeoLocation.X : null));
+
+            // DTO → Family
+            CreateMap<FamilyDto, Family>()
+                .ForMember(dest => dest.GeoLocation,
+                    opt => opt.MapFrom(src =>
+                        src.Latitude.HasValue && src.Longitude.HasValue
+                            ? new Point((double)src.Longitude.Value, (double)src.Latitude.Value) { SRID = 4326 }
+                            : null
+                    ));
+
+
         }
     }
 }

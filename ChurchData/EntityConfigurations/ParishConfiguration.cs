@@ -21,6 +21,10 @@ namespace ChurchData.EntityConfigurations
             builder.Property(p => p.Pincode).HasColumnName("pincode");
             builder.Property(p => p.VicarName).HasColumnName("vicar_name");
             builder.Property(p => p.DistrictId).HasColumnName("district_id");
+           
+            builder.Property(p => p.GeoLocation)
+                   .HasColumnName("geo_location")
+                   .HasColumnType("geography (point, 4326)");
 
             builder.HasOne(p => p.District)
                    .WithMany(d => d.Parishes)

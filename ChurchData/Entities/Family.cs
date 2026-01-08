@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using NetTopologySuite.Geometries;
 
 namespace ChurchData
 {
@@ -36,6 +35,10 @@ namespace ChurchData
         public int ParishId { get; set; }
 
         public DateTime? JoinDate { get; set; }
+
+        // Map to the database column "geo_location" of type geography(Point,4326)
+        [Column("geo_location", TypeName = "geography (Point,4326)")]
+        public Point? GeoLocation { get; set; }
 
         [JsonIgnore]
         public Unit? Unit { get; set; }

@@ -8,7 +8,6 @@ using ChurchContracts.Interfaces.Repositories;
 using ChurchContracts.Interfaces.Services;
 using ChurchData;
 using ChurchData.Mappings;
-using ChurchManagementAPI.Controllers.Base;
 using ChurchManagementAPI.Controllers.Middleware;
 using ChurchRepositories;
 using ChurchRepositories.Queries;
@@ -23,6 +22,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +44,11 @@ if (isLoggingEnabled)
 
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions => npgsqlOptions.UseNetTopologySuite()
+    )
+);
 
 // Add Identity services
 builder.Services.AddIdentity<User, Role>(options =>

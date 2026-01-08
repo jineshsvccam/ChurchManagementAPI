@@ -65,6 +65,13 @@ namespace ChurchServices
             {
                 // Map DTO to entity
                 var familyEntity = _mapper.Map<Family>(request);
+
+                if (request.Latitude.HasValue && (request.Latitude < -90 || request.Latitude > 90))
+                    throw new ArgumentException("Latitude must be between -90 and 90");
+
+                if (request.Longitude.HasValue && (request.Longitude < -180 || request.Longitude > 180))
+                    throw new ArgumentException("Longitude must be between -180 and 180");
+
                 if (request.Action == "INSERT")
                 {
                     _logger.LogInformation("Adding new family: {FamilyName}", familyEntity.FamilyName);
@@ -91,6 +98,14 @@ namespace ChurchServices
         public async Task<FamilyDto> AddAsync(FamilyDto familyDto)
         {
             _logger.LogInformation("Adding family: {FamilyName}", familyDto.FamilyName);
+
+            if (familyDto.Latitude.HasValue && (familyDto.Latitude < -90 || familyDto.Latitude > 90))
+                throw new ArgumentException("Latitude must be between -90 and 90");
+
+            if (familyDto.Longitude.HasValue && (familyDto.Longitude < -180 || familyDto.Longitude > 180))
+                throw new ArgumentException("Longitude must be between -180 and 180");
+
+
             var familyEntity = _mapper.Map<Family>(familyDto);
             var addedFamily = await _familyRepository.AddAsync(familyEntity);
             _logger.LogInformation("Successfully added family Id: {Id}", addedFamily.FamilyId);
@@ -100,6 +115,13 @@ namespace ChurchServices
         public async Task<FamilyDto> UpdateAsync(FamilyDto familyDto)
         {
             _logger.LogInformation("Updating family with Id: {Id}", familyDto.FamilyId);
+
+            if (familyDto.Latitude.HasValue && (familyDto.Latitude < -90 || familyDto.Latitude > 90))
+                throw new ArgumentException("Latitude must be between -90 and 90");
+
+            if (familyDto.Longitude.HasValue && (familyDto.Longitude < -180 || familyDto.Longitude > 180))
+                throw new ArgumentException("Longitude must be between -180 and 180");
+
             var familyEntity = _mapper.Map<Family>(familyDto);
             if (familyEntity.JoinDate.HasValue)
             {

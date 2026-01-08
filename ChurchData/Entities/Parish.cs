@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+using NetTopologySuite.Geometries;
+
 
 namespace ChurchData
 {
@@ -20,6 +18,11 @@ namespace ChurchData
         public string? Pincode { get; set; }
         public string? VicarName { get; set; }
         public int DistrictId { get; set; }
+
+        // Map to the database column "geo_location" of type geography(Point,4326)
+        [Column("geo_location", TypeName = "geography (Point,4326)")]
+        public Point? GeoLocation { get; set; }
+
         public District? District { get; set; }
         public ICollection<Unit> Units { get; set; } = new List<Unit>();
         public ICollection<Family> Families { get; set; } = new List<Family>();

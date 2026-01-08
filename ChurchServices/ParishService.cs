@@ -60,6 +60,13 @@ namespace ChurchServices
         public async Task<ParishDto> AddAsync(ParishDto parishDto)
         {
             _logger.LogInformation("Adding new parish: {ParishName}.", parishDto.ParishName);
+
+            if (parishDto.Latitude.HasValue && (parishDto.Latitude < -90 || parishDto.Latitude > 90))
+                throw new ArgumentException("Latitude must be between -90 and 90");
+
+            if (parishDto.Longitude.HasValue && (parishDto.Longitude < -180 || parishDto.Longitude > 180))
+                throw new ArgumentException("Longitude must be between -180 and 180");
+
             var parish = _mapper.Map<Parish>(parishDto);
             var createdParish = await _parishRepository.AddAsync(parish);
           //  await LoadDummyDataAsync(createdParish.ParishId);
@@ -70,6 +77,14 @@ namespace ChurchServices
         public async Task<ParishDto> UpdateAsync(ParishDto parishDto)
         {
             _logger.LogInformation("Updating parish with ID {ParishId}.", parishDto.ParishId);
+
+            if (parishDto.Latitude.HasValue && (parishDto.Latitude < -90 || parishDto.Latitude > 90))
+                throw new ArgumentException("Latitude must be between -90 and 90");
+
+            if (parishDto.Longitude.HasValue && (parishDto.Longitude < -180 || parishDto.Longitude > 180))
+                throw new ArgumentException("Longitude must be between -180 and 180");
+
+
             var parish = _mapper.Map<Parish>(parishDto);
             await _parishRepository.UpdateAsync(parish);
             return parishDto;

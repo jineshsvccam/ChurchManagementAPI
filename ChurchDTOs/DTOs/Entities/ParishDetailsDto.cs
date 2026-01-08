@@ -17,6 +17,10 @@ namespace ChurchDTOs.DTOs.Entities
         public string? VicarName { get; set; }
         public int DistrictId { get; set; }
 
+        // Geolocation values (do not expose NetTopologySuite types in DTOs)
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+
         public ICollection<UnitDto>? Units { get; set; }
         public ICollection<FamilyDto>? Families { get; set; }
         public ICollection<TransactionHeadDto>? TransactionHeads { get; set; }
@@ -39,6 +43,9 @@ namespace ChurchDTOs.DTOs.Entities
         public string? Pincode { get; set; }
         public string? VicarName { get; set; }
         public int DistrictId { get; set; }
+
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
      
     }
 
@@ -70,6 +77,7 @@ namespace ChurchDTOs.DTOs.Entities
         public ICollection<FamilyMemberDto>? FamilyMembers { get; set; }
         public ICollection<FinancialYearBasicDto>? FinancialYears { get; set; }
         public LastTransactionDetail LastTransactionDetail { get; set; }
+
     }
 
 

@@ -36,6 +36,9 @@ namespace ChurchData.EntityConfigurations
             builder.Property(f => f.JoinDate)
                    .HasColumnName("join_date")
                    .HasColumnType("date");
+            builder.Property(f => f.GeoLocation)
+                   .HasColumnName("geo_location")
+                   .HasColumnType("geography (point, 4326)");
 
             builder.HasOne(f => f.Unit)
                    .WithMany(u => u.Families) // Assuming Unit has a collection of Families

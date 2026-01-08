@@ -24,6 +24,10 @@ namespace ChurchDTOs.DTOs.Entities
         public int ParishId { get; set; }
         public DateTime? JoinDate { get; set; }
 
+        // Geolocation values (do not expose NetTopologySuite types in DTOs)
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+
         public bool HasFamilyPhoto { get; set; }
         public Guid? FamilyPhotoFileId { get; set; }
     }
@@ -36,6 +40,10 @@ namespace ChurchDTOs.DTOs.Entities
         public string? Status { get; set; }
         public string HeadName { get; set; } = string.Empty;
         public int ParishId { get; set; }
+
+        // Geolocation values
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
        
     }
     public class FamilyBasicDto
@@ -44,6 +52,10 @@ namespace ChurchDTOs.DTOs.Entities
         public string FamilyName { get; set; } = string.Empty;
         public int FamilyNumber { get; set; }
         public int UnitId { get; set; }
+
+        // Geolocation values
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
 
     }
 }
