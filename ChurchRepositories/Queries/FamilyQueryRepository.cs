@@ -32,21 +32,25 @@ namespace ChurchRepositories.Queries
                 "Fetching families with photo info. ParishId: {ParishId}, UnitId: {UnitId}, FamilyId: {FamilyId}",
                 parishId, unitId, familyId);
 
-            var query =
-                from f in _context.Families
-                join ff in _context.FamilyFiles
-                    .Where(x =>
-                        x.FileType == "FamilyPhoto" &&
-                        x.IsPrimary &&
-                        x.Status == "Approved")
-                    on f.FamilyId equals ff.FamilyId into photoGroup
-                from photo in photoGroup.DefaultIfEmpty()
-                select new FamilyWithPhotoInfo
-                {
-                    Family = f,
-                    HasFamilyPhoto = photo != null,
-                    FamilyPhotoFileId = photo != null ? photo.FileId : null
-                };
+                var query =
+                         from f in _context.Families
+                         let latestPhoto = _context.FamilyFiles
+                             .Where(ff =>
+                                 ff.FamilyId == f.FamilyId &&
+                                 ff.FileType == "FamilyPhoto" &&
+                                 ff.Status == "Approved")
+                             .OrderByDescending(ff => ff.UploadedAt) 
+                             .Select(ff => new
+                             {
+                                 ff.FileId
+                             })
+                             .FirstOrDefault()
+     select new FamilyWithPhotoInfo
+     {
+         Family = f,
+         HasFamilyPhoto = latestPhoto != null,
+         FamilyPhotoFileId = latestPhoto != null ? latestPhoto.FileId : null
+     };
 
             if (parishId.HasValue)
                 query = query.Where(x => x.Family.ParishId == parishId.Value);

@@ -67,7 +67,9 @@ namespace ChurchDTOs.DTOs.Entities
     public class ParishDetailsBasicDto : IParishEntity
     {
         public int ParishId { get; set; }
-        public required string ParishName { get; set; }      
+        public required string ParishName { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
 
         public ICollection<UnitBasicDto>? Units { get; set; }
         public ICollection<FamilyBasicDto>? Families { get; set; }

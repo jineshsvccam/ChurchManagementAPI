@@ -91,7 +91,12 @@ namespace ChurchRepositories
             {
                 ParishId = parish.ParishId,
                 ParishName = parish.ParishName,
-
+                Latitude = parish.GeoLocation != null
+                    ? (decimal?)parish.GeoLocation.Y   // Latitude
+                    : null,
+                            Longitude = parish.GeoLocation != null
+                    ? (decimal?)parish.GeoLocation.X   // Longitude
+                    : null,
                 Units = await _context.Units.Where(u => u.ParishId == parishId).Select(u => new UnitBasicDto
                 {
                     UnitId = u.UnitId,
@@ -103,7 +108,7 @@ namespace ChurchRepositories
                     FamilyId = f.FamilyId,
                     FamilyName = string.Concat(f.HeadName, " ", f.FamilyName),
                     FamilyNumber = f.FamilyNumber,
-                    UnitId=f.UnitId
+                    UnitId = f.UnitId
 
                 }).ToListAsync(),
                 TransactionHeads = await _context.TransactionHeads.Where(th => th.ParishId == parishId).Select(th => new TransactionHeadBasicDto
@@ -138,7 +143,7 @@ namespace ChurchRepositories
                     DateOfBirth = fm.DateOfBirth,
                     Gender = fm.Gender.ToString()
                 }).ToListAsync() : new List<FamilyMemberDto>(),
-                LastTransactionDetail= lastTransaction
+                LastTransactionDetail = lastTransaction
             };
 
             return details;
