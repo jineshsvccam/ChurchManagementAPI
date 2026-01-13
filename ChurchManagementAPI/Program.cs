@@ -238,7 +238,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminPolicy", policy =>
         policy.RequireRole("Admin"));
     options.AddPolicy("ManagementPolicy", policy =>
-        policy.RequireRole("Admin", "Secretary", "Trustee"));
+        policy.RequireRole("Admin", "Secretary", "Trustee","Priest"));
     options.AddPolicy("FamilyMemberPolicy", policy =>
         policy.RequireRole("Admin", "Secretary", "Trustee", "FamilyMember"));
 });
