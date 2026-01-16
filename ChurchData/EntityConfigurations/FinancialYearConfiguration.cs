@@ -32,10 +32,12 @@ namespace ChurchData.EntityConfigurations
                    .HasDefaultValue(false);
 
             builder.Property(fy => fy.LockDate)
-                   .HasColumnName("lock_date");
+                   .HasColumnName("lock_date")
+                   .IsRequired(false);
 
             builder.Property(fy => fy.Description)
-                   .HasColumnName("description");
+                   .HasColumnName("description")
+                   .IsRequired(false);
 
             builder.HasOne(fy => fy.Parish)
                    .WithMany(p => p.FinancialYears)
