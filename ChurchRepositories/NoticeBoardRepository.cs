@@ -75,7 +75,27 @@ namespace ChurchRepositories
                 decimal totalPayment = paymentSummary != null ? paymentSummary.TotalPayment : 0;
                 DateTime trDate = paymentSummary != null ? paymentSummary.EarliestTrDate : DateTime.MinValue;
                 string vrNo = paymentSummary != null ? paymentSummary.SampleVrNo : string.Empty;               
-                string unitName = paymentSummary != null ? paymentSummary.UnitName : string.Empty;
+                string unitName;
+                if (paymentSummary != null && !string.IsNullOrEmpty(paymentSummary.UnitName))
+                {
+                    unitName = paymentSummary.UnitName;
+                }
+                else if (family.Unit != null && !string.IsNullOrEmpty(family.Unit.UnitName))
+                {
+                    unitName = family.Unit.UnitName;
+                }
+                else if (family.UnitId != 0)
+                {
+                    // Fallback: query the Units table by UnitId to get the name
+                    unitName = await _context.Units
+                        .Where(u => u.UnitId == family.UnitId)
+                        .Select(u => u.UnitName)
+                        .FirstOrDefaultAsync() ?? string.Empty;
+                }
+                else
+                {
+                    unitName = string.Empty;
+                }
 
                 // Build a combined family name: head name + family name.
                 string combinedFamilyName = $"{family.HeadName} {family.FamilyName}".Trim();

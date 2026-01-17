@@ -437,6 +437,7 @@ public class AccessDataExporter
                         {
                             FamilyId = familyId,
                             ParishId = ParishId,
+                            ActionType="INSERT",
                             SubmittedBy = Guid.Parse("bc27673d-f3c7-4e05-9613-628697099840"), 
                             Payload = json
                         };
