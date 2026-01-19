@@ -106,6 +106,14 @@ namespace ChurchData.EntityConfigurations
                         v => (UserStatus)Enum.Parse(typeof(UserStatus), v))
                     .HasDefaultValue(UserStatus.Pending);
 
+            builder.Property(u => u.TwoFactorType)
+                   .HasColumnName("two_factor_type")
+                   .HasMaxLength(20);
+
+            builder.Property(u => u.TwoFactorEnabledAt)
+                   .HasColumnName("two_factor_enabled_at")
+                   .HasColumnType("timestamp with time zone");
+
             builder.HasOne(u => u.Family)
                    .WithMany(f => f.Users)
                    .HasForeignKey(u => u.FamilyId)
@@ -115,6 +123,9 @@ namespace ChurchData.EntityConfigurations
                    .WithMany(p => p.Users)
                    .HasForeignKey(u => u.ParishId)
                    .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasIndex(u => u.TwoFactorType)
+                   .HasDatabaseName("idx_users_two_factor_type");
         }
     }
 }

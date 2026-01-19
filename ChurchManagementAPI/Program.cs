@@ -101,6 +101,11 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 
 
+builder.Services.AddScoped<IUserAuthenticatorRepository, UserAuthenticatorRepository>();
+builder.Services.AddScoped<IUser2FARecoveryCodeRepository, User2FARecoveryCodeRepository>();
+builder.Services.AddScoped<IUser2FASessionRepository, User2FASessionRepository>();
+builder.Services.AddScoped<ITwoFactorAuthenticationService, TwoFactorAuthenticationService>();
+
 builder.Services.AddScoped<IParishService, ParishService>();
 builder.Services.AddScoped<IParishRepository, ParishRepository>();
 builder.Services.AddScoped<IDioceseRepository, DioceseRepository>();

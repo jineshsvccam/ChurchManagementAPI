@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ChurchData.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace ChurchData
@@ -26,9 +27,19 @@ namespace ChurchData
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        [MaxLength(20)]
+        [Column("two_factor_type")]
+        public string? TwoFactorType { get; set; }
+
+        [Column("two_factor_enabled_at")]
+        public DateTime? TwoFactorEnabledAt { get; set; }
+
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
         public virtual Family? Family { get; set; }
         public virtual Parish? Parish { get; set; }
+        public virtual ICollection<UserAuthenticator> Authenticators { get; set; } = new HashSet<UserAuthenticator>();
+        public virtual ICollection<User2FARecoveryCode> RecoveryCodes { get; set; } = new HashSet<User2FARecoveryCode>();
+        public virtual ICollection<User2FASession> TwoFactorSessions { get; set; } = new HashSet<User2FASession>();
     }
 
     public class UserRole : IdentityUserRole<Guid>

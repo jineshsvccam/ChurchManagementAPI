@@ -1,8 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using ChurchContracts;
+using ChurchContracts.Interfaces.Repositories;
 using ChurchData;
+using ChurchData.Entities;
 using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +21,15 @@ public class AuthService : IAuthService
     private readonly RoleManager<Role> _roleManager;
     private readonly ILogger<AuthService> _logger;
     private readonly ApplicationDbContext _context;
+    private readonly IUser2FASessionRepository _sessionRepository;
+
+    private const int TwoFactorSessionExpiryMinutes = 5;
 
     // Constructor: Sets up dependencies
     public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
         RoleManager<Role> roleManager, IConfiguration configuration,
-        ILogger<AuthService> logger, ApplicationDbContext context)
+        ILogger<AuthService> logger, ApplicationDbContext context,
+        IUser2FASessionRepository sessionRepository)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -30,12 +37,12 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _logger = logger;
         _context = context;
+        _sessionRepository = sessionRepository;
     }
 
     // AuthenticateUserAsync: Checks login and returns token
-    public async Task<AuthResultDto> AuthenticateUserAsync(string username, string password)
+    public async Task<object> AuthenticateUserAsync(string username, string password, string ipAddress, string userAgent)
     {
-        // var user = await _userManager.FindByNameAsync(username);
         var user = await _context.Users
              .Include(u => u.Family)
              .Include(u => u.Parish)
@@ -61,6 +68,31 @@ public class AuthService : IAuthService
                 IsSuccess = false,
                 Message = "Your account is not approved."
             };
+
+        // If user has TwoFactorEnabled, create a session and return temp token
+        if (user.TwoFactorEnabled)
+        {
+            var tempToken = GenerateTempToken();
+            var session = new User2FASession
+            {
+                UserId = user.Id,
+                TempToken = tempToken,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Attempts = 0,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(TwoFactorSessionExpiryMinutes)
+            };
+
+            await _sessionRepository.AddAsync(session);
+
+            return new TwoFactorRequiredResponseDto
+            {
+                TempToken = tempToken,
+                TwoFactorType = user.TwoFactorType ?? "AUTHENTICATOR",
+                Message = "Two-factor authentication is required."
+            };
+        }
 
         // Get roles for the user
         var roles = await _userManager.GetRolesAsync(user);
@@ -161,5 +193,16 @@ public class AuthService : IAuthService
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token); // Return token string
+    }
+
+    // GenerateTempToken: Creates a temporary token for 2FA
+    private string GenerateTempToken()
+    {
+        var bytes = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(bytes);
+        }
+        return Convert.ToBase64String(bytes);
     }
 }

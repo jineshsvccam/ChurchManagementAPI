@@ -1,5 +1,4 @@
-﻿
-using ChurchData.Entities;
+﻿using ChurchData.Entities;
 using ChurchData.EntityConfigurations;
 using ChurchDTOs.DTOs.Utils;
 using Microsoft.AspNetCore.Identity;
@@ -34,6 +33,10 @@ namespace ChurchData
         public DbSet<FamilyContribution> FamilyContributions { get; set; }
         public DbSet<RecurringTransaction> RecurringTransactions { get; set; }
         public DbSet<FamilyFile> FamilyFiles { get; set; }
+        public DbSet<UserAuthenticator> UserAuthenticators { get; set; }
+        public DbSet<User2FARecoveryCode> User2FARecoveryCodes { get; set; }
+        public DbSet<User2FASession> User2FASessions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

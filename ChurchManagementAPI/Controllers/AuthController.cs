@@ -21,32 +21,40 @@ namespace ChurchManagementAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            // Normal Password
             string decryptedUsername = loginDto.Username;
             string decryptedPassword = loginDto.Password;
 
-            // Decrypt the username and password
-            //string decryptedUsername = _aesEncryptionHelper.DecryptAES(loginDto.Username);
-            //string decryptedPassword = _aesEncryptionHelper.DecryptAES(loginDto.Password);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString() ?? "Unknown";
 
-            var result = await _authService.AuthenticateUserAsync(decryptedUsername, decryptedPassword);
+            var result = await _authService.AuthenticateUserAsync(decryptedUsername, decryptedPassword, ipAddress, userAgent);
 
-            if (!result.IsSuccess)
+            if (result is AuthResultDto authResult)
             {
-                return Unauthorized(new { Message = result.Message });
+                if (!authResult.IsSuccess)
+                {
+                    return Unauthorized(new { Message = authResult.Message });
+                }
+
+                return Ok(new
+                {
+                    Token = authResult.Token,
+                    Message = authResult.Message,
+                    FullName = authResult.FullName,
+                    ParishId = authResult.ParishId,
+                    ParishName = authResult.ParishName,
+                    FamilyId = authResult?.FamilyId,
+                    FamilyName = authResult?.FamilyName,
+                    Roles = authResult.Roles
+                });
             }
 
-            return Ok(new
+            if (result is TwoFactorRequiredResponseDto twoFactorResult)
             {
-                Token = result.Token,
-                Message = result.Message,
-                FullName = result.FullName,
-                ParishId = result.ParishId,
-                ParishName = result.ParishName,
-                FamilyId = result?.FamilyId,
-                FamilyName = result?.FamilyName,
-                Roles = result.Roles
-            });
+                return Ok(twoFactorResult);
+            }
+
+            return StatusCode(500, new { Message = "An unexpected error occurred." });
         }
 
 
