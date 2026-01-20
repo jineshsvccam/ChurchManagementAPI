@@ -8,7 +8,7 @@ namespace ChurchDTOs.DTOs.Entities
         public string TempToken { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(6, MinimumLength = 6)]
+        [StringLength(10, MinimumLength = 6)]
         public string Code { get; set; } = string.Empty;
     }
 }

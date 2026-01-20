@@ -64,6 +64,7 @@ builder.Services.AddScoped<RoleManager<Role>>();
 builder.Services.AddScoped<UserManager<User>>();
 builder.Services.AddScoped<SignInManager<User>>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<AuthService>());
 
 // Add CORS policy
 builder.Services.AddCors(options =>
