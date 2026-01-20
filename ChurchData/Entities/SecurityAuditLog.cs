@@ -10,7 +10,6 @@ namespace ChurchData.Entities
         [Column("log_id")]
         public Guid LogId { get; set; } = Guid.NewGuid();
 
-        [Required]
         [Column("user_id")]
         public Guid? UserId { get; set; }
 
@@ -48,12 +47,17 @@ namespace ChurchData.Entities
     /// </summary>
     public static class SecurityEventType
     {
+        // Authentication Events
+        public const string LoginSuccess = "LOGIN_SUCCESS";
+        public const string LoginFailed = "LOGIN_FAILED";
+
         // 2FA Setup Events
         public const string TwoFactorSetupInitiated = "2FA_SETUP_INITIATED";
         public const string TwoFactorSetupVerified = "2FA_SETUP_VERIFIED";
         public const string TwoFactorDisabled = "2FA_DISABLED";
 
         // 2FA Verification Events
+        public const string TwoFactorChallengeCreated = "2FA_CHALLENGE_CREATED";
         public const string TwoFactorVerificationSuccess = "2FA_VERIFICATION_SUCCESS";
         public const string TwoFactorVerificationFailed = "2FA_VERIFICATION_FAILED";
         public const string TwoFactorMaxAttemptsExceeded = "2FA_MAX_ATTEMPTS_EXCEEDED";

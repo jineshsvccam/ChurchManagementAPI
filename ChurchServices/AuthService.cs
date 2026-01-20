@@ -71,25 +71,58 @@ public class AuthService : IAuthService
              .FirstOrDefaultAsync(u => u.UserName == username);
 
         if (user == null)
+        {
+            // Audit log: Login failed - user not found
+            _auditService.LogFireAndForget(
+                SecurityEventType.LoginFailed,
+                null,
+                $"Login failed: user '{username}' not found",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
+
             return new AuthResultDto
             {
                 IsSuccess = false,
                 Message = "User not found."
             };
+        }
 
         if (!await _userManager.CheckPasswordAsync(user, password))
+        {
+            // Audit log: Login failed - invalid password
+            _auditService.LogFireAndForget(
+                SecurityEventType.LoginFailed,
+                user.Id,
+                "Login failed: invalid password",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
+
             return new AuthResultDto
             {
                 IsSuccess = false,
                 Message = "Invalid password."
             };
+        }
 
         if (user.Status != UserStatus.Active)
+        {
+            // Audit log: Login failed - account not active
+            _auditService.LogFireAndForget(
+                SecurityEventType.LoginFailed,
+                user.Id,
+                $"Login failed: account status is {user.Status}",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
+
             return new AuthResultDto
             {
                 IsSuccess = false,
                 Message = "Your account is not approved."
             };
+        }
 
         // Get roles early to use for both 2FA check and response
         var roles = await _userManager.GetRolesAsync(user);
@@ -142,6 +175,15 @@ public class AuthService : IAuthService
 
             await _sessionRepository.AddAsync(session);
 
+            // Audit log: 2FA challenge created
+            _auditService.LogFireAndForget(
+                SecurityEventType.TwoFactorChallengeCreated,
+                user.Id,
+                "2FA challenge issued, awaiting verification",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Info);
+
             return new TwoFactorRequiredResponseDto
             {
                 TempToken = tempToken,
@@ -149,6 +191,15 @@ public class AuthService : IAuthService
                 Message = "Two-factor authentication is required."
             };
         }
+
+        // Audit log: Login success (no 2FA required)
+        _auditService.LogFireAndForget(
+            SecurityEventType.LoginSuccess,
+            user.Id,
+            "Login successful (2FA not required)",
+            ipAddress,
+            userAgent,
+            AuditSeverity.Info);
 
         return new AuthResultDto
         {
@@ -385,6 +436,15 @@ public class AuthService : IAuthService
             SecurityEventType.TwoFactorVerificationSuccess,
             session.UserId,
             usedRecoveryCode ? "Verified using recovery code" : "Verified using TOTP",
+            ipAddress,
+            userAgent,
+            AuditSeverity.Info);
+
+        // Audit log: Login success (after 2FA)
+        _auditService.LogFireAndForget(
+            SecurityEventType.LoginSuccess,
+            session.UserId,
+            "Login successful (2FA verified)",
             ipAddress,
             userAgent,
             AuditSeverity.Info);
