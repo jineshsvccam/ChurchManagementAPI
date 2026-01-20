@@ -68,5 +68,19 @@ namespace ChurchRepositories
             _context.User2FASessions.RemoveRange(sessions);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> CountActiveSessionsAsync(Guid userId, DateTime windowStart)
+        {
+            // Count sessions that are:
+            // 1. Belonging to the specified user
+            // 2. Created within the rate limit window
+            // 3. Not yet expired
+            // This query uses indexed columns (user_id, created_at, expires_at)
+            return await _context.User2FASessions
+                .CountAsync(s => 
+                    s.UserId == userId && 
+                    s.CreatedAt >= windowStart && 
+                    s.ExpiresAt > DateTime.UtcNow);
+        }
     }
 }

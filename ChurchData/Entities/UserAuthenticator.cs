@@ -26,6 +26,13 @@ namespace ChurchData.Entities
         [Column("verified_at")]
         public DateTime? VerifiedAt { get; set; }
 
+        /// <summary>
+        /// Last TOTP time step that was successfully used.
+        /// Used for replay attack prevention - codes from same/older time step are rejected.
+        /// </summary>
+        [Column("last_used_time_step")]
+        public long? LastUsedTimeStep { get; set; }
+
         [Required]
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

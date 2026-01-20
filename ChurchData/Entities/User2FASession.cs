@@ -25,6 +25,14 @@ namespace ChurchData.Entities
         [Column("user_agent")]
         public string? UserAgent { get; set; }
 
+        /// <summary>
+        /// SHA256 hash of client fingerprint (IP + User-Agent).
+        /// Used for MITM protection - session bound to original client.
+        /// </summary>
+        [MaxLength(64)]
+        [Column("client_fingerprint")]
+        public string? ClientFingerprint { get; set; }
+
         [Required]
         [Column("attempts")]
         public short Attempts { get; set; } = 0;

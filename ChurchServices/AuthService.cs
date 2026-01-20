@@ -2,8 +2,10 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using ChurchCommon.Settings;
 using ChurchContracts;
 using ChurchContracts.Interfaces.Repositories;
+using ChurchContracts.Interfaces.Services;
 using ChurchData;
 using ChurchData.Entities;
 using ChurchDTOs.DTOs.Entities;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 public class AuthService : IAuthService
@@ -24,11 +27,15 @@ public class AuthService : IAuthService
     private readonly IUser2FASessionRepository _sessionRepository;
     private readonly IUserAuthenticatorRepository _authenticatorRepository;
     private readonly IUser2FARecoveryCodeRepository _recoveryCodeRepository;
+    private readonly TwoFactorSettings _twoFactorSettings;
+    private readonly ITotpSecretEncryptionService _totpEncryption;
+    private readonly ISecurityAuditService _auditService;
 
     private const int TwoFactorSessionExpiryMinutes = 5;
     private const int MaxSessionAttempts = 5;
     private const int RecoveryCodeCount = 3;
     private const int RecoveryCodeLength = 8;
+    private const string FamilyMemberRole = "FamilyMember";
 
     // Constructor: Sets up dependencies
     public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
@@ -36,7 +43,10 @@ public class AuthService : IAuthService
         ILogger<AuthService> logger, ApplicationDbContext context,
         IUser2FASessionRepository sessionRepository,
         IUserAuthenticatorRepository authenticatorRepository,
-        IUser2FARecoveryCodeRepository recoveryCodeRepository)
+        IUser2FARecoveryCodeRepository recoveryCodeRepository,
+        IOptions<TwoFactorSettings> twoFactorSettings,
+        ITotpSecretEncryptionService totpEncryption,
+        ISecurityAuditService auditService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -47,6 +57,9 @@ public class AuthService : IAuthService
         _sessionRepository = sessionRepository;
         _authenticatorRepository = authenticatorRepository;
         _recoveryCodeRepository = recoveryCodeRepository;
+        _twoFactorSettings = twoFactorSettings.Value;
+        _totpEncryption = totpEncryption;
+        _auditService = auditService;
     }
 
     // AuthenticateUserAsync: Checks login and returns token
@@ -78,16 +91,50 @@ public class AuthService : IAuthService
                 Message = "Your account is not approved."
             };
 
-        // If user has TwoFactorEnabled, create a session and return temp token
-        if (user.TwoFactorEnabled)
+        // Get roles early to use for both 2FA check and response
+        var roles = await _userManager.GetRolesAsync(user);
+
+        // Check if 2FA should be enforced for this user
+        bool requires2FA = ShouldRequire2FA(user, roles);
+
+        if (requires2FA)
         {
+            // Rate limit check: Enforce BEFORE creating new session
+            var windowStart = DateTime.UtcNow.AddMinutes(-_twoFactorSettings.RateLimitWindowMinutes);
+            var activeSessionCount = await _sessionRepository.CountActiveSessionsAsync(user.Id, windowStart);
+            
+            if (activeSessionCount >= _twoFactorSettings.MaxSessionsPerUser)
+            {
+                _logger.LogWarning(
+                    "2FA session rate limit exceeded for user {UserId}. Active sessions: {Count}, Max allowed: {Max}",
+                    user.Id, activeSessionCount, _twoFactorSettings.MaxSessionsPerUser);
+                
+                // Audit log: Rate limit exceeded
+                _auditService.LogFireAndForget(
+                    SecurityEventType.TwoFactorRateLimitExceeded,
+                    user.Id,
+                    $"Rate limit exceeded. Active sessions: {activeSessionCount}",
+                    ipAddress,
+                    userAgent,
+                    AuditSeverity.Warning);
+                
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    Message = "Too many login attempts. Please wait a few minutes before trying again."
+                };
+            }
+
             var tempToken = GenerateTempToken();
+            var clientFingerprint = ComputeClientFingerprint(ipAddress, userAgent);
+            
             var session = new User2FASession
             {
                 UserId = user.Id,
                 TempToken = tempToken,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
+                ClientFingerprint = clientFingerprint,
                 Attempts = 0,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(TwoFactorSessionExpiryMinutes)
@@ -103,9 +150,6 @@ public class AuthService : IAuthService
             };
         }
 
-        // Get roles for the user
-        var roles = await _userManager.GetRolesAsync(user);
-
         return new AuthResultDto
         {
             IsSuccess = true,
@@ -120,8 +164,53 @@ public class AuthService : IAuthService
         };
     }
 
+    /// <summary>
+    /// Determines if 2FA should be required for a user based on:
+    /// - Global TwoFactorSettings.Enabled
+    /// - User's TwoFactorEnabled flag
+    /// - User's roles (FamilyMember-only users are exempt)
+    /// </summary>
+    private bool ShouldRequire2FA(User user, IList<string> roles)
+    {
+        // If global 2FA is disabled, never require 2FA
+        if (!_twoFactorSettings.Enabled)
+            return false;
+
+        // If user hasn't enabled 2FA, don't require it
+        if (!user.TwoFactorEnabled)
+            return false;
+
+        // Check if user has ONLY the FamilyMember role (exempt from 2FA)
+        if (IsOnlyFamilyMember(roles))
+            return false;
+
+        // All other cases: require 2FA
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if user has only the FamilyMember role.
+    /// Returns false if:
+    /// - Roles list is null or empty (require 2FA)
+    /// - User has any role other than FamilyMember
+    /// </summary>
+    private bool IsOnlyFamilyMember(IList<string> roles)
+    {
+        // No roles or empty roles list → require 2FA (not exempt)
+        if (roles == null || roles.Count == 0)
+            return false;
+
+        // If user has exactly one role and it's FamilyMember → exempt
+        if (roles.Count == 1 && roles[0].Equals(FamilyMemberRole, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // If user has multiple roles, check if ANY role is NOT FamilyMember
+        // If so, they need 2FA
+        return roles.All(r => r.Equals(FamilyMemberRole, StringComparison.OrdinalIgnoreCase));
+    }
+
     // VerifyTwoFactorAsync: Validates TOTP code or recovery code and manages session
-    public async Task<AuthResultDto> VerifyTwoFactorAsync(string tempToken, string code)
+    public async Task<AuthResultDto> VerifyTwoFactorAsync(string tempToken, string code, string ipAddress, string userAgent)
     {
         var session = await _sessionRepository.GetByTempTokenAsync(tempToken);
 
@@ -136,6 +225,15 @@ public class AuthService : IAuthService
 
         if (session.ExpiresAt < DateTime.UtcNow)
         {
+            // Audit log: Session expired
+            _auditService.LogFireAndForget(
+                SecurityEventType.TwoFactorSessionExpired,
+                session.UserId,
+                "2FA session expired during verification",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Info);
+
             await _sessionRepository.DeleteAsync(session.SessionId);
             return new AuthResultDto
             {
@@ -144,8 +242,41 @@ public class AuthService : IAuthService
             };
         }
 
+        // Validate client fingerprint (MITM protection)
+        if (!ValidateClientFingerprint(session.ClientFingerprint, ipAddress, userAgent))
+        {
+            _logger.LogWarning(
+                "2FA session fingerprint mismatch for user {UserId}. Possible MITM attack.",
+                session.UserId);
+
+            // Audit log: Fingerprint mismatch (potential MITM)
+            _auditService.LogFireAndForget(
+                SecurityEventType.TwoFactorFingerprintMismatch,
+                session.UserId,
+                "Client fingerprint mismatch - possible MITM attack",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Critical);
+
+            await _sessionRepository.DeleteAsync(session.SessionId);
+            return new AuthResultDto
+            {
+                IsSuccess = false,
+                Message = "Invalid or expired 2FA session."
+            };
+        }
+
         if (session.Attempts >= MaxSessionAttempts)
         {
+            // Audit log: Max attempts exceeded
+            _auditService.LogFireAndForget(
+                SecurityEventType.TwoFactorMaxAttemptsExceeded,
+                session.UserId,
+                $"Maximum verification attempts ({MaxSessionAttempts}) exceeded",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
+
             await _sessionRepository.DeleteAsync(session.SessionId);
             return new AuthResultDto
             {
@@ -156,10 +287,12 @@ public class AuthService : IAuthService
 
         bool isValidCode = false;
         bool isRecoveryCode = !IsTotpCode(code);
+        bool usedRecoveryCode = false;
 
         if (isRecoveryCode)
         {
-            isValidCode = await VerifyRecoveryCodeAsync(session.UserId, code);
+            isValidCode = await VerifyRecoveryCodeAsync(session.UserId, code, ipAddress, userAgent);
+            usedRecoveryCode = isValidCode;
         }
         else
         {
@@ -175,13 +308,51 @@ public class AuthService : IAuthService
                 };
             }
 
-            isValidCode = VerifyTotpCode(authenticator.SecretKey, code);
+            // Decrypt the secret key for verification
+            var decryptedSecret = _totpEncryption.Decrypt(authenticator.SecretKey);
+            if (decryptedSecret == null)
+            {
+                _logger.LogError("Failed to decrypt TOTP secret for user {UserId}", session.UserId);
+                await _sessionRepository.DeleteAsync(session.SessionId);
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    Message = "2FA verification failed. Please contact support."
+                };
+            }
+
+            // Verify TOTP with replay attack protection
+            var (isValid, usedTimeStep, isReplayAttempt) = VerifyTotpCodeWithReplayProtection(
+                decryptedSecret, 
+                code, 
+                authenticator.LastUsedTimeStep,
+                session.UserId,
+                ipAddress,
+                userAgent);
+
+            if (isValid && usedTimeStep.HasValue)
+            {
+                // Update last used time step to prevent replay
+                authenticator.LastUsedTimeStep = usedTimeStep.Value;
+                await _authenticatorRepository.UpdateAsync(authenticator);
+            }
+
+            isValidCode = isValid;
         }
 
         if (!isValidCode)
         {
             session.Attempts++;
             await _sessionRepository.UpdateAsync(session);
+
+            // Audit log: Failed verification attempt
+            _auditService.LogFireAndForget(
+                SecurityEventType.TwoFactorVerificationFailed,
+                session.UserId,
+                $"Verification failed. Attempt {session.Attempts}/{MaxSessionAttempts}",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
 
             var attemptsRemaining = MaxSessionAttempts - session.Attempts;
             return new AuthResultDto
@@ -209,6 +380,15 @@ public class AuthService : IAuthService
             };
         }
 
+        // Audit log: Successful 2FA verification
+        _auditService.LogFireAndForget(
+            SecurityEventType.TwoFactorVerificationSuccess,
+            session.UserId,
+            usedRecoveryCode ? "Verified using recovery code" : "Verified using TOTP",
+            ipAddress,
+            userAgent,
+            AuditSeverity.Info);
+
         var roles = await _userManager.GetRolesAsync(user);
 
         return new AuthResultDto
@@ -230,7 +410,7 @@ public class AuthService : IAuthService
         return code.Length == 6 && code.All(char.IsDigit);
     }
 
-    private async Task<bool> VerifyRecoveryCodeAsync(Guid userId, string code)
+    private async Task<bool> VerifyRecoveryCodeAsync(Guid userId, string code, string ipAddress, string userAgent)
     {
         var recoveryCodes = await _recoveryCodeRepository.GetUnusedByUserIdAsync(userId);
 
@@ -241,6 +421,16 @@ public class AuthService : IAuthService
                 recoveryCode.IsUsed = true;
                 recoveryCode.UsedAt = DateTime.UtcNow;
                 await _recoveryCodeRepository.UpdateAsync(recoveryCode);
+
+                // Audit log: Recovery code used
+                _auditService.LogFireAndForget(
+                    SecurityEventType.RecoveryCodeUsed,
+                    userId,
+                    "Recovery code successfully used for 2FA verification",
+                    ipAddress,
+                    userAgent,
+                    AuditSeverity.Warning);
+
                 return true;
             }
         }
@@ -265,11 +455,16 @@ public class AuthService : IAuthService
 
         await _authenticatorRepository.RevokeAllByUserIdAsync(userId);
 
-        var secretKey = GenerateSecretKey();
+        // Generate plaintext secret for QR code display
+        var plaintextSecret = GenerateSecretKey();
+        
+        // Encrypt secret before storing
+        var encryptedSecret = _totpEncryption.Encrypt(plaintextSecret);
+        
         var authenticator = new UserAuthenticator
         {
             UserId = userId,
-            SecretKey = secretKey,
+            SecretKey = encryptedSecret, // Store encrypted
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             VerifiedAt = null
@@ -277,11 +472,19 @@ public class AuthService : IAuthService
 
         await _authenticatorRepository.AddAsync(authenticator);
 
-        var qrCodeUri = GenerateQrCodeUri(user.Email ?? user.UserName, secretKey);
+        // Audit log: 2FA setup initiated
+        _auditService.LogFireAndForget(
+            SecurityEventType.TwoFactorSetupInitiated,
+            userId,
+            "2FA authenticator setup initiated",
+            severity: AuditSeverity.Info);
+
+        // Return plaintext for user to scan (only time it's exposed)
+        var qrCodeUri = GenerateQrCodeUri(user.Email ?? user.UserName, plaintextSecret);
 
         return new EnableAuthenticatorResponseDto
         {
-            SecretKey = FormatSecretKey(secretKey),
+            SecretKey = FormatSecretKey(plaintextSecret),
             QrCodeUri = qrCodeUri,
             RecoveryCodes = new List<string>()
         };
@@ -307,13 +510,31 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("Authenticator is already verified.");
         }
 
-        var isValidCode = VerifyTotpCode(authenticator.SecretKey, code);
-        if (!isValidCode)
+        // Decrypt secret for verification
+        var decryptedSecret = _totpEncryption.Decrypt(authenticator.SecretKey);
+        if (decryptedSecret == null)
+        {
+            _logger.LogError("Failed to decrypt TOTP secret during setup verification for user {UserId}", userId);
+            throw new InvalidOperationException("2FA setup verification failed. Please try again.");
+        }
+
+        // Verify with replay protection (lastUsedTimeStep is null for new setup)
+        var (isValid, usedTimeStep, _) = VerifyTotpCodeWithReplayProtection(
+            decryptedSecret, 
+            code, 
+            authenticator.LastUsedTimeStep,
+            userId,
+            null,
+            null);
+
+        if (!isValid)
         {
             throw new InvalidOperationException("Invalid verification code.");
         }
 
+        // Update authenticator with verification time and initial time step
         authenticator.VerifiedAt = DateTime.UtcNow;
+        authenticator.LastUsedTimeStep = usedTimeStep;
         await _authenticatorRepository.UpdateAsync(authenticator);
 
         user.TwoFactorEnabled = true;
@@ -322,6 +543,20 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         var recoveryCodes = await GenerateRecoveryCodesAsync(userId);
+
+        // Audit log: 2FA setup verified and enabled
+        _auditService.LogFireAndForget(
+            SecurityEventType.TwoFactorSetupVerified,
+            userId,
+            "2FA authenticator setup verified and enabled",
+            severity: AuditSeverity.Info);
+
+        // Audit log: Recovery codes generated
+        _auditService.LogFireAndForget(
+            SecurityEventType.RecoveryCodesGenerated,
+            userId,
+            $"{recoveryCodes.Count} recovery codes generated",
+            severity: AuditSeverity.Info);
 
         return new EnableAuthenticatorResponseDto
         {
@@ -442,6 +677,59 @@ public class AuthService : IAuthService
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Verifies a TOTP code with replay attack protection.
+    /// Rejects codes that have already been used (same or older time step).
+    /// </summary>
+    private (bool isValid, long? usedTimeStep, bool isReplayAttempt) VerifyTotpCodeWithReplayProtection(
+        string secretKey, 
+        string code, 
+        long? lastUsedTimeStep,
+        Guid userId,
+        string ipAddress,
+        string userAgent)
+    {
+        var unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var currentTimeStep = unixTime / 30;
+
+        // Check time steps with ±1 tolerance for clock skew
+        // But enforce that we only accept NEW time steps (greater than last used)
+        for (int i = -1; i <= 1; i++)
+        {
+            var testTimeStep = currentTimeStep + i;
+            var testCode = GenerateTotpCode(secretKey, testTimeStep);
+            
+            if (testCode == code)
+            {
+                // Code matches - now check for replay
+                if (lastUsedTimeStep.HasValue && testTimeStep <= lastUsedTimeStep.Value)
+                {
+                    // This code/time step was already used - replay attack!
+                    _logger.LogWarning(
+                        "TOTP replay attack detected. TimeStep: {TimeStep}, LastUsed: {LastUsed}",
+                        testTimeStep, lastUsedTimeStep.Value);
+
+                    // Audit log: Replay attempt
+                    _auditService.LogFireAndForget(
+                        SecurityEventType.TwoFactorReplayAttempt,
+                        userId,
+                        $"TOTP replay attack detected. TimeStep: {testTimeStep}, LastUsed: {lastUsedTimeStep.Value}",
+                        ipAddress,
+                        userAgent,
+                        AuditSeverity.Critical);
+
+                    return (false, null, true);
+                }
+                
+                // Valid and not a replay
+                return (true, testTimeStep, false);
+            }
+        }
+
+        // Code doesn't match any valid time step
+        return (false, null, false);
     }
 
     // GenerateTotpCode: Creates a TOTP code based on the secret key and time step
@@ -600,5 +888,43 @@ public class AuthService : IAuthService
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);
         }
+    }
+
+    /// <summary>
+    /// Computes a SHA256 fingerprint of the client's IP address and User-Agent.
+    /// Used to bind 2FA sessions to a specific client for MITM protection.
+    /// </summary>
+    private string ComputeClientFingerprint(string ipAddress, string userAgent)
+    {
+        // Normalize inputs to handle null/empty values consistently
+        var normalizedIp = ipAddress ?? "unknown";
+        var normalizedUserAgent = userAgent ?? "unknown";
+        
+        // Combine IP and User-Agent with a separator that won't appear in either
+        var combined = $"{normalizedIp}|{normalizedUserAgent}";
+        
+        using var sha256 = SHA256.Create();
+        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Validates the client fingerprint using constant-time comparison.
+    /// Returns true if fingerprint matches or if session has no fingerprint (backward compatibility).
+    /// </summary>
+    private bool ValidateClientFingerprint(string? storedFingerprint, string ipAddress, string userAgent)
+    {
+        // Backward compatibility: if no fingerprint stored, skip validation
+        if (string.IsNullOrEmpty(storedFingerprint))
+            return true;
+
+        var currentFingerprint = ComputeClientFingerprint(ipAddress, userAgent);
+        
+        // Convert to bytes for constant-time comparison
+        var storedBytes = Convert.FromHexString(storedFingerprint);
+        var currentBytes = Convert.FromHexString(currentFingerprint);
+        
+        // Constant-time comparison to prevent timing attacks
+        return CryptographicOperations.FixedTimeEquals(storedBytes, currentBytes);
     }
 }

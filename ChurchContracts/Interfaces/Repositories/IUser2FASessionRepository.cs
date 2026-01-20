@@ -11,5 +11,14 @@ namespace ChurchContracts.Interfaces.Repositories
         Task DeleteAsync(Guid sessionId);
         Task DeleteExpiredSessionsAsync();
         Task DeleteAllByUserIdAsync(Guid userId);
+        
+        /// <summary>
+        /// Counts active (non-expired) sessions for a user created within the specified time window.
+        /// Used for rate limiting 2FA session creation.
+        /// </summary>
+        /// <param name="userId">The user ID to check</param>
+        /// <param name="windowStart">Start of the time window</param>
+        /// <returns>Count of active sessions created after windowStart</returns>
+        Task<int> CountActiveSessionsAsync(Guid userId, DateTime windowStart);
     }
 }

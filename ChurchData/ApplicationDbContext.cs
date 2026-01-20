@@ -36,6 +36,7 @@ namespace ChurchData
         public DbSet<UserAuthenticator> UserAuthenticators { get; set; }
         public DbSet<User2FARecoveryCode> User2FARecoveryCodes { get; set; }
         public DbSet<User2FASession> User2FASessions { get; set; }
+        public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using ChurchCommon.Settings;
 using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchContracts.ChurchContracts;
@@ -12,6 +13,7 @@ using ChurchManagementAPI.Controllers.Middleware;
 using ChurchRepositories;
 using ChurchRepositories.Queries;
 using ChurchServices;
+using ChurchServices.Security;
 using ChurchServices.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -168,7 +170,6 @@ builder.Services.AddScoped<IPivotReportService>(sp => sp.GetRequiredService<Pivo
 builder.Services.AddScoped<ISingleHeadFiscalReportService>(sp => sp.GetRequiredService<PivotReportService>());
 builder.Services.AddScoped<IMonthlyFiscalReportService>(sp => sp.GetRequiredService<PivotReportService>());
 
-
 builder.Services.AddScoped<IPivotReportRepository, PivotReportRepository>();
 builder.Services.AddScoped<ISingleHeadFiscalReportRepository, PivotReportRepository>();
 builder.Services.AddScoped<IMonthlyFiscalReportRepository, PivotReportRepository>();
@@ -193,6 +194,14 @@ builder.Services.AddScoped<IUserStateService, InMemoryUserStateService>();
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
+builder.Services.Configure<TwoFactorSettings>(builder.Configuration.GetSection("TwoFactorSettings"));
+builder.Services.Configure<TotpEncryptionSettings>(builder.Configuration.GetSection("TotpEncryptionSettings"));
+
+// Register TOTP secret encryption service
+builder.Services.AddSingleton<ITotpSecretEncryptionService, TotpSecretEncryptionService>();
+
+// Register Security Audit Service (singleton for fire-and-forget logging)
+builder.Services.AddSingleton<ISecurityAuditService, SecurityAuditService>();
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"];

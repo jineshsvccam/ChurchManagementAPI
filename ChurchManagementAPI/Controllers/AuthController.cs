@@ -65,7 +65,10 @@ namespace ChurchManagementAPI.Controllers
                 return BadRequest(new ErrorResponseDto { Message = errorMessage });
             }
 
-            var result = await _authService.VerifyTwoFactorAsync(request.TempToken, request.Code);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString() ?? "Unknown";
+
+            var result = await _authService.VerifyTwoFactorAsync(request.TempToken, request.Code, ipAddress, userAgent);
 
             if (!result.IsSuccess)
             {
