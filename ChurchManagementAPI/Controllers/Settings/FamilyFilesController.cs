@@ -1,10 +1,10 @@
-﻿using ChurchContracts;
+using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ChurchManagementAPI.Controllers
+namespace ChurchManagementAPI.Controllers.Settings
 {
     public class FamilyFilesController : ManagementAuthorizedTrialController
     {
@@ -21,7 +21,7 @@ namespace ChurchManagementAPI.Controllers
                 ?? throw new ArgumentNullException(nameof(familyFileService));
         }
 
-        // 🔹 Get all files for a family
+        // ?? Get all files for a family
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FamilyFileDto>>> GetByFamily(
             [FromQuery] int familyId)
@@ -30,7 +30,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(files);
         }
 
-        // 🔹 Get all files for a member
+        // ?? Get all files for a member
         [HttpGet("member/{memberId}")]
         public async Task<ActionResult<IEnumerable<FamilyFileDto>>> GetByMember(
             [FromQuery] int familyId,
@@ -40,7 +40,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(files);
         }
 
-        // 🔹 Get files by type (ProfilePhoto, FamilyPhoto, etc.)
+        // ?? Get files by type (ProfilePhoto, FamilyPhoto, etc.)
         [HttpGet("type/{fileType}")]
         public async Task<ActionResult<IEnumerable<FamilyFileDto>>> GetByType(
             [FromQuery] int familyId,
@@ -51,7 +51,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(files);
         }
 
-        // 🔹 Get single file metadata
+        // ?? Get single file metadata
         [HttpGet("{fileId}")]
         public async Task<ActionResult<FamilyFileDto>> GetById(Guid fileId)
         {
@@ -63,7 +63,7 @@ namespace ChurchManagementAPI.Controllers
             return Ok(file);
         }
 
-        // 🔹 Save file metadata (after S3 upload)
+        // ?? Save file metadata (after S3 upload)
         [HttpPost]
         public async Task<ActionResult<FamilyFileDto>> Create(
             [FromBody] FamilyFileCreateDto createDto)
@@ -76,7 +76,7 @@ namespace ChurchManagementAPI.Controllers
             );
         }
 
-        // 🔹 Approve file
+        // ?? Approve file
         [HttpPut("{fileId}/approve")]
         public async Task<IActionResult> Approve(Guid fileId)
         {
@@ -84,7 +84,7 @@ namespace ChurchManagementAPI.Controllers
             return NoContent();
         }
 
-        // 🔹 Reject file
+        // ?? Reject file
         [HttpPut("{fileId}/reject")]
         public async Task<IActionResult> Reject(Guid fileId)
         {
@@ -92,7 +92,7 @@ namespace ChurchManagementAPI.Controllers
             return NoContent();
         }
 
-        // 🔹 Delete file
+        // ?? Delete file
         [HttpDelete("{fileId}")]
         public async Task<IActionResult> Delete(Guid fileId)
         {

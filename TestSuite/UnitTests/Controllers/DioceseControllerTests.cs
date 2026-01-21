@@ -2,7 +2,7 @@
 using Moq;
 using ChurchContracts;
 using ChurchData;
-using ChurchManagementAPI.Controllers;
+using ChurchManagementAPI.Controllers.Admin;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;

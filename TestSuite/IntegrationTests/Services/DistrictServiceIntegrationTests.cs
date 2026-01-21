@@ -1,8 +1,8 @@
 ﻿using Xunit;
 using Microsoft.EntityFrameworkCore;
 using ChurchData;
-using ChurchRepositories;
-using ChurchServices;
+using ChurchRepositories.Admin;
+using ChurchServices.Admin;
 using ChurchContracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;

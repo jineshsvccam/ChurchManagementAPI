@@ -1,11 +1,11 @@
-﻿using ChurchContracts;
+using ChurchContracts;
 using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using System.Security.Claims;
 
-namespace ChurchManagementAPI.Controllers
+namespace ChurchManagementAPI.Controllers.Admin
 {
     [ApiController]
     [Route("[controller]")]

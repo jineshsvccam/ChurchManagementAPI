@@ -1,12 +1,12 @@
 ﻿using Xunit;
 using Moq;
 using ChurchContracts;
-using ChurchServices;
+using ChurchServices.Admin;
 using ChurchData;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ChurchManagementAPI.Controllers;
-using ChurchRepositories;
+using ChurchManagementAPI.Controllers.Admin;
+using ChurchRepositories.Admin;
 using Microsoft.Extensions.Logging;
 
 namespace DiocesesTest

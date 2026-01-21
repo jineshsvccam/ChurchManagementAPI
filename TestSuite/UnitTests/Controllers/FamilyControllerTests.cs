@@ -1,5 +1,5 @@
 ﻿using ChurchContracts;
-using ChurchManagementAPI.Controllers;
+using ChurchManagementAPI.Controllers.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -110,9 +110,9 @@ namespace FamilyTests
         {
             // Arrange
             _mockFamilyService.Setup(s => s.GetByIdAsync(1))
+                // Act
                 .ThrowsAsync(new Exception("Test exception"));
 
-            // Act
             var result = await _controller.GetById(1);
             var objectResult = result.Result as ObjectResult;
 

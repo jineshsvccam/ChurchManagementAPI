@@ -1,10 +1,10 @@
-﻿using ChurchContracts;
+using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ChurchManagementAPI.Controllers
+namespace ChurchManagementAPI.Controllers.Admin
 {
    // [ApiExplorerSettings(IgnoreApi = false)]
     public class FinancialYearController : ManagementAuthorizedTrialController

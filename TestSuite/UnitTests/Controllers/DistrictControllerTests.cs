@@ -1,6 +1,6 @@
 using ChurchContracts;
 using ChurchData;
-using ChurchManagementAPI.Controllers;
+using ChurchManagementAPI.Controllers.Admin;
 using ChurchServices;
 using Microsoft.AspNetCore.Mvc;
 using Moq;

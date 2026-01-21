@@ -1,9 +1,9 @@
 ﻿using Xunit;
 using Microsoft.EntityFrameworkCore;
 using ChurchData;
-using ChurchRepositories;
-using ChurchServices;
-using ChurchManagementAPI.Controllers;
+using ChurchRepositories.Admin;
+using ChurchServices.Admin;
+using ChurchManagementAPI.Controllers.Admin;
 using ChurchContracts;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;

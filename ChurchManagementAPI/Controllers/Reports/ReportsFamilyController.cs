@@ -1,4 +1,4 @@
-﻿using ChurchCommon.Utils;
+using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Utils;
@@ -6,7 +6,7 @@ using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ChurchManagementAPI.Controllers
+namespace ChurchManagementAPI.Controllers.Reports
 {
     public class ReportsFamilyController : FamilyMemberAuthorizedController
     {

@@ -1,6 +1,6 @@
 ﻿using ChurchCommon.Utils;
 using ChurchData;
-using ChurchRepositories;
+using ChurchRepositories.Settings;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

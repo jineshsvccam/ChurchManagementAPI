@@ -1,6 +1,6 @@
 using ChurchContracts;
 using ChurchData;
-using ChurchServices;
+using ChurchServices.Settings;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;

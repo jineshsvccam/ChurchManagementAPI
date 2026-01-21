@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchData;
-using ChurchServices;
+using ChurchServices.Settings;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

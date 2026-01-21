@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchData;
-using ChurchServices;
+using ChurchServices.Admin;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

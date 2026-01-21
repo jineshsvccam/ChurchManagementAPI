@@ -1,4 +1,4 @@
-﻿using ChurchContracts;
+using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Utils;
 using ChurchManagementAPI.Controllers.Base;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ChurchManagementAPI.Controllers
+namespace ChurchManagementAPI.Controllers.Reports
 {
 
     //  [ApiExplorerSettings(IgnoreApi = false)]
