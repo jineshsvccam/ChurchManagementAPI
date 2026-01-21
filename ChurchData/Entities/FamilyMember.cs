@@ -123,15 +123,12 @@ namespace ChurchData
         public int? ParentId { get; set; }
 
         [ForeignKey("MemberId")]
-        [InverseProperty("Relations")]
         public virtual FamilyMember Member { get; set; }
 
         [ForeignKey("SpouseId")]
-        [InverseProperty("Relations")]
         public virtual FamilyMember Spouse { get; set; }
 
         [ForeignKey("ParentId")]
-        [InverseProperty("Relations")]
         public virtual FamilyMember Parent { get; set; }
     }
 

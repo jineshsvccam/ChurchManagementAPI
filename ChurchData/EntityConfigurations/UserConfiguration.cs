@@ -104,7 +104,8 @@ namespace ChurchData.EntityConfigurations
                     .HasConversion(
                         v => v.ToString(),
                         v => (UserStatus)Enum.Parse(typeof(UserStatus), v))
-                    .HasDefaultValue(UserStatus.Pending);
+                    .HasDefaultValue(UserStatus.Pending)
+                    .HasSentinel(UserStatus.Pending);
 
             builder.Property(u => u.TwoFactorType)
                    .HasColumnName("two_factor_type")
