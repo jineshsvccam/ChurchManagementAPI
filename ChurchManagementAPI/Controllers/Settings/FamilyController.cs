@@ -2,11 +2,12 @@ using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Settings
 {
-   // [ApiExplorerSettings(IgnoreApi = false)]
     public class FamilyController : ManagementAuthorizedTrialController
     {
         private readonly IFamilyService _familyService;
@@ -15,8 +16,8 @@ namespace ChurchManagementAPI.Controllers.Settings
             IFamilyService familyService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<FamilyController> logger)
-           // : base(httpContextAccessor, context, logger)
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _familyService = familyService ?? throw new ArgumentNullException(nameof(familyService));
         }
@@ -34,7 +35,7 @@ namespace ChurchManagementAPI.Controllers.Settings
             var family = await _familyService.GetByIdAsync(id);
             if (family == null)
             {
-                return NotFound($"Family with Id {id} not found.");
+                return NotFound();
             }
             return Ok(family);
         }
@@ -51,34 +52,55 @@ namespace ChurchManagementAPI.Controllers.Settings
         {
             if (id != familyDto.FamilyId)
             {
-                return BadRequest("Family ID in the request body does not match the URL parameter.");
+                return BadRequest("ID mismatch");
             }
 
-            var updatedFamily = await _familyService.UpdateAsync(familyDto);
-            if (updatedFamily == null)
+            try
             {
-                return NotFound($"Family with Id {id} not found.");
+                var updatedFamily = await _familyService.UpdateAsync(familyDto);
+                return Ok(updatedFamily);
             }
-
-            return Ok(updatedFamily);
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _familyService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _familyService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<FamilyDto> requests)
         {
-            var createdFamilies = await _familyService.AddOrUpdateAsync(requests);
-            if (createdFamilies.Any())
+            if (requests == null || !requests.Any())
             {
-                return CreatedAtAction(nameof(GetFamilies), createdFamilies);
+                return BadRequest("Requests cannot be null or empty.");
             }
-            return Ok();
+
+            try
+            {
+                var result = await _familyService.AddOrUpdateAsync(requests);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

@@ -2,21 +2,22 @@ using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Settings
 {
-   // [ApiExplorerSettings(IgnoreApi = false)]
     public class TransactionHeadController : ManagementAuthorizedTrialController
     {
         private readonly ITransactionHeadService _transactionHeadService;
 
         public TransactionHeadController(
-            ITransactionHeadService transactionHeadService,          
+            ITransactionHeadService transactionHeadService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<TransactionHeadController> logger)
-           // : base(httpContextAccessor, context, logger)
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _transactionHeadService = transactionHeadService ?? throw new ArgumentNullException(nameof(transactionHeadService));
         }
@@ -54,31 +55,52 @@ namespace ChurchManagementAPI.Controllers.Settings
                 return BadRequest("ID mismatch");
             }
 
-            var updatedHead = await _transactionHeadService.UpdateAsync(transactionHeadDto);
-            if (updatedHead == null)
+            try
+            {
+                var updatedHead = await _transactionHeadService.UpdateAsync(transactionHeadDto);
+                return Ok(updatedHead);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-
-            return Ok(updatedHead);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _transactionHeadService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _transactionHeadService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<TransactionHeadDto> transactionHeadDtos)
         {
-            var createdTransactionHeads = await _transactionHeadService.AddOrUpdateAsync(transactionHeadDtos);
-            if (createdTransactionHeads.Any())
+            if (transactionHeadDtos == null || !transactionHeadDtos.Any())
             {
-                return CreatedAtAction(nameof(GetTransactionHeads), createdTransactionHeads);
+                return BadRequest("Requests cannot be null or empty.");
             }
-            return Ok();
+
+            try
+            {
+                var result = await _transactionHeadService.AddOrUpdateAsync(transactionHeadDtos);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

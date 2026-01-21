@@ -1,7 +1,9 @@
 using AutoMapper;
+using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Settings
@@ -11,89 +13,115 @@ namespace ChurchServices.Settings
         private readonly IUnitRepository _unitRepository;
         private readonly ILogger<UnitService> _logger;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApplicationDbContext _context;
 
-        public UnitService(IUnitRepository unitRepository, ILogger<UnitService> logger, IMapper mapper)
+        public UnitService(IUnitRepository unitRepository, ILogger<UnitService> logger, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
         {
-            _unitRepository = unitRepository;
-            _logger = logger;
-            _mapper = mapper;
+            _unitRepository = unitRepository ?? throw new ArgumentNullException(nameof(unitRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public async Task<IEnumerable<UnitDto>> GetAllAsync(int? parishId)
         {
-            _logger.LogInformation("Fetching all units for parishId: {ParishId}", parishId);
+            _logger.LogInformation("Fetching units for ParishId: {ParishId}", parishId);
             var units = await _unitRepository.GetAllAsync(parishId);
-            var unitsDto = _mapper.Map<IEnumerable<UnitDto>>(units);
-            _logger.LogInformation("Fetched {Count} units", unitsDto.Count());
-            return unitsDto;
+            return _mapper.Map<IEnumerable<UnitDto>>(units);
         }
 
         public async Task<UnitDto?> GetByIdAsync(int id)
         {
-            _logger.LogInformation("Fetching unit by id: {Id}", id);
+            _logger.LogInformation("Fetching unit by Id: {Id}", id);
             var unit = await _unitRepository.GetByIdAsync(id);
-            if (unit == null)
+            if (unit != null)
             {
-                _logger.LogWarning("No unit found with id: {Id}", id);
-                return null;
+                await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, unit.ParishId);
             }
-            return _mapper.Map<UnitDto>(unit);
-        }
-
-        public async Task<UnitDto> AddAsync(UnitDto unitDto)
-        {
-            _logger.LogInformation("Adding new unit with name: {UnitName}", unitDto.UnitName);
-            var unitEntity = _mapper.Map<Unit>(unitDto);
-            var createdUnit = await _unitRepository.AddAsync(unitEntity);
-            _logger.LogInformation("Created unit with id: {UnitId}", createdUnit.UnitId);
-            return _mapper.Map<UnitDto>(createdUnit);
-        }
-
-        public async Task<UnitDto> UpdateAsync(UnitDto unitDto)
-        {
-            _logger.LogInformation("Updating unit with id: {UnitId}", unitDto.UnitId);
-            var unitEntity = _mapper.Map<Unit>(unitDto);
-            await _unitRepository.UpdateAsync(unitEntity);
-            _logger.LogInformation("Updated unit with id: {UnitId}", unitDto.UnitId);
-            return unitDto;
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            _logger.LogInformation("Deleting unit with id: {UnitId}", id);
-            await _unitRepository.DeleteAsync(id);
-            _logger.LogInformation("Deleted unit with id: {UnitId}", id);
+            return _mapper.Map<UnitDto?>(unit);
         }
 
         public async Task<IEnumerable<UnitDto>> AddOrUpdateAsync(IEnumerable<UnitDto> requests)
         {
-            _logger.LogInformation("Processing {Count} unit requests", requests.Count());
-            var processedUnits = new List<Unit>();
+            // Validate parish ownership for all DTOs in bulk request
+            await ValidateBulkParishOwnershipAsync(requests);
+
+            var processedUnits = new List<UnitDto>();
 
             foreach (var request in requests)
             {
-                var unitEntity = _mapper.Map<Unit>(request);
-                if (request.Action == "INSERT")
+                if (string.Equals(request.Action, "INSERT", StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogInformation("Inserting unit with name: {UnitName}", unitEntity.UnitName);
-                    var createdUnit = await _unitRepository.AddAsync(unitEntity);
+                    var createdUnit = await AddAsync(request);
                     processedUnits.Add(createdUnit);
                 }
-                else if (request.Action == "UPDATE")
+                else if (string.Equals(request.Action, "UPDATE", StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogInformation("Updating unit with id: {UnitId}", unitEntity.UnitId);
-                    var updatedUnit = await _unitRepository.UpdateAsync(unitEntity);
+                    var updatedUnit = await UpdateAsync(request);
                     processedUnits.Add(updatedUnit);
                 }
                 else
                 {
-                    _logger.LogError("Invalid action specified: {Action}", request.Action);
-                    throw new ArgumentException("Invalid action specified");
+                    _logger.LogWarning("Invalid action specified: {Action}", request.Action);
+                    throw new ArgumentException($"Invalid action specified: {request.Action}");
                 }
             }
+            return processedUnits;
+        }
 
-            _logger.LogInformation("Processed {Count} unit requests", processedUnits.Count);
-            return _mapper.Map<IEnumerable<UnitDto>>(processedUnits);
+        public async Task<UnitDto> AddAsync(UnitDto unitDto)
+        {
+            var unit = _mapper.Map<Unit>(unitDto);
+            var addedUnit = await _unitRepository.AddAsync(unit);
+            _logger.LogInformation("Added new unit with Id: {UnitId}", addedUnit.UnitId);
+            return _mapper.Map<UnitDto>(addedUnit);
+        }
+
+        public async Task<UnitDto> UpdateAsync(UnitDto unitDto)
+        {
+            var existingUnit = await _unitRepository.GetByIdAsync(unitDto.UnitId);
+            if (existingUnit == null)
+            {
+                throw new KeyNotFoundException("Unit not found");
+            }
+
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, existingUnit.ParishId);
+
+            var unit = _mapper.Map<Unit>(unitDto);
+            var updatedUnit = await _unitRepository.UpdateAsync(unit);
+            _logger.LogInformation("Updated unit with Id: {UnitId}", updatedUnit.UnitId);
+            return _mapper.Map<UnitDto>(updatedUnit);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            _logger.LogInformation("Deleting unit with Id: {Id}", id);
+            await _unitRepository.DeleteAsync(id);
+        }
+
+        private async Task ValidateBulkParishOwnershipAsync<TDto>(IEnumerable<TDto> requests) where TDto : class
+        {
+            var (roleName, userParishId) = await UserHelper.GetCurrentUserRoleAndParishAsync(_httpContextAccessor, _context);
+
+            // Admin users can modify any parish data
+            if (string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            foreach (var request in requests)
+            {
+                if (request is ChurchDTOs.DTOs.Utils.IParishEntity parishEntity)
+                {
+                    if (userParishId == null || parishEntity.ParishId != userParishId)
+                    {
+                        throw new UnauthorizedAccessException("You are not authorized to modify data from another parish.");
+                    }
+                }
+            }
         }
     }
 }

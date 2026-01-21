@@ -2,7 +2,9 @@ using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Settings
 {
@@ -14,11 +16,10 @@ namespace ChurchManagementAPI.Controllers.Settings
             IFamilyFileService familyFileService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<FamilyFilesController> logger)
-        // : base(httpContextAccessor, context, logger)
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
-            _familyFileService = familyFileService
-                ?? throw new ArgumentNullException(nameof(familyFileService));
+            _familyFileService = familyFileService ?? throw new ArgumentNullException(nameof(familyFileService));
         }
 
         // ?? Get all files for a family
@@ -58,7 +59,7 @@ namespace ChurchManagementAPI.Controllers.Settings
             var file = await _familyFileService.GetByIdAsync(fileId);
             if (file == null)
             {
-                return NotFound($"Family file with Id {fileId} not found.");
+                return NotFound();
             }
             return Ok(file);
         }
@@ -80,24 +81,45 @@ namespace ChurchManagementAPI.Controllers.Settings
         [HttpPut("{fileId}/approve")]
         public async Task<IActionResult> Approve(Guid fileId)
         {
-            await _familyFileService.ApproveAsync(fileId);
-            return NoContent();
+            try
+            {
+                await _familyFileService.ApproveAsync(fileId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         // ?? Reject file
         [HttpPut("{fileId}/reject")]
         public async Task<IActionResult> Reject(Guid fileId)
         {
-            await _familyFileService.RejectAsync(fileId);
-            return NoContent();
+            try
+            {
+                await _familyFileService.RejectAsync(fileId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         // ?? Delete file
         [HttpDelete("{fileId}")]
         public async Task<IActionResult> Delete(Guid fileId)
         {
-            await _familyFileService.DeleteAsync(fileId);
-            return NoContent();
+            try
+            {
+                await _familyFileService.DeleteAsync(fileId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("presign-upload")]
@@ -111,10 +133,15 @@ namespace ChurchManagementAPI.Controllers.Settings
         [HttpGet("{fileId}/signed-url")]
         public async Task<ActionResult<PresignDownloadResponseDto>> GetSignedUrl(Guid fileId)
         {
-            var response = await _familyFileService.GenerateDownloadUrlAsync(fileId);
-            return Ok(response);
+            try
+            {
+                var response = await _familyFileService.GenerateDownloadUrlAsync(fileId);
+                return Ok(response);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
-
-
     }
 }

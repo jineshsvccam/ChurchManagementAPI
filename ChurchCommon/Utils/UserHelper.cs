@@ -57,5 +57,50 @@ namespace ChurchCommon.Utils
 
             return (currentUserRole.Role.Name, currentUserRole.User?.ParishId, currentUserRole.User?.FamilyId);
         }
+
+        /// <summary>
+        /// Lightweight method to get current user's role and parish for repository-level validation.
+        /// </summary>
+        public static async Task<(string RoleName, int? ParishId)> GetCurrentUserRoleAndParishAsync(
+            IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
+        {
+            Guid currentUserId = GetCurrentUserIdGuid(httpContextAccessor);
+
+            var currentUserRole = await context.UserRoles
+                .AsNoTracking()
+                .Include(ur => ur.Role)
+                .Include(ur => ur.User)
+                .FirstOrDefaultAsync(ur => ur.UserId == currentUserId);
+
+            if (currentUserRole == null)
+            {
+                throw new InvalidOperationException("User role not found.");
+            }
+
+            return (currentUserRole.Role.Name, currentUserRole.User?.ParishId);
+        }
+
+        /// <summary>
+        /// Validates that non-admin users can only modify data for their own parish.
+        /// </summary>
+        public static async Task ValidateParishOwnershipAsync(
+            IHttpContextAccessor httpContextAccessor, 
+            ApplicationDbContext context, 
+            int entityParishId)
+        {
+            var (roleName, userParishId) = await GetCurrentUserRoleAndParishAsync(httpContextAccessor, context);
+
+            // Admin users can modify any parish data
+            if (string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            // Non-admin users can only modify their own parish data
+            if (userParishId == null || userParishId != entityParishId)
+            {
+                throw new UnauthorizedAccessException("You are not authorized to modify data from another parish.");
+            }
+        }
     }
 }

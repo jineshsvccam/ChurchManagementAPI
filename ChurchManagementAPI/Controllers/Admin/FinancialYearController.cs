@@ -2,7 +2,9 @@ using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Admin
 {
@@ -14,8 +16,8 @@ namespace ChurchManagementAPI.Controllers.Admin
         public FinancialYearController(IFinancialYearService financialYearService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<FinancialYearController> logger)
-            //: base(httpContextAccessor, context, logger)
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _financialYearService = financialYearService;
         }

@@ -2,7 +2,9 @@ using ChurchContracts;
 using ChurchContracts.Utils;
 using ChurchData;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Transactions
 {
@@ -15,8 +17,8 @@ namespace ChurchManagementAPI.Controllers.Transactions
         public TransactionController(ITransactionService transactionService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<TransactionController> logger)
-           // : base(httpContextAccessor, context, logger)
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _transactionService = transactionService;
         }

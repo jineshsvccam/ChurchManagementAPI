@@ -2,84 +2,105 @@ using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Settings
 {
-  //  [ApiExplorerSettings(IgnoreApi = false)]
     public class UnitController : ManagementAuthorizedTrialController
     {
         private readonly IUnitService _unitService;
 
         public UnitController(
-             IUnitService unitService,
-             IHttpContextAccessor httpContextAccessor,
-             ApplicationDbContext context,
-             ILogger<UnitController> logger)
-            // : base(httpContextAccessor, context, logger)
+            IUnitService unitService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
-            _unitService = unitService;
+            _unitService = unitService ?? throw new ArgumentNullException(nameof(unitService));
         }
-
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UnitDto>>> GetUnits([FromQuery] int? parishId)
         {
-            var unitsDto = await _unitService.GetAllAsync(parishId);
-            return Ok(unitsDto);
+            var units = await _unitService.GetAllAsync(parishId);
+            return Ok(units);
         }
 
-        
         [HttpGet("{id}")]
         public async Task<ActionResult<UnitDto>> GetById(int id)
         {
-            var unitDto = await _unitService.GetByIdAsync(id);
-            if (unitDto == null)
+            var unit = await _unitService.GetByIdAsync(id);
+            if (unit == null)
             {
                 return NotFound();
             }
-            return Ok(unitDto);
+            return Ok(unit);
         }
 
-        
         [HttpPost]
         public async Task<ActionResult<UnitDto>> Create([FromBody] UnitDto unitDto)
         {
-            var createdUnitDto = await _unitService.AddAsync(unitDto);
-            return CreatedAtAction(nameof(GetById), new { id = createdUnitDto.UnitId }, createdUnitDto);
+            var createdUnit = await _unitService.AddAsync(unitDto);
+            return CreatedAtAction(nameof(GetById), new { id = createdUnit.UnitId }, createdUnit);
         }
 
-       
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UnitDto unitDto)
         {
             if (id != unitDto.UnitId)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch");
             }
 
-            var updatedUnitDto = await _unitService.UpdateAsync(unitDto);
-            return Ok(updatedUnitDto);
+            try
+            {
+                var updatedUnit = await _unitService.UpdateAsync(unitDto);
+                return Ok(updatedUnit);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
-        // DELETE: api/unit/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _unitService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _unitService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
-        // POST: api/unit/create-or-update
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<UnitDto> units)
         {
-            var processedUnitsDto = await _unitService.AddOrUpdateAsync(units);
-            if (processedUnitsDto.Any())
+            if (units == null || !units.Any())
             {
-                return CreatedAtAction(nameof(GetUnits), processedUnitsDto);
+                return BadRequest("Requests cannot be null or empty.");
             }
-            return Ok();
+
+            try
+            {
+                var result = await _unitService.AddOrUpdateAsync(units);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

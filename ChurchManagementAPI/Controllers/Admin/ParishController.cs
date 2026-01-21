@@ -1,8 +1,11 @@
 using AutoMapper;
 using ChurchContracts;
+using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Admin
 {
@@ -10,19 +13,26 @@ namespace ChurchManagementAPI.Controllers.Admin
     {
         private readonly IParishService _parishService;
         private readonly IMapper _mapper;
-        private readonly ILogger<ParishController> _logger;
+        private readonly ILogger<ParishController> _controllerLogger;
 
-        public ParishController(IParishService parishService, IMapper mapper, ILogger<ParishController> logger)
+        public ParishController(
+            IParishService parishService,
+            IMapper mapper,
+            ILogger<ParishController> controllerLogger,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context,
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _parishService = parishService;
             _mapper = mapper;
-            _logger = logger;
+            _controllerLogger = controllerLogger;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ParishDto>>> GetAll()
         {
-            _logger.LogInformation("Fetching all parishes.");
+            _controllerLogger.LogInformation("Fetching all parishes.");
             var parishes = await _parishService.GetAllAsync();
             return Ok(_mapper.Map<IEnumerable<ParishDto>>(parishes));
         }
@@ -30,11 +40,11 @@ namespace ChurchManagementAPI.Controllers.Admin
         [HttpGet("{id}")]
         public async Task<ActionResult<ParishDto>> GetById(int id)
         {
-            _logger.LogInformation("Fetching parish with ID {ParishId}.", id);
+            _controllerLogger.LogInformation("Fetching parish with ID {ParishId}.", id);
             var parish = await _parishService.GetByIdAsync(id);
             if (parish == null)
             {
-                _logger.LogWarning("Parish with ID {ParishId} not found.", id);
+                _controllerLogger.LogWarning("Parish with ID {ParishId} not found.", id);
                 return NotFound();
             }
             return Ok(_mapper.Map<ParishDto>(parish));
@@ -43,11 +53,11 @@ namespace ChurchManagementAPI.Controllers.Admin
         [HttpPost]
         public async Task<ActionResult<ParishDto>> Create(ParishDto parishDto)
         {
-            _logger.LogInformation("Creating a new parish: {ParishName}", parishDto.ParishName);
+            _controllerLogger.LogInformation("Creating a new parish: {ParishName}", parishDto.ParishName);
 
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Invalid Parish model received.");
+                _controllerLogger.LogWarning("Invalid Parish model received.");
                 return BadRequest(ModelState);
             }
             var createdParish = await _parishService.AddAsync(parishDto);
@@ -59,7 +69,7 @@ namespace ChurchManagementAPI.Controllers.Admin
         {
             if (id != parishDto.ParishId)
             {
-                _logger.LogWarning("Parish ID mismatch: {ParishId}", id);
+                _controllerLogger.LogWarning("Parish ID mismatch: {ParishId}", id);
                 return BadRequest();
             }
 
@@ -69,7 +79,7 @@ namespace ChurchManagementAPI.Controllers.Admin
             {
                 return NotFound();
             }
-            _logger.LogInformation("Parish with ID {ParishId} updated successfully.", id);
+            _controllerLogger.LogInformation("Parish with ID {ParishId} updated successfully.", id);
 
             return Ok(updatedParish);
         }
@@ -77,7 +87,7 @@ namespace ChurchManagementAPI.Controllers.Admin
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            _logger.LogInformation("Deleting parish with ID {ParishId}.", id);
+            _controllerLogger.LogInformation("Deleting parish with ID {ParishId}.", id);
             await _parishService.DeleteAsync(id);
             return NoContent();
         }
@@ -85,12 +95,12 @@ namespace ChurchManagementAPI.Controllers.Admin
         [HttpGet("{parishId}/details")]
         public async Task<ActionResult<ParishDetailsBasicDto>> GetParishDetails(int parishId, [FromQuery] bool includeFamilyMembers = false)
         {
-            _logger.LogInformation("Fetching parish details for ID {ParishId}. IncludeFamilyMembers: {IncludeFamilyMembers}", parishId, includeFamilyMembers);
+            _controllerLogger.LogInformation("Fetching parish details for ID {ParishId}. IncludeFamilyMembers: {IncludeFamilyMembers}", parishId, includeFamilyMembers);
             var parishDetails = await _parishService.GetParishDetailsAsync(parishId, includeFamilyMembers);
 
             if (parishDetails == null)
             {
-                _logger.LogWarning("Parish details not found for ID {ParishId}.", parishId);
+                _controllerLogger.LogWarning("Parish details not found for ID {ParishId}.", parishId);
                 return NotFound();
             }
 

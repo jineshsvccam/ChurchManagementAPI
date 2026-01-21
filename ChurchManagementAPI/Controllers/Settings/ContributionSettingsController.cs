@@ -2,22 +2,24 @@ using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Settings
 {
-   // [ApiExplorerSettings(IgnoreApi = false)]
     public class ContributionSettingsController : ManagementAuthorizedTrialController
     {
         private readonly IContributionSettingsService _service;
 
-        public ContributionSettingsController(IContributionSettingsService service,
+        public ContributionSettingsController(
+            IContributionSettingsService service,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<ContributionSettingsController> logger)
-            //: base(httpContextAccessor, context, logger)
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
-            _service = service;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
         [HttpGet]
@@ -28,46 +30,77 @@ namespace ChurchManagementAPI.Controllers.Settings
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<ContributionSettingsDto>> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            if (result is null) return NotFound();
+            if (result == null)
+            {
+                return NotFound();
+            }
             return Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] ContributionSettingsDto dto)
+        public async Task<ActionResult<ContributionSettingsDto>> Create([FromBody] ContributionSettingsDto dto)
         {
-            var newId = await _service.AddAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = newId }, dto);
+            var created = await _service.AddAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.SettingId }, created);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] ContributionSettingsDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
+            if (id != dto.SettingId)
+            {
+                return BadRequest("ID mismatch");
+            }
 
-            return Ok(updated);
+            try
+            {
+                var updated = await _service.UpdateAsync(id, dto);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-           await _service.DeleteAsync(id);
-           
-            return NoContent();
+            try
+            {
+                await _service.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("create-or-update")]
         public async Task<IActionResult> CreateOrUpdate([FromBody] IEnumerable<ContributionSettingsDto> requests)
         {
-            var createdEntries = await _service.AddOrUpdateAsync(requests);
-            if (createdEntries.Any())
+            if (requests == null || !requests.Any())
             {
-                return CreatedAtAction(nameof(GetAll), createdEntries);
+                return BadRequest("Requests cannot be null or empty.");
             }
-            return Ok(createdEntries);
+
+            try
+            {
+                var result = await _service.AddOrUpdateAsync(requests);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
-
 }

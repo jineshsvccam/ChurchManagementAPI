@@ -5,6 +5,7 @@ using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Reports
 {
@@ -24,11 +25,6 @@ namespace ChurchManagementAPI.Controllers.Reports
         private readonly ISingleHeadFiscalReportService _singleHeadFiscalReportService;
         private readonly IMonthlyFiscalReportService _monthlyFiscalReportService;
 
-
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<ReportsController> _logger;
-
         public ReportsController(ILedgerService ledgerService,
             IBankConsolidatedStatementService bankService,
             ITrialBalanceService trialBalanceService,
@@ -43,9 +39,8 @@ namespace ChurchManagementAPI.Controllers.Reports
             IMonthlyFiscalReportService monthlyFiscalReportService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<ReportsController> logger)
-        //: base(httpContextAccessor, context,logger)
-
+            ILogger<ManagementAuthorizedTrialController> logger)
+            : base(httpContextAccessor, context, logger)
         {
             _ledgerService = ledgerService;
             _bankService = bankService;
@@ -58,7 +53,6 @@ namespace ChurchManagementAPI.Controllers.Reports
             _pivotReportService = pivotReportService;
             _singleHeadFiscalReportService = singleHeadFiscalReportService;
             _monthlyFiscalReportService = monthlyFiscalReportService;
-
         }
 
         [HttpGet("ledger")]

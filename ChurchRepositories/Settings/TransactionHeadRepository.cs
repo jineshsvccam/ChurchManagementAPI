@@ -1,126 +1,89 @@
 using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
-
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace ChurchRepositories.Settings
 {
     public class TransactionHeadRepository : ITransactionHeadRepository
     {
         private readonly ApplicationDbContext _context;
-        private readonly IOptions<LoggingSettings> _loggingSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UserManager<User> _userManager;
-        private readonly ILogger<TransactionHeadRepository> _logger;
         private readonly LogsHelper _logsHelper;
 
         public TransactionHeadRepository(
             ApplicationDbContext context,
-            IOptions<LoggingSettings> loggingSettings,
-            UserManager<User> userManager,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<TransactionHeadRepository> logger,
             LogsHelper logsHelper)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _loggingSettings = loggingSettings ?? throw new ArgumentNullException(nameof(loggingSettings));
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context;
+            _httpContextAccessor = httpContextAccessor;
             _logsHelper = logsHelper;
         }
 
         public async Task<IEnumerable<TransactionHead>> GetTransactionHeadsAsync(int? parishId, int? headId)
         {
-            _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
-
-            var query = _context.TransactionHeads.AsQueryable();
+            var query = _context.TransactionHeads.AsNoTracking().AsQueryable();
             if (parishId.HasValue)
+            {
                 query = query.Where(th => th.ParishId == parishId.Value);
+            }
             if (headId.HasValue)
+            {
                 query = query.Where(th => th.HeadId == headId.Value);
-
-            var result = await query.ToListAsync();
-            _logger.LogInformation("Fetched {Count} transaction heads.", result.Count);
-
-            return result;
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<TransactionHead?> GetByIdAsync(int id)
         {
-            _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
-            var result = await _context.TransactionHeads.FindAsync(id);
-
-            if (result == null)
-                _logger.LogWarning("Transaction head not found with Id: {Id}", id);
-
-            return result;
+            return await _context.TransactionHeads.FindAsync(id);
         }
 
         public async Task<TransactionHead> AddAsync(TransactionHead transactionHead)
         {
-            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-            _logger.LogInformation("Adding transaction head: {HeadName}", transactionHead.HeadName);
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transactionHead.ParishId);
 
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             await _context.TransactionHeads.AddAsync(transactionHead);
             await _context.SaveChangesAsync();
-
             await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "INSERT", userId, null, Extensions.Serialize(transactionHead));
-
-            _logger.LogInformation("Successfully added transaction head Id: {Id}", transactionHead.HeadId);
             return transactionHead;
         }
 
         public async Task<TransactionHead> UpdateAsync(TransactionHead transactionHead)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transactionHead.ParishId);
+
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-            _logger.LogInformation("Updating transaction head Id: {Id}", transactionHead.HeadId);
-
-            var existingTransactionHead = await _context.TransactionHeads
-                .AsNoTracking()
-                .FirstOrDefaultAsync(th => th.HeadId == transactionHead.HeadId);
-
+            var existingTransactionHead = await _context.TransactionHeads.FindAsync(transactionHead.HeadId);
             if (existingTransactionHead == null)
             {
-                _logger.LogWarning("Transaction head not found for update with Id: {Id}", transactionHead.HeadId);
-                throw new KeyNotFoundException("TransactionHead not found");
+                throw new KeyNotFoundException("Transaction head not found");
             }
 
-            var oldValues =existingTransactionHead.Clone();
-
-            _context.TransactionHeads.Update(transactionHead);
+            var oldValues = existingTransactionHead.Clone();
+            _context.Entry(existingTransactionHead).CurrentValues.SetValues(transactionHead);
             await _context.SaveChangesAsync();
-
             await _logsHelper.LogChangeAsync("transaction_heads", transactionHead.HeadId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(transactionHead));
-
-            _logger.LogInformation("Successfully updated transaction head Id: {Id}", transactionHead.HeadId);
             return transactionHead;
         }
 
         public async Task DeleteAsync(int id)
         {
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-            _logger.LogInformation("Deleting transaction head Id: {Id}", id);
-
             var transactionHead = await _context.TransactionHeads.FindAsync(id);
             if (transactionHead == null)
             {
-                _logger.LogWarning("Transaction head not found for deletion with Id: {Id}", id);
-                throw new KeyNotFoundException("TransactionHead not found");
+                throw new KeyNotFoundException("Transaction head not found");
             }
+
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transactionHead.ParishId);
 
             _context.TransactionHeads.Remove(transactionHead);
             await _context.SaveChangesAsync();
-
             await _logsHelper.LogChangeAsync("transaction_heads", id, "DELETE", userId, Extensions.Serialize(transactionHead), null);
-
-            _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
         }
-
     }
 }

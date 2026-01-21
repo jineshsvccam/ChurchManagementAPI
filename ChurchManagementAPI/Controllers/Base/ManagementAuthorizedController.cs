@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace ChurchManagementAPI.Controllers.Base
 {
-   // [ApiExplorerSettings(IgnoreApi = true)] // Remove this attribute
     [Authorize(Policy = "ManagementPolicy")]
     [ApiController]
     [Route("api/[controller]")]
@@ -37,9 +36,21 @@ namespace ChurchManagementAPI.Controllers.Base
             return userParishId;
         }
 
+        protected async Task<bool> IsAdminUserAsync()
+        {
+            var (roleName, _, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+            return string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase);
+        }
+
         [NonAction]
         public async Task ValidateParishIdAsync(int parishId)
         {
+            // Admin users can access any parish
+            if (await IsAdminUserAsync())
+            {
+                return;
+            }
+
             var currentParishId = await GetCurrentParishIdAsync();
             if (currentParishId == null || currentParishId != parishId)
             {
@@ -50,6 +61,12 @@ namespace ChurchManagementAPI.Controllers.Base
 
         protected async Task ValidateParishEntityAsync(object entityObj)
         {
+            // Admin users can access any parish data
+            if (await IsAdminUserAsync())
+            {
+                return;
+            }
+
             var currentParishId = await GetCurrentParishIdAsync();
             if (entityObj is IParishEntity singleEntity)
             {
@@ -75,9 +92,43 @@ namespace ChurchManagementAPI.Controllers.Base
             }
         }
 
+        protected async Task ValidateInputBodyAsync(object bodyObj)
+        {
+            // Admin users can modify any parish data
+            if (await IsAdminUserAsync())
+            {
+                return;
+            }
+
+            var currentParishId = await GetCurrentParishIdAsync();
+            if (bodyObj is IParishEntity singleEntity)
+            {
+                if (singleEntity.ParishId != currentParishId)
+                {
+                    _logger.LogWarning($"Unauthorized input body. Expected Parish ID: {currentParishId}, Entity Parish ID: {singleEntity.ParishId}");
+                    throw new UnauthorizedAccessException("You are not authorized to modify data from another parish.");
+                }
+            }
+            else if (bodyObj is IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    if (item is IParishEntity parishEntity)
+                    {
+                        if (parishEntity.ParishId != currentParishId)
+                        {
+                            _logger.LogWarning($"Unauthorized input body item. Expected Parish ID: {currentParishId}, Item Parish ID: {parishEntity.ParishId}");
+                            throw new UnauthorizedAccessException("You are not authorized to modify one or more items from another parish.");
+                        }
+                    }
+                }
+            }
+        }
+
         [NonAction]
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
+            // Validate parishId query parameter
             if (context.ActionArguments.TryGetValue("parishId", out var parishIdObj) && parishIdObj is int parishId)
             {
                 try
@@ -89,6 +140,30 @@ namespace ChurchManagementAPI.Controllers.Base
                     context.Result = new ForbidResult();
                     _logger.LogWarning($"Access denied for input parish {parishId}: {ex.Message}");
                     return;
+                }
+            }
+
+            // Validate input body DTOs
+            foreach (var argument in context.ActionArguments.Values)
+            {
+                if (argument == null)
+                {
+                    continue;
+                }
+
+                // Check if it's an IParishEntity or a collection of IParishEntity
+                if (argument is IParishEntity || (argument is IEnumerable enumerable && enumerable.Cast<object>().FirstOrDefault() is IParishEntity))
+                {
+                    try
+                    {
+                        await ValidateInputBodyAsync(argument);
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        context.Result = new ForbidResult();
+                        _logger.LogWarning($"Access denied for input body: {ex.Message}");
+                        return;
+                    }
                 }
             }
 

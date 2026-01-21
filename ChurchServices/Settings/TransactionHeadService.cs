@@ -1,7 +1,9 @@
 using AutoMapper;
+using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
 using ChurchDTOs.DTOs.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Settings
@@ -11,93 +13,118 @@ namespace ChurchServices.Settings
         private readonly ITransactionHeadRepository _transactionHeadRepository;
         private readonly ILogger<TransactionHeadService> _logger;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApplicationDbContext _context;
 
         public TransactionHeadService(ITransactionHeadRepository transactionHeadRepository,
                                       ILogger<TransactionHeadService> logger,
-                                      IMapper mapper)
+                                      IMapper mapper,
+                                      IHttpContextAccessor httpContextAccessor,
+                                      ApplicationDbContext context)
         {
             _transactionHeadRepository = transactionHeadRepository ?? throw new ArgumentNullException(nameof(transactionHeadRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public async Task<IEnumerable<TransactionHeadDto>> GetTransactionHeadsAsync(int? parishId, int? headId)
         {
             _logger.LogInformation("Fetching transaction heads for ParishId: {ParishId}, HeadId: {HeadId}", parishId, headId);
             var result = await _transactionHeadRepository.GetTransactionHeadsAsync(parishId, headId);
-            var resultDto = _mapper.Map<IEnumerable<TransactionHeadDto>>(result);
-            _logger.LogInformation("Fetched {Count} transaction heads successfully.", resultDto?.Count() ?? 0);
-            return resultDto;
+            return _mapper.Map<IEnumerable<TransactionHeadDto>>(result);
         }
 
         public async Task<TransactionHeadDto?> GetByIdAsync(int id)
         {
             _logger.LogInformation("Fetching transaction head by Id: {Id}", id);
             var result = await _transactionHeadRepository.GetByIdAsync(id);
-            if (result == null)
+            if (result != null)
             {
-                _logger.LogWarning("Transaction head not found with Id: {Id}", id);
-                return null;
+                await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, result.ParishId);
             }
-            return _mapper.Map<TransactionHeadDto>(result);
+            return _mapper.Map<TransactionHeadDto?>(result);
         }
 
         public async Task<IEnumerable<TransactionHeadDto>> AddOrUpdateAsync(IEnumerable<TransactionHeadDto> requests)
         {
-            _logger.LogInformation("Processing {Count} transaction head(s) for AddOrUpdate.", requests.Count());
-            var processedEntities = new List<TransactionHead>();
+            // Validate parish ownership for all DTOs in bulk request
+            await ValidateBulkParishOwnershipAsync(requests);
 
-            foreach (var requestDto in requests)
+            var processedHeads = new List<TransactionHeadDto>();
+
+            foreach (var request in requests)
             {
-                // Map DTO to entity
-                var transactionHeadEntity = _mapper.Map<TransactionHead>(requestDto);
-
-                if (requestDto.Action?.ToUpper() == "INSERT")
+                if (string.Equals(request.Action, "INSERT", StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogInformation("Adding new transaction head: {HeadName}", transactionHeadEntity.HeadName);
-                    var createdEntity = await _transactionHeadRepository.AddAsync(transactionHeadEntity);
-                    processedEntities.Add(createdEntity);
+                    var createdHead = await AddAsync(request);
+                    processedHeads.Add(createdHead);
                 }
-                else if (requestDto.Action?.ToUpper() == "UPDATE")
+                else if (string.Equals(request.Action, "UPDATE", StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogInformation("Updating transaction head Id: {Id}", transactionHeadEntity.HeadId);
-                    var updatedEntity = await _transactionHeadRepository.UpdateAsync(transactionHeadEntity);
-                    processedEntities.Add(updatedEntity);
+                    var updatedHead = await UpdateAsync(request);
+                    processedHeads.Add(updatedHead);
                 }
                 else
                 {
-                    _logger.LogWarning("Invalid action '{Action}' specified for transaction head Id: {Id}", requestDto.Action, transactionHeadEntity.HeadId);
-                    throw new ArgumentException("Invalid action specified");
+                    _logger.LogWarning("Invalid action specified: {Action}", request.Action);
+                    throw new ArgumentException($"Invalid action specified: {request.Action}");
                 }
             }
-
-            _logger.LogInformation("Successfully processed {Count} transaction heads for AddOrUpdate.", processedEntities.Count);
-            return _mapper.Map<IEnumerable<TransactionHeadDto>>(processedEntities);
+            return processedHeads;
         }
 
         public async Task<TransactionHeadDto> AddAsync(TransactionHeadDto transactionHeadDto)
         {
-            _logger.LogInformation("Adding transaction head: {HeadName}", transactionHeadDto.HeadName);
             var entity = _mapper.Map<TransactionHead>(transactionHeadDto);
             var addedEntity = await _transactionHeadRepository.AddAsync(entity);
-            _logger.LogInformation("Successfully added transaction head Id: {Id}", addedEntity.HeadId);
+            _logger.LogInformation("Added new transaction head with Id: {HeadId}", addedEntity.HeadId);
             return _mapper.Map<TransactionHeadDto>(addedEntity);
         }
 
         public async Task<TransactionHeadDto> UpdateAsync(TransactionHeadDto transactionHeadDto)
         {
-            _logger.LogInformation("Updating transaction head Id: {Id}", transactionHeadDto.HeadId);
+            var existingEntity = await _transactionHeadRepository.GetByIdAsync(transactionHeadDto.HeadId);
+            if (existingEntity == null)
+            {
+                throw new KeyNotFoundException("Transaction head not found");
+            }
+
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, existingEntity.ParishId);
+
             var entity = _mapper.Map<TransactionHead>(transactionHeadDto);
             var updatedEntity = await _transactionHeadRepository.UpdateAsync(entity);
-            _logger.LogInformation("Successfully updated transaction head Id: {Id}", updatedEntity.HeadId);
+            _logger.LogInformation("Updated transaction head with Id: {HeadId}", updatedEntity.HeadId);
             return _mapper.Map<TransactionHeadDto>(updatedEntity);
         }
 
         public async Task DeleteAsync(int id)
         {
-            _logger.LogInformation("Deleting transaction head Id: {Id}", id);
+            _logger.LogInformation("Deleting transaction head with Id: {Id}", id);
             await _transactionHeadRepository.DeleteAsync(id);
-            _logger.LogInformation("Successfully deleted transaction head Id: {Id}", id);
+        }
+
+        private async Task ValidateBulkParishOwnershipAsync<TDto>(IEnumerable<TDto> requests) where TDto : class
+        {
+            var (roleName, userParishId) = await UserHelper.GetCurrentUserRoleAndParishAsync(_httpContextAccessor, _context);
+
+            // Admin users can modify any parish data
+            if (string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            foreach (var request in requests)
+            {
+                if (request is ChurchDTOs.DTOs.Utils.IParishEntity parishEntity)
+                {
+                    if (userParishId == null || parishEntity.ParishId != userParishId)
+                    {
+                        throw new UnauthorizedAccessException("You are not authorized to modify data from another parish.");
+                    }
+                }
+            }
         }
     }
 }

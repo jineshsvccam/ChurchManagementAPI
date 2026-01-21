@@ -1,13 +1,8 @@
 using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
-using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ChurchRepositories.Settings
 {
@@ -16,25 +11,23 @@ namespace ChurchRepositories.Settings
         private readonly ApplicationDbContext _context;
         private readonly LogsHelper _logsHelper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<TransactionHeadRepository> _logger;
 
         public FamilyDueRepository(ApplicationDbContext context,
                                  IHttpContextAccessor httpContextAccessor,
-                                 ILogger<TransactionHeadRepository> logger,
-                                  LogsHelper logsHelper)
+                                 LogsHelper logsHelper)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _logsHelper = logsHelper;
-            _logger = logger;
         }
-
 
         public async Task<IEnumerable<FamilyDue>> GetAllAsync(int? parishId)
         {
-            var query = _context.FamilyDues.AsQueryable();
+            var query = _context.FamilyDues.AsNoTracking().AsQueryable();
             if (parishId.HasValue)
+            {
                 query = query.Where(fd => fd.ParishId == parishId.Value);
+            }
             return await query.ToListAsync();
         }
 
@@ -45,6 +38,8 @@ namespace ChurchRepositories.Settings
 
         public async Task<FamilyDue> AddAsync(FamilyDue familyDue)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, familyDue.ParishId);
+
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             await _context.FamilyDues.AddAsync(familyDue);
             await _context.SaveChangesAsync();
@@ -54,36 +49,36 @@ namespace ChurchRepositories.Settings
 
         public async Task<FamilyDue> UpdateAsync(FamilyDue familyDue)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, familyDue.ParishId);
+
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var existingDue = await _context.FamilyDues.FindAsync(familyDue.DuesId);
-            if (existingDue != null)
+            if (existingDue == null)
             {
-                var oldValues = existingDue.Clone();
-                _context.Entry(existingDue).CurrentValues.SetValues(familyDue);
-                await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("family_dues", familyDue.DuesId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(familyDue));
-                return familyDue;
+                throw new KeyNotFoundException("Family due not found");
             }
-            else
-            {
-                throw new KeyNotFoundException("Family Due record not found");
-            }
+
+            var oldValues = existingDue.Clone();
+            _context.Entry(existingDue).CurrentValues.SetValues(familyDue);
+            await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("family_dues", familyDue.DuesId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(familyDue));
+            return familyDue;
         }
 
         public async Task DeleteAsync(int id)
         {
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var due = await _context.FamilyDues.FindAsync(id);
-            if (due != null)
+            if (due == null)
             {
-                _context.FamilyDues.Remove(due);
-                await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("family_dues", due.DuesId, "DELETE", userId, Extensions.Serialize(due), null);
+                throw new KeyNotFoundException("Family due not found");
             }
-            else
-            {
-                throw new KeyNotFoundException("Family Due record not found");
-            }
+
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, due.ParishId);
+
+            _context.FamilyDues.Remove(due);
+            await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("family_dues", due.DuesId, "DELETE", userId, Extensions.Serialize(due), null);
         }
     }
 }
