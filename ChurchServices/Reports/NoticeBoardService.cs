@@ -5,16 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchDTOs.DTOs.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Reports
 {
     public class NoticeBoardService : INoticeBoardService
     {
         private readonly INoticeBoardRepository _noticeBoardRepository;
+        private readonly ILogger<NoticeBoardService> _logger;
 
-        public NoticeBoardService(INoticeBoardRepository noticeBoardRepository)
+        public NoticeBoardService(INoticeBoardRepository noticeBoardRepository, ILogger<NoticeBoardService> logger)
         {
             _noticeBoardRepository = noticeBoardRepository;
+            _logger = logger;
         }
 
         public Task<NoticeBoardDTO> GetNoticeBoardAsync(
@@ -24,6 +27,9 @@ namespace ChurchServices.Reports
             string headName,
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
+            _logger.LogInformation("Generating notice board report for ParishId: {ParishId}, StartDate: {StartDate}, EndDate: {EndDate}, HeadName: {HeadName}", 
+                parishId, startDate, endDate, headName);
+
             // 1. Validate required dates if including transactions
 
             if (!startDate.HasValue || !endDate.HasValue)

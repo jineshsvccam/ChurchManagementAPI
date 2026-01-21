@@ -34,34 +34,40 @@ namespace ChurchManagementAPI.Controllers.Reports
          [FromQuery] int parishId,
          [FromQuery] int familyNumber)
         {
+            _logger.LogInformation("Generating family report for ParishId: {ParishId}, FamilyNumber: {FamilyNumber}", parishId, familyNumber);
+
             // Get current user's role, parish, and family information
             var (userRole, userParishId, userFamilyId) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
 
-            // Verify parish authorization
-            if (userParishId != parishId)
+            // Admin users can access any parish data
+            if (!string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogWarning("User attempted to access reports from another parish. UserParishId: {UserParishId}, RequestedParishId: {ParishId}", 
-                    userParishId, parishId);
-                return Forbid();
-            }
-
-            // If the user is a FamilyMember role, ensure they can only access their own family's report
-            if (userRole == "FamilyMember")
-            {
-                // Get the family by familyNumber to extract FamilyId for comparison
-                var requestedFamily = await _context.Families
-                    .FirstOrDefaultAsync(f => f.ParishId == parishId && f.FamilyNumber == familyNumber);
-
-                if (requestedFamily == null)
+                // Verify parish authorization for non-admin users
+                if (userParishId != parishId)
                 {
-                    return NotFound("Family not found.");
+                    _logger.LogWarning("User attempted to access reports from another parish. UserParishId: {UserParishId}, RequestedParishId: {ParishId}", 
+                        userParishId, parishId);
+                    return Forbid();
                 }
 
-                if (requestedFamily.FamilyId != userFamilyId)
+                // If the user is a FamilyMember role, ensure they can only access their own family's report
+                if (userRole == "FamilyMember")
                 {
-                    _logger.LogWarning("User {UserId} with FamilyId {UserFamilyId} attempted to access FamilyId {RequestedFamilyId}",
-                        UserHelper.GetCurrentUserIdGuid(_httpContextAccessor), userFamilyId, requestedFamily.FamilyId);
-                    return Forbid();
+                    // Get the family by familyNumber to extract FamilyId for comparison
+                    var requestedFamily = await _context.Families
+                        .FirstOrDefaultAsync(f => f.ParishId == parishId && f.FamilyNumber == familyNumber);
+
+                    if (requestedFamily == null)
+                    {
+                        return NotFound("Family not found.");
+                    }
+
+                    if (requestedFamily.FamilyId != userFamilyId)
+                    {
+                        _logger.LogWarning("User {UserId} with FamilyId {UserFamilyId} attempted to access FamilyId {RequestedFamilyId}",
+                            UserHelper.GetCurrentUserIdGuid(_httpContextAccessor), userFamilyId, requestedFamily.FamilyId);
+                        return Forbid();
+                    }
                 }
             }
 
@@ -77,34 +83,41 @@ namespace ChurchManagementAPI.Controllers.Reports
           [FromQuery] DateTime endDate,
           [FromQuery] bool istransactionrequired = true)
         {
+            _logger.LogInformation("Generating kudishika report for ParishId: {ParishId}, FamilyNumber: {FamilyNumber}, StartDate: {StartDate}, EndDate: {EndDate}", 
+                parishId, familyNumber, startDate, endDate);
+
             // Get current user's role, parish, and family information
             var (userRole, userParishId, userFamilyId) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
 
-            // Verify parish authorization
-            if (userParishId != parishId)
+            // Admin users can access any parish data
+            if (!string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogWarning("User attempted to access reports from another parish. UserParishId: {UserParishId}, RequestedParishId: {ParishId}", 
-                    userParishId, parishId);
-                return Forbid();
-            }
-
-            // If the user is a FamilyMember role, ensure they can only access their own family's report
-            if (userRole == "FamilyMember")
-            {
-                // Get the family by familyNumber to extract FamilyId for comparison
-                var requestedFamily = await _context.Families
-                    .FirstOrDefaultAsync(f => f.ParishId == parishId && f.FamilyNumber == familyNumber);
-
-                if (requestedFamily == null)
+                // Verify parish authorization for non-admin users
+                if (userParishId != parishId)
                 {
-                    return NotFound("Family not found.");
+                    _logger.LogWarning("User attempted to access reports from another parish. UserParishId: {UserParishId}, RequestedParishId: {ParishId}", 
+                        userParishId, parishId);
+                    return Forbid();
                 }
 
-                if (requestedFamily.FamilyId != userFamilyId)
+                // If the user is a FamilyMember role, ensure they can only access their own family's report
+                if (userRole == "FamilyMember")
                 {
-                    _logger.LogWarning("User {UserId} with FamilyId {UserFamilyId} attempted to access FamilyId {RequestedFamilyId}",
-                        UserHelper.GetCurrentUserIdGuid(_httpContextAccessor), userFamilyId, requestedFamily.FamilyId);
-                    return Forbid();
+                    // Get the family by familyNumber to extract FamilyId for comparison
+                    var requestedFamily = await _context.Families
+                        .FirstOrDefaultAsync(f => f.ParishId == parishId && f.FamilyNumber == familyNumber);
+
+                    if (requestedFamily == null)
+                    {
+                        return NotFound("Family not found.");
+                    }
+
+                    if (requestedFamily.FamilyId != userFamilyId)
+                    {
+                        _logger.LogWarning("User {UserId} with FamilyId {UserFamilyId} attempted to access FamilyId {RequestedFamilyId}",
+                            UserHelper.GetCurrentUserIdGuid(_httpContextAccessor), userFamilyId, requestedFamily.FamilyId);
+                        return Forbid();
+                    }
                 }
             }
 

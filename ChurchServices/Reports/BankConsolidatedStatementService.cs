@@ -1,15 +1,18 @@
 using ChurchContracts;
 using ChurchDTOs.DTOs.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Reports
 {
     public class BankConsolidatedStatementService : IBankConsolidatedStatementService
     {
         private readonly IBankConsolidatedStatementRepository _bankRepository;
+        private readonly ILogger<BankConsolidatedStatementService> _logger;
 
-        public BankConsolidatedStatementService(IBankConsolidatedStatementRepository bankRepository)
+        public BankConsolidatedStatementService(IBankConsolidatedStatementRepository bankRepository, ILogger<BankConsolidatedStatementService> logger)
         {
             _bankRepository = bankRepository;
+            _logger = logger;
         }
 
         public async Task<BankStatementConsolidatedDTO> GetBankStatementAsync(
@@ -19,6 +22,9 @@ namespace ChurchServices.Reports
              bool includeTransactions = false,
              FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
+            _logger.LogInformation("Generating bank consolidated statement for ParishId: {ParishId}, StartDate: {StartDate}, EndDate: {EndDate}, IncludeTransactions: {IncludeTransactions}", 
+                parishId, startDate, endDate, includeTransactions);
+
             // 1. Validate required dates if including transactions
             if (includeTransactions)
             {
@@ -61,6 +67,5 @@ namespace ChurchServices.Reports
                 customizationOption
             );
         }
-
     }
 }

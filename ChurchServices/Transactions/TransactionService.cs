@@ -37,13 +37,6 @@ namespace ChurchServices.Transactions
         public async Task<PagedResult<TransactionDto>> GetTransactionsAsync(
             int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize)
         {
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
-            if (parishId.HasValue && parishId != userParishId)
-            {
-                throw new UnauthorizedAccessException("You do not have permission to view transactions for this parish.");
-            }
-
             _logger.LogInformation("Fetching transactions for parish {parishId}", parishId);
             var result = await _transactionRepository.GetTransactionsAsync(parishId, familyId, transactionId, startDate, endDate, pageNumber, pageSize);
 
@@ -56,8 +49,6 @@ namespace ChurchServices.Transactions
 
         public async Task<TransactionDto?> GetByIdAsync(int id)
         {
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
             var transaction = await _transactionRepository.GetByIdAsync(id);
             if (transaction == null)
             {
@@ -65,22 +56,15 @@ namespace ChurchServices.Transactions
                 return null;
             }
 
-            if (transaction.ParishId != userParishId)
-            {
-                throw new UnauthorizedAccessException("You do not have permission to view this transaction.");
-            }
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transaction.ParishId);
 
             return _mapper.Map<TransactionDto>(transaction);
         }
 
         public async Task<IEnumerable<TransactionDto>> AddOrUpdateAsync(IEnumerable<TransactionDto> requests)
         {
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
-            if (requests.Any(r => r.ParishId != userParishId))
-            {
-                throw new UnauthorizedAccessException("One or more transactions belong to a different parish. Operation not allowed.");
-            }
+            // Validate parish ownership for all DTOs in bulk request
+            await ValidateBulkParishOwnershipAsync(requests);
 
             var transactions = new List<TransactionDto>();
 
@@ -99,13 +83,6 @@ namespace ChurchServices.Transactions
 
         public async Task<TransactionDto> AddAsync(TransactionDto transactionDto)
         {
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
-            if (transactionDto.ParishId != userParishId)
-            {
-                throw new InvalidOperationException("You do not have permission to insert data for this parish.");
-            }
-
             var financialYear = await _financialYearRepository.GetFinancialYearByDateAsync(transactionDto.ParishId, transactionDto.TrDate);
             if (financialYear == null || financialYear.IsLocked)
             {
@@ -121,18 +98,13 @@ namespace ChurchServices.Transactions
 
         public async Task<TransactionDto> UpdateAsync(TransactionDto transactionDto)
         {
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
             var existingTransaction = await _transactionRepository.GetByIdAsync(transactionDto.TransactionId);
             if (existingTransaction == null)
             {
                 throw new InvalidOperationException("Transaction not found.");
             }
 
-            if (existingTransaction.ParishId != userParishId)
-            {
-                throw new UnauthorizedAccessException("You do not have permission to update this transaction.");
-            }
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, existingTransaction.ParishId);
 
             var financialYear = await _financialYearRepository.GetFinancialYearByDateAsync(transactionDto.ParishId, transactionDto.TrDate);
             if (financialYear == null || financialYear.IsLocked)
@@ -153,17 +125,10 @@ namespace ChurchServices.Transactions
 
         public async Task DeleteAsync(int id)
         {
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
             var transaction = await _transactionRepository.GetByIdAsync(id);
             if (transaction == null)
             {
                 throw new InvalidOperationException("Transaction not found.");
-            }
-
-            if (transaction.ParishId != userParishId)
-            {
-                throw new UnauthorizedAccessException("You do not have permission to delete this transaction.");
             }
 
             var financialYear = await _financialYearRepository.GetFinancialYearByDateAsync(transaction.ParishId, transaction.TrDate);
@@ -188,8 +153,6 @@ namespace ChurchServices.Transactions
                 throw new ArgumentException("Cannot delete more than 10 transactions at once.");
             }
 
-            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
-
             var transactions = await _transactionRepository.GetByIdsAsync(ids);
 
             if (transactions.Count != ids.Length)
@@ -199,12 +162,8 @@ namespace ChurchServices.Transactions
                 throw new InvalidOperationException($"Some transactions were not found: {string.Join(", ", missingIds)}");
             }
 
-            var unauthorizedTransactions = transactions.Where(t => t.ParishId != userParishId).ToList();
-            if (unauthorizedTransactions.Any())
-            {
-                throw new UnauthorizedAccessException(
-                    $"You do not have permission to delete transactions: {string.Join(", ", unauthorizedTransactions.Select(t => t.TransactionId))}");
-            }
+            // Get user's parish for financial year validation
+            var (_, userParishId, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
 
             var transactionDates = transactions.Select(t => t.TrDate).Distinct().ToList();
             var financialYears = await _financialYearRepository.GetFinancialYearsByDatesAsync((int)userParishId, transactionDates);
@@ -226,6 +185,28 @@ namespace ChurchServices.Transactions
             await _transactionRepository.DeleteMultipleAsync(ids);
 
             _logger.LogInformation("Transactions with ids {ids} deleted.", string.Join(", ", ids));
+        }
+
+        private async Task ValidateBulkParishOwnershipAsync<TDto>(IEnumerable<TDto> requests) where TDto : class
+        {
+            var (roleName, userParishId) = await UserHelper.GetCurrentUserRoleAndParishAsync(_httpContextAccessor, _context);
+
+            // Admin users can modify any parish data
+            if (string.Equals(roleName, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            foreach (var request in requests)
+            {
+                if (request is ChurchDTOs.DTOs.Utils.IParishEntity parishEntity)
+                {
+                    if (userParishId == null || parishEntity.ParishId != userParishId)
+                    {
+                        throw new UnauthorizedAccessException("You are not authorized to modify data from another parish.");
+                    }
+                }
+            }
         }
     }
 }

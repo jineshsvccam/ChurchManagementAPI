@@ -1,16 +1,19 @@
 using ChurchContracts;
 using ChurchDTOs.DTOs.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Reports
 {
-    public class TrialBalanceService:ITrialBalanceService
+    public class TrialBalanceService : ITrialBalanceService
     {
         private readonly ITrialBalancetRepository _trialBalanceRepository;
-        public TrialBalanceService(ITrialBalancetRepository trialBalancetRepository)
+        private readonly ILogger<TrialBalanceService> _logger;
+
+        public TrialBalanceService(ITrialBalancetRepository trialBalancetRepository, ILogger<TrialBalanceService> logger)
         {
             _trialBalanceRepository = trialBalancetRepository;
+            _logger = logger;
         }
-
 
         public async Task<TrialBalanceDTO> GetTrialBalanceAsync(
              int parishId,
@@ -19,6 +22,9 @@ namespace ChurchServices.Reports
              bool includeTransactions = false,
              FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
+            _logger.LogInformation("Generating trial balance report for ParishId: {ParishId}, StartDate: {StartDate}, EndDate: {EndDate}, IncludeTransactions: {IncludeTransactions}", 
+                parishId, startDate, endDate, includeTransactions);
+
             // 1. Validate required dates if including transactions
             if (includeTransactions)
             {
@@ -61,6 +67,5 @@ namespace ChurchServices.Reports
                 customizationOption
             );
         }
-
     }
 }

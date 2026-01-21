@@ -27,8 +27,6 @@ namespace ChurchRepositories.Transactions
         public async Task<PagedResult<Transaction>> GetTransactionsAsync(int? parishId, int? familyId, int? transactionId, DateTime? startDate, DateTime? endDate, int pageNumber, int pageSize)
         {
             var cacheKey = $"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}";
-            // _cache.Remove($"GetTransactionsAsync-{parishId}-{familyId}-{transactionId}-{startDate}-{endDate}-{pageNumber}-{pageSize}");
-
 
             if (!_cache.TryGetValue(cacheKey, out PagedResult<Transaction> transactions))
             {
@@ -86,6 +84,8 @@ namespace ChurchRepositories.Transactions
 
         public async Task<Transaction> AddAsync(Transaction transaction)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transaction.ParishId);
+
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             await _context.Transactions.AddAsync(transaction);
             await _context.SaveChangesAsync();
@@ -96,36 +96,36 @@ namespace ChurchRepositories.Transactions
 
         public async Task<Transaction> UpdateAsync(Transaction transaction)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transaction.ParishId);
+
+            int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var existingTransaction = await _context.Transactions.FindAsync(transaction.TransactionId);
-            Transaction oldValues = transaction.Clone();
-            if (existingTransaction != null)
-            {
-                int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-                _context.Entry(existingTransaction).CurrentValues.SetValues(transaction);
-                await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(transaction));
-                return transaction;
-            }
-            else
+            if (existingTransaction == null)
             {
                 throw new KeyNotFoundException("Transaction not found");
             }
+
+            var oldValues = existingTransaction.Clone();
+            _context.Entry(existingTransaction).CurrentValues.SetValues(transaction);
+            await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(transaction));
+            return transaction;
         }
 
         public async Task DeleteAsync(int id)
         {
-            var transaction = await _context.Transactions.FindAsync(id);
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
-            if (transaction != null)
-            {
-                _context.Transactions.Remove(transaction);
-                await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "DELETE", userId, Extensions.Serialize(transaction), null);
-            }
-            else
+            var transaction = await _context.Transactions.FindAsync(id);
+            if (transaction == null)
             {
                 throw new KeyNotFoundException("Transaction not found");
             }
+
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transaction.ParishId);
+
+            _context.Transactions.Remove(transaction);
+            await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "DELETE", userId, Extensions.Serialize(transaction), null);
         }
 
         public async Task<List<Transaction>> GetByIdsAsync(int[] ids)
@@ -134,19 +134,22 @@ namespace ChurchRepositories.Transactions
                 .Where(t => ids.Contains(t.TransactionId))
                 .ToListAsync();
         }
+
         public async Task DeleteMultipleAsync(int[] ids)
         {
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            using (var dbTransaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
+                    int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
+
                     // Fetch the transactions to delete
                     var transactions = await _context.Transactions
                         .Where(t => ids.Contains(t.TransactionId))
                         .ToListAsync();
 
                     // Verify that we found all requested IDs
-                    if (transactions.Count() != ids.Length)
+                    if (transactions.Count != ids.Length)
                     {
                         var foundIds = transactions.Select(t => t.TransactionId).ToHashSet();
                         var missingIds = ids.Where(id => !foundIds.Contains(id));
@@ -154,8 +157,19 @@ namespace ChurchRepositories.Transactions
                             $"Some transactions were not found for deletion: {string.Join(", ", missingIds)}");
                     }
 
-                    // Delete all transactions
-                    _context.Transactions.RemoveRange(transactions);
+                    // Validate parish ownership for all transactions
+                    foreach (var transaction in transactions)
+                    {
+                        await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, transaction.ParishId);
+                    }
+
+                    // Delete all transactions and log each deletion
+                    foreach (var transaction in transactions)
+                    {
+                        _context.Transactions.Remove(transaction);
+                        await _logsHelper.LogChangeAsync("transactions", transaction.TransactionId, "DELETE", userId, Extensions.Serialize(transaction), null);
+                    }
+
                     int deletedCount = await _context.SaveChangesAsync();
 
                     // Verify that all records were actually deleted
@@ -166,16 +180,15 @@ namespace ChurchRepositories.Transactions
                     }
 
                     // Commit the transaction if everything succeeded
-                    await transaction.CommitAsync();
+                    await dbTransaction.CommitAsync();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // Roll back the transaction on any failure
-                    await transaction.RollbackAsync();
-                    throw; // Re-throw the exception for the caller to handle
+                    await dbTransaction.RollbackAsync();
+                    throw;
                 }
             }
         }
-
     }
 }

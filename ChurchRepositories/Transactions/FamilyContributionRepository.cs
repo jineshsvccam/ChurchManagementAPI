@@ -4,7 +4,6 @@ using ChurchData;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,7 +30,7 @@ namespace ChurchRepositories.Transactions
 
         public async Task<IEnumerable<FamilyContribution>> GetAllAsync(int? parishId)
         {
-            var query = _context.FamilyContributions.AsQueryable();
+            var query = _context.FamilyContributions.AsNoTracking().AsQueryable();
             if (parishId.HasValue)
                 query = query.Where(fc => fc.ParishId == parishId.Value);
             return await query.ToListAsync();
@@ -44,6 +43,8 @@ namespace ChurchRepositories.Transactions
 
         public async Task<FamilyContribution> AddAsync(FamilyContribution familyContribution)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, familyContribution.ParishId);
+
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             familyContribution.TransactionDate = DateTime.SpecifyKind(familyContribution.TransactionDate, DateTimeKind.Utc);
             await _context.FamilyContributions.AddAsync(familyContribution);
@@ -54,37 +55,37 @@ namespace ChurchRepositories.Transactions
 
         public async Task<FamilyContribution> UpdateAsync(FamilyContribution familyContribution)
         {
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, familyContribution.ParishId);
+
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var existingContribution = await _context.FamilyContributions.FindAsync(familyContribution.ContributionId);
-            if (existingContribution != null)
-            {
-                var oldValues = existingContribution.Clone();
-                _context.Entry(existingContribution).CurrentValues.SetValues(familyContribution);
-                familyContribution.TransactionDate = DateTime.SpecifyKind(familyContribution.TransactionDate, DateTimeKind.Utc);
-                await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("family_contributions", familyContribution.ContributionId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(familyContribution));
-                return familyContribution;
-            }
-            else
+            if (existingContribution == null)
             {
                 throw new KeyNotFoundException("Family Contribution not found");
             }
+
+            var oldValues = existingContribution.Clone();
+            familyContribution.TransactionDate = DateTime.SpecifyKind(familyContribution.TransactionDate, DateTimeKind.Utc);
+            _context.Entry(existingContribution).CurrentValues.SetValues(familyContribution);
+            await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("family_contributions", familyContribution.ContributionId, "UPDATE", userId, Extensions.Serialize(oldValues), Extensions.Serialize(familyContribution));
+            return familyContribution;
         }
 
         public async Task DeleteAsync(int id)
         {
             int userId = UserHelper.GetCurrentUserId(_httpContextAccessor);
             var contribution = await _context.FamilyContributions.FindAsync(id);
-            if (contribution != null)
-            {
-                _context.FamilyContributions.Remove(contribution);
-                await _context.SaveChangesAsync();
-                await _logsHelper.LogChangeAsync("family_contributions", contribution.ContributionId, "DELETE", userId, Extensions.Serialize(contribution), null);
-            }
-            else
+            if (contribution == null)
             {
                 throw new KeyNotFoundException("Family Contribution not found");
             }
+
+            await UserHelper.ValidateParishOwnershipAsync(_httpContextAccessor, _context, contribution.ParishId);
+
+            _context.FamilyContributions.Remove(contribution);
+            await _context.SaveChangesAsync();
+            await _logsHelper.LogChangeAsync("family_contributions", contribution.ContributionId, "DELETE", userId, Extensions.Serialize(contribution), null);
         }
     }
 }

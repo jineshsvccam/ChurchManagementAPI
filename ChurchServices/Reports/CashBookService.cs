@@ -5,15 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using ChurchContracts;
 using ChurchDTOs.DTOs.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Reports
 {
     public class CashBookService : ICashBookService
     {
         private readonly ICashBookRepository _cashBookRepository;
-        public CashBookService(ICashBookRepository cashBookRepository)
+        private readonly ILogger<CashBookService> _logger;
+
+        public CashBookService(ICashBookRepository cashBookRepository, ILogger<CashBookService> logger)
         {
             _cashBookRepository = cashBookRepository;
+            _logger = logger;
         }
         public async Task<CashBookReportDTO> GetCashBookAsync(
             int parishId,
@@ -22,6 +26,9 @@ namespace ChurchServices.Reports
             string bankName = "All",
             FinancialReportCustomizationOption customizationOption = FinancialReportCustomizationOption.Both)
         {
+            _logger.LogInformation("Generating cash book report for ParishId: {ParishId}, StartDate: {StartDate}, EndDate: {EndDate}, BankName: {BankName}", 
+                parishId, startDate, endDate, bankName);
+
             // 1. Validate required dates if including transactions
 
             if (!startDate.HasValue || !endDate.HasValue)

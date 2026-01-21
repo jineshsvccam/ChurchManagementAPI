@@ -1,21 +1,29 @@
 using ChurchContracts;
 using ChurchDTOs.DTOs.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchServices.Reports
 {
     public class AramanaReportService : IAramanaReportService
     {
         private readonly IAramanaReportRepository _aramanaReportRepository;
-        public AramanaReportService(IAramanaReportRepository aramanaReportRepository)
+        private readonly ILogger<AramanaReportService> _logger;
+
+        public AramanaReportService(IAramanaReportRepository aramanaReportRepository, ILogger<AramanaReportService> logger)
         {
             _aramanaReportRepository = aramanaReportRepository;
+            _logger = logger;
         }
+
         public async Task<AramanaReportDTO> GetAramanaReportAsync(
             int parishId,
             DateTime? startDate,
             DateTime? endDate)
         {
-            // 1. Validate required dates if including transactions
+            _logger.LogInformation("Generating aramana report for ParishId: {ParishId}, StartDate: {StartDate}, EndDate: {EndDate}",
+                parishId, startDate, endDate);
+
+            // 1. Validate required dates
             if (!startDate.HasValue || !endDate.HasValue)
             {
                 throw new ArgumentException("Start date and End date are required when including transactions.");
