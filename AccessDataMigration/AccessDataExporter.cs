@@ -366,28 +366,28 @@ public class AccessDataExporter
                                 MobilePhone = reader["Mobile"].ToString(),
                                 Email = reader["Email"].ToString(),
                                 FacebookProfile = reader["Facebook"].ToString(),
-                                GeoLocation = reader["Location"].ToString()
+                                GeoLocation = ""
                             }
                         },
                             Identity = new FamilyMemberIdentityDto
                             {
-                                AadharNumber = "test Aadhar",
-                                PassportNumber = "testPassport",
-                                DrivingLicense = "testdl",
-                                VoterId = "testvoter"
+                                AadharNumber = "",
+                                PassportNumber = "",
+                                DrivingLicense = "",
+                                VoterId = ""
                             },
                             Occupation = new FamilyMemberOccupationDto
                             {
                                 Qualification = reader["Quali"].ToString(),
-                                StudentOrEmployee = "Unemployed",
+                                StudentOrEmployee = "",
                                 ClassOrWork = reader["CW"].ToString(),
-                                SchoolOrWorkplace = "Unemployed",
-                                SundaySchoolClass = "TestSun"
+                                SchoolOrWorkplace = "",
+                                SundaySchoolClass = ""
                             },
                             Sacraments = new FamilyMemberSacramentsDto
                             {
-                                BaptismalName = "BapName",
-                                BaptismDate = DateTime.UtcNow,
+                                BaptismalName = "",
+                                BaptismDate = null,
                                 MarriageDate = null,
                                 MooronDate = null,
                                 MooronInOurChurch = false,
@@ -398,28 +398,28 @@ public class AccessDataExporter
                         {
                             new FamilyMemberRelationsDto
                             {
-                                FatherName = "father test",
-                                MotherName = "mother test",
+                                FatherName = "",
+                                MotherName = "",
                                 SpouseId = 0,
                                 ParentId = 0
                             }
                         },
                             Files = new FamilyMemberFilesDto
                             {
-                                MarriageFileNo = "MfileNo",
-                                BaptismFileNo = "BfileNo",
-                                DeathFileNo = "DfileNo",
-                                JoinFileNo = "JfileNo",
-                                MooronFileNo = "MooronFileNo",
-                                CommonCellNo = "CommonCellNo"
+                                MarriageFileNo = "",
+                                BaptismFileNo = "",
+                                DeathFileNo = "",
+                                JoinFileNo = "",
+                                MooronFileNo = "",
+                                CommonCellNo = ""
                             },
                             Lifecycle = new FamilyMemberLifecycleDto
                             {
                                 CommonCell = false,
-                                LeftReason = "leftreason",
+                                LeftReason = "",
                                 JoinDate = null,
                                 LeftDate = null,
-                                BurialPlace = "CommonCell",
+                                BurialPlace = "",
                                 DeathDate = null
                             }
                         };
@@ -437,15 +437,15 @@ public class AccessDataExporter
                         {
                             FamilyId = familyId,
                             ParishId = ParishId,
-                            ActionType="INSERT",
-                            SubmittedBy = Guid.Parse("bc27673d-f3c7-4e05-9613-628697099840"), 
-                            Payload = json
+                            ActionType="INSERT",                          
+                            Payload = json                           
                         };
 
                         familyMembers.Add(pending);
                     }
                 }
             }
+           
 
             return familyMembers;
         }

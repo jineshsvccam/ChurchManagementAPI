@@ -3,6 +3,7 @@ using ChurchData;
 using ChurchDTOs.DTOs.Entities;
 using ChurchManagementAPI.Controllers.Base;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChurchManagementAPI.Controllers.Settings
 {
@@ -10,6 +11,7 @@ namespace ChurchManagementAPI.Controllers.Settings
     public class BankController : ManagementAuthorizedController<BankController>
     {
         private readonly IBankService _bankService;
+        private readonly ApplicationDbContext _context;
 
         public BankController(
             IBankService bankService,
@@ -19,21 +21,29 @@ namespace ChurchManagementAPI.Controllers.Settings
             : base(httpContextAccessor, context, logger)
         {
             _bankService = bankService;
+            _context = context;
         }
 
-        // This endpoint accepts a parishId in the query, which will be validated by the action filter.
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BankDto>>> GetBanks([FromQuery] int parishId, [FromQuery] int? bankId)
         {
+            if (parishId <= 0)
+            {
+                return BadRequest(new { Error = "Invalid ParishId", Message = "ParishId must be a positive integer." });
+            }
+
             var banks = await _bankService.GetBanksAsync(parishId, bankId);
             return Ok(banks);
         }
 
-        // This endpoint does not accept a parishId parameter.
-        // The filter will validate the returned BankDto (if it implements IParishEntity).
         [HttpGet("{id}")]
         public async Task<ActionResult<BankDto>> GetById(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest(new { Error = "Invalid Id", Message = "Id must be a positive integer." });
+            }
+
             var bank = await _bankService.GetByIdAsync(id);
             if (bank == null)
             {
@@ -43,11 +53,17 @@ namespace ChurchManagementAPI.Controllers.Settings
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create(BankDto bank)
+        public async Task<ActionResult> Create([FromBody] BankDto bank)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            var validationError = await ValidateParishExistsAsync(bank.ParishId);
+            if (validationError != null)
+            {
+                return validationError;
             }
 
             var createdBank = await _bankService.AddAsync(bank);
@@ -55,11 +71,22 @@ namespace ChurchManagementAPI.Controllers.Settings
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, BankDto bank)
+        public async Task<IActionResult> Update(int id, [FromBody] BankDto bank)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (id != bank.BankId)
             {
-                return BadRequest();
+                return BadRequest(new { Error = "ID mismatch", Message = "The ID in the URL does not match the ID in the request body." });
+            }
+
+            var validationError = await ValidateParishExistsAsync(bank.ParishId);
+            if (validationError != null)
+            {
+                return validationError;
             }
 
             try
@@ -76,6 +103,11 @@ namespace ChurchManagementAPI.Controllers.Settings
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest(new { Error = "Invalid Id", Message = "Id must be a positive integer." });
+            }
+
             try
             {
                 await _bankService.DeleteAsync(id);
@@ -95,6 +127,18 @@ namespace ChurchManagementAPI.Controllers.Settings
                 return BadRequest("Requests cannot be null or empty.");
             }
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var parishIds = requests.Select(r => r.ParishId).Distinct().ToList();
+            var validationError = await ValidateParishIdsExistAsync(parishIds);
+            if (validationError != null)
+            {
+                return validationError;
+            }
+
             try
             {
                 var createdBanks = await _bankService.AddOrUpdateAsync(requests);
@@ -108,6 +152,31 @@ namespace ChurchManagementAPI.Controllers.Settings
             {
                 return NotFound();
             }
+        }
+
+        private async Task<BadRequestObjectResult?> ValidateParishExistsAsync(int parishId)
+        {
+            var parishExists = await _context.Parishes.AnyAsync(p => p.ParishId == parishId);
+            if (!parishExists)
+            {
+                return BadRequest(new { Error = "Invalid ParishId", Message = $"Parish with ID {parishId} does not exist." });
+            }
+            return null;
+        }
+
+        private async Task<BadRequestObjectResult?> ValidateParishIdsExistAsync(List<int> parishIds)
+        {
+            var existingParishIds = await _context.Parishes
+                .Where(p => parishIds.Contains(p.ParishId))
+                .Select(p => p.ParishId)
+                .ToListAsync();
+
+            var invalidParishIds = parishIds.Except(existingParishIds).ToList();
+            if (invalidParishIds.Any())
+            {
+                return BadRequest(new { Error = "Invalid ParishId(s)", Message = $"Parish(es) with ID(s) {string.Join(", ", invalidParishIds)} do not exist." });
+            }
+            return null;
         }
     }
 }
