@@ -123,7 +123,7 @@ namespace ChurchManagementAPI.Controllers.Settings
                 return BadRequest(new { Error = "Invalid ParishId", Message = $"Parish with ID {parishId} does not exist." });
             }
 
-            if (familyId.HasValue)
+            if (familyId.HasValue && familyId>0)
             {
                 var familyExists = await _context.Families.AnyAsync(f => f.FamilyId == familyId.Value);
                 if (!familyExists)
