@@ -112,10 +112,10 @@ namespace ChurchManagementAPI.Controllers.Settings
                 return BadRequest(new { Error = "Invalid ParishId", Message = "ParishId must be a positive integer." });
             }
 
-            if (familyId.HasValue && familyId.Value <= 0)
-            {
-                return BadRequest(new { Error = "Invalid FamilyId", Message = "FamilyId must be a positive integer." });
-            }
+            //if (familyId.HasValue && familyId.Value <= 0)
+            //{
+            //    return BadRequest(new { Error = "Invalid FamilyId", Message = "FamilyId must be a positive integer." });
+            //}
 
             var parishExists = await _context.Parishes.AnyAsync(p => p.ParishId == parishId);
             if (!parishExists)
