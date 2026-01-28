@@ -36,6 +36,7 @@ namespace ChurchServices.Settings
             {
                 FamilyId = requestDto.FamilyId,
                 ParishId = requestDto.ParishId,
+                MemberId=requestDto.Payload.GetProperty("MemberId").GetInt32(),
                 SubmittedBy = userid,
                 ActionType = requestDto.ActionType,
                 SubmittedData = requestDto.Payload,
