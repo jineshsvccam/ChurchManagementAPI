@@ -209,7 +209,8 @@ public class AuthService : IAuthService
             FullName = user.FullName,
             ParishId = user.ParishId,
             ParishName = user.Parish?.ParishName,
-            FamilyId = user.Family?.FamilyNumber,
+            FamilyId = user.Family?.FamilyId,
+            FamilyNumber= user.Family?.FamilyNumber,
             FamilyName = string.Concat(user.Family?.HeadName, " ", user.Family?.FamilyName),
             Roles = roles.ToList()
         };
