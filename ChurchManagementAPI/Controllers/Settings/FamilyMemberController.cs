@@ -112,11 +112,6 @@ namespace ChurchManagementAPI.Controllers.Settings
                 return BadRequest(new { Error = "Invalid ParishId", Message = "ParishId must be a positive integer." });
             }
 
-            //if (familyId.HasValue && familyId.Value <= 0)
-            //{
-            //    return BadRequest(new { Error = "Invalid FamilyId", Message = "FamilyId must be a positive integer." });
-            //}
-
             var parishExists = await _context.Parishes.AnyAsync(p => p.ParishId == parishId);
             if (!parishExists)
             {
@@ -132,7 +127,10 @@ namespace ChurchManagementAPI.Controllers.Settings
                 }
             }
 
-            var response = await _familyMemberService.GetFamilyMembersFilteredAsync(parishId, familyId, filterRequest);
+            // Get current user's role and familyId for mobile masking
+            var (userRole, _, userFamilyId) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+
+            var response = await _familyMemberService.GetFamilyMembersFilteredAsync(parishId, familyId, filterRequest, userRole, userFamilyId);
             if (!response.Success)
             {
                 return BadRequest(response.Message);
@@ -171,11 +169,46 @@ namespace ChurchManagementAPI.Controllers.Settings
                 }
             }
 
-            var response = await _familyMemberService.GetAllFamilyMembersAsync(parishId, familyId);
+            // Get current user's role and familyId for mobile masking
+            var (userRole, _, userFamilyId) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+
+            var response = await _familyMemberService.GetAllFamilyMembersAsync(parishId, familyId, userRole, userFamilyId);
             if (!response.Success)
             {
                 return BadRequest(response.Message);
             }
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Get the mobile number of a specific member by ID.
+        /// Rate limited to 5 requests per day per user.
+        /// </summary>
+        /// <param name="memberId">The member ID to get mobile number for</param>
+        /// <returns>Mobile number with rate limit info</returns>
+        [HttpGet("{memberId}/mobile")]
+        public async Task<IActionResult> GetMemberMobileNumber(int memberId)
+        {
+            if (memberId <= 0)
+            {
+                return BadRequest(new { Error = "Invalid MemberId", Message = "MemberId must be a positive integer." });
+            }
+
+            // Get current user ID
+            var userId = UserHelper.GetCurrentUserIdGuid(_httpContextAccessor);
+
+            var response = await _familyMemberService.GetMemberMobileNumberAsync(memberId, userId);
+            
+            if (!response.Success)
+            {
+                // Return 429 Too Many Requests if rate limit exceeded
+                if (response.Message.Contains("Daily limit reached"))
+                {
+                    return StatusCode(429, response);
+                }
+                return BadRequest(response);
+            }
+            
             return Ok(response);
         }
     }

@@ -121,4 +121,16 @@ namespace ChurchDTOs.DTOs.Entities
         public string FamilyName { get; set; }
         public string FirstName { get; set; }
     }
+
+    /// <summary>
+    /// Response DTO for mobile number view request with rate limit info
+    /// </summary>
+    public class MemberMobileResponseDto
+    {
+        public int MemberId { get; set; }
+        public string MemberName { get; set; }
+        public string? MobilePhone { get; set; }
+        public int RequestsUsedToday { get; set; }
+        public int RequestsRemainingToday { get; set; }
+    }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using ChurchCommon.Utils;
 using ChurchContracts;
 using ChurchData;
+using ChurchData.Entities;
 using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,8 @@ namespace ChurchServices.Settings
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+        private const int MaxDailyMobileViewRequests = 5;
+
         public FamilyMemberService(IFamilyMemberRepository familyMemberRepository, ApplicationDbContext context, ILogger<FamilyMemberService> logger,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
@@ -25,6 +28,19 @@ namespace ChurchServices.Settings
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+        }
+
+        private static string MaskMobileNumber(string? mobileNumber)
+        {
+            if (string.IsNullOrWhiteSpace(mobileNumber) || mobileNumber.Length < 4)
+                return mobileNumber;
+            return mobileNumber[..^4] + "****";
+        }
+
+        private static bool ShouldMaskMobile(string userRole, int? userFamilyId, int memberFamilyId)
+        {
+            return string.Equals(userRole, "FamilyMember", StringComparison.OrdinalIgnoreCase)
+                   && (!userFamilyId.HasValue || userFamilyId.Value != memberFamilyId);
         }
 
 
@@ -195,6 +211,11 @@ namespace ChurchServices.Settings
 
         public async Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetFamilyMembersFilteredAsync(int parishId, int? familyId, FamilyMemberFilterRequest filterRequest)
         {
+            return await GetFamilyMembersFilteredAsync(parishId, familyId, filterRequest, null, null);
+        }
+
+        public async Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetFamilyMembersFilteredAsync(int parishId, int? familyId, FamilyMemberFilterRequest filterRequest, string userRole, int? userFamilyId)
+        {
             var units = await _context.Units
                      .Where(u => u.ParishId == parishId)
                      .ToListAsync();
@@ -215,10 +236,27 @@ namespace ChurchServices.Settings
             }
             if (familyId != null && familyId != 0)
             {
-                members = members.Where(m => m.FamilyNumber == familyId).ToList();
+                members = members.Where(m => m.FamilyId == familyId).ToList();
             }
 
-            var dtos = members.Select(member => MapFamilyMemberToDto(member, units, families, filterRequest.Fields)).ToList();
+            var dtos = members.Select(member =>
+            {
+                var dto = MapFamilyMemberToDto(member, units, families, filterRequest.Fields);
+
+                // Apply mobile masking for FamilyMember role
+                if (!string.IsNullOrEmpty(userRole) && ShouldMaskMobile(userRole, userFamilyId, member.FamilyId))
+                {
+                    dto.MobilePhone = MaskMobileNumber(dto.MobilePhone);
+                    if (dto.Contacts != null)
+                    {
+                        foreach (var contact in dto.Contacts)
+                        {
+                            contact.MobilePhone = MaskMobileNumber(contact.MobilePhone);
+                        }
+                    }
+                }
+                return dto;
+            }).ToList();
 
             return new ServiceResponse<IEnumerable<FamilyMemberDto>>
             {
@@ -230,8 +268,31 @@ namespace ChurchServices.Settings
 
         public async Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetAllFamilyMembersAsync(int? parishId, int? familyId)
         {
+            return await GetAllFamilyMembersAsync(parishId, familyId, null, null);
+        }
+
+        public async Task<ServiceResponse<IEnumerable<FamilyMemberDto>>> GetAllFamilyMembersAsync(int? parishId, int? familyId, string userRole, int? userFamilyId)
+        {
             var members = await _familyMemberRepository.GetAllFamilyMembersAsync(parishId, familyId);
-            var dtos = members.Select(member => MapFamilyMemberToDto(member)).ToList();
+            var dtos = members.Select(member =>
+            {
+                var dto = MapFamilyMemberToDto(member);
+
+                // Apply mobile masking for FamilyMember role
+                if (!string.IsNullOrEmpty(userRole) && ShouldMaskMobile(userRole, userFamilyId, member.FamilyId))
+                {
+                    dto.MobilePhone = MaskMobileNumber(dto.MobilePhone);
+                    if (dto.Contacts != null)
+                    {
+                        foreach (var contact in dto.Contacts)
+                        {
+                            contact.MobilePhone = MaskMobileNumber(contact.MobilePhone);
+                        }
+                    }
+                }
+                return dto;
+            }).ToList();
+
             return new ServiceResponse<IEnumerable<FamilyMemberDto>>
             {
                 Success = true,
@@ -486,6 +547,96 @@ namespace ChurchServices.Settings
                 FamilyName = "",
                 FirstName = familyMember.FirstName
             };
+        }
+
+        public async Task<ServiceResponse<MemberMobileResponseDto>> GetMemberMobileNumberAsync(int memberId, Guid userId)
+        {
+            try
+            {
+                // Get the member
+                var member = await _context.FamilyMembers
+                    .Include(fm => fm.Contacts)
+                    .FirstOrDefaultAsync(fm => fm.MemberId == memberId);
+
+                if (member == null)
+                {
+                    return new ServiceResponse<MemberMobileResponseDto>
+                    {
+                        Success = false,
+                        Message = "Family member not found."
+                    };
+                }
+
+                // Get today's start (UTC)
+                var todayStart = DateTime.UtcNow.Date;
+                var todayEnd = todayStart.AddDays(1);
+
+                // Count today's requests for this user
+                var todayRequestCount = await _context.MobileViewRequests
+                    .CountAsync(r => r.UserId == userId && r.RequestedAt >= todayStart && r.RequestedAt < todayEnd);
+
+                var mobilePhone = member.Contacts?.FirstOrDefault()?.MobilePhone;
+
+                // Check if user has already viewed this member's mobile today (don't count again)
+                var alreadyViewedToday = await _context.MobileViewRequests
+                    .AnyAsync(r => r.UserId == userId && r.MemberId == memberId && r.RequestedAt >= todayStart && r.RequestedAt < todayEnd);
+
+                if (!alreadyViewedToday)
+                {
+                    // Check rate limit
+                    if (todayRequestCount >= MaxDailyMobileViewRequests)
+                    {
+                        return new ServiceResponse<MemberMobileResponseDto>
+                        {
+                            Success = false,
+                            Message = $"Daily limit reached. You can only view {MaxDailyMobileViewRequests} mobile numbers per day.",
+                            Data = new MemberMobileResponseDto
+                            {
+                                MemberId = memberId,
+                                MemberName = $"{member.FirstName} {member.LastName}",
+                                MobilePhone = null,
+                                RequestsUsedToday = todayRequestCount,
+                                RequestsRemainingToday = 0
+                            }
+                        };
+                    }
+
+                    // Log the request
+                    var viewRequest = new MobileViewRequest
+                    {
+                        UserId = userId,
+                        MemberId = memberId,
+                        RequestedAt = DateTime.UtcNow
+                    };
+                    _context.MobileViewRequests.Add(viewRequest);
+                    await _context.SaveChangesAsync();
+
+                    todayRequestCount++;
+                }
+
+                return new ServiceResponse<MemberMobileResponseDto>
+                {
+                    Success = true,
+                    Message = "Mobile number retrieved successfully.",
+                    Data = new MemberMobileResponseDto
+                    {
+                        MemberId = memberId,
+                        MemberName = $"{member.FirstName} {member.LastName}",
+                        MobilePhone = mobilePhone,
+                        RequestsUsedToday = todayRequestCount,
+                        RequestsRemainingToday = MaxDailyMobileViewRequests - todayRequestCount
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving mobile number for member {MemberId}", memberId);
+                return new ServiceResponse<MemberMobileResponseDto>
+                {
+                    Success = false,
+                    Message = $"An error occurred: {ex.Message}"
+                };
+            }
         }
     }
 }

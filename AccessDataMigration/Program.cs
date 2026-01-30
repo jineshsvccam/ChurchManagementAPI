@@ -45,11 +45,11 @@ class Program
             bool processFamilies = false;
             bool processBanks = false;
             bool processTransactions = false;
-            bool processFamilyDue = false;
+            bool processFamilyDue = true;
             bool processFamilyContribution = false;
             bool processContributionSetting = false;
 
-            bool processFamilyMembers = true;
+            bool processFamilyMembers = false;
             
 
             Console.WriteLine("Boolean flags set...");
@@ -71,7 +71,7 @@ class Program
 
             await apiService.AuthenticateAsync(authurl, username, password);
 
-            dataExporter.ParishId = 31;
+            dataExporter.ParishId = 8035;
 
             Console.WriteLine("Instances created...");
 

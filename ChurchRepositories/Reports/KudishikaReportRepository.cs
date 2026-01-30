@@ -65,12 +65,12 @@ namespace ChurchRepositories.Reports
 
             // 2. Retrieve transactions (payments) from FinancialReportsView for this family.
             var payments = await _context.FinancialReportsView
-                .Where(r => r.ParishId == parishId && r.FamilyNumber == familyNumber)
+                .Where(r => r.ParishId == parishId && r.FamilyId == family.FamilyId)
                 .ToListAsync();
 
             // 3. Retrieve dues from FinancialReportsViewDues for this family.
             var dues = await _context.FinancialReportsViewDues
-                .Where(r => r.ParishId == parishId && r.FamilyNumber == familyNumber)
+                .Where(r => r.ParishId == parishId && r.FamilyId == family.FamilyId)
                 .ToListAsync();
 
             // 4. Retrieve opening balances from FamilyDues for this family.         
@@ -95,14 +95,14 @@ namespace ChurchRepositories.Reports
                 {
                     additionalDues = await _context.FinancialReportsViewDues
                         .Where(d => d.ParishId == parishId
-                                 && d.FamilyNumber == familyNumber
+                                 && d.FamilyId == family.FamilyId
                                  && d.HeadId == head.HeadId
                                  && d.TrDate < startUtc.Value)
                         .SumAsync(d => (decimal?)d.ExpenseAmount) ?? 0m;
 
                     additionalPayments = await _context.FinancialReportsView
                         .Where(p => p.ParishId == parishId
-                                 && p.FamilyNumber == familyNumber
+                                 && p.FamilyId == family.FamilyId
                                  && p.HeadId == head.HeadId
                                  && p.TrDate < startUtc.Value)
                         .SumAsync(p => (decimal?)p.IncomeAmount) ?? 0m;
