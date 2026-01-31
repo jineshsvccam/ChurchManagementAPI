@@ -84,6 +84,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "User not found."
             };
         }
@@ -102,6 +103,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "Invalid password."
             };
         }
@@ -120,6 +122,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "Your account is not approved."
             };
         }
@@ -154,6 +157,7 @@ public class AuthService : IAuthService
                 return new AuthResultDto
                 {
                     IsSuccess = false,
+                    AuthStage = "FAILED",
                     Message = "Too many login attempts. Please wait a few minutes before trying again."
                 };
             }
@@ -186,12 +190,16 @@ public class AuthService : IAuthService
 
             return new TwoFactorRequiredResponseDto
             {
+                IsSuccess = true,
+                AuthStage = "REQUIRES_2FA",
                 TempToken = tempToken,
+                IsTwoFactorRequired = true,
                 TwoFactorType = user.TwoFactorType ?? "AUTHENTICATOR",
                 Message = "Two-factor authentication is required."
             };
         }
 
+        // No 2FA required - issue JWT token
         // Audit log: Login success (no 2FA required)
         _auditService.LogFireAndForget(
             SecurityEventType.LoginSuccess,
@@ -201,26 +209,64 @@ public class AuthService : IAuthService
             userAgent,
             AuditSeverity.Info);
 
+        // Check if this is the first login
+        bool isFirstLogin = user.FirstLoginAt == null;
+
+        // Update FirstLoginAt on first successful login
+        if (isFirstLogin)
+        {
+            user.FirstLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+
+        // Determine if user should be prompted to set up 2FA
+        bool shouldSetupTwoFactor = ShouldPromptFor2FASetup(user, roles);
+
         return new AuthResultDto
         {
             IsSuccess = true,
+            AuthStage = "COMPLETED",
             Token = GenerateJwtToken(user),
             Message = "Login successful.",
+            IsFirstLogin = isFirstLogin,
+            IsTwoFactorEnabled = user.TwoFactorEnabled,
+            IsTwoFactorRequired = false,
+            TwoFactorType = user.TwoFactorType,
+            ShouldSetupTwoFactor = shouldSetupTwoFactor,
             FullName = user.FullName,
             ParishId = user.ParishId,
             ParishName = user.Parish?.ParishName,
-            FamilyId = user.Family?.FamilyId,
-            FamilyNumber= user.Family?.FamilyNumber,
+            FamilyId = user.Family?.FamilyNumber,
             FamilyName = string.Concat(user.Family?.HeadName, " ", user.Family?.FamilyName),
             Roles = roles.ToList()
         };
     }
 
     /// <summary>
+    /// Determines if user should be prompted to set up 2FA.
+    /// Prompts when:
+    /// - User has any role other than FamilyMember-only
+    /// - AND 2FA is not yet enabled
+    /// </summary>
+    private bool ShouldPromptFor2FASetup(User user, IList<string> roles)
+    {
+        // If 2FA is already enabled, no need to prompt
+        if (user.TwoFactorEnabled)
+            return false;
+
+        // If user has ONLY FamilyMember role, don't prompt
+        if (IsOnlyFamilyMember(roles))
+            return false;
+
+        // All other roles should be prompted to set up 2FA
+        return true;
+    }
+
+    /// <summary>
     /// Determines if 2FA should be required for a user based on:
     /// - Global TwoFactorSettings.Enabled
     /// - User's TwoFactorEnabled flag
-    /// - User's roles (FamilyMember-only users are exempt)
+    /// - User's roles (FamilyMember-only users are exempt, all others require 2FA)
     /// </summary>
     private bool ShouldRequire2FA(User user, IList<string> roles)
     {
@@ -236,7 +282,7 @@ public class AuthService : IAuthService
         if (IsOnlyFamilyMember(roles))
             return false;
 
-        // All other cases: require 2FA
+        // All other roles require 2FA when it's enabled
         return true;
     }
 
@@ -271,6 +317,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "Invalid or expired 2FA session."
             };
         }
@@ -290,6 +337,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "2FA session has expired. Please login again."
             };
         }
@@ -314,6 +362,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "Invalid or expired 2FA session."
             };
         }
@@ -333,6 +382,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "Maximum verification attempts exceeded. Please login again."
             };
         }
@@ -356,6 +406,7 @@ public class AuthService : IAuthService
                 return new AuthResultDto
                 {
                     IsSuccess = false,
+                    AuthStage = "FAILED",
                     Message = "2FA is not properly configured for this account."
                 };
             }
@@ -369,6 +420,7 @@ public class AuthService : IAuthService
                 return new AuthResultDto
                 {
                     IsSuccess = false,
+                    AuthStage = "FAILED",
                     Message = "2FA verification failed. Please contact support."
                 };
             }
@@ -410,6 +462,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = attemptsRemaining > 0
                     ? $"Invalid verification code. {attemptsRemaining} attempt(s) remaining."
                     : "Invalid verification code. Maximum attempts exceeded."
@@ -419,8 +472,8 @@ public class AuthService : IAuthService
         await _sessionRepository.DeleteAsync(session.SessionId);
 
         var user = await _context.Users
-            .Include(u => u.Family)
-            .Include(u => u.Parish)
+            // .Include(u => u.Family)
+            // .Include(u => u.Parish)
             .FirstOrDefaultAsync(u => u.Id == session.UserId);
 
         if (user == null)
@@ -428,6 +481,7 @@ public class AuthService : IAuthService
             return new AuthResultDto
             {
                 IsSuccess = false,
+                AuthStage = "FAILED",
                 Message = "User not found."
             };
         }
@@ -452,11 +506,30 @@ public class AuthService : IAuthService
 
         var roles = await _userManager.GetRolesAsync(user);
 
+        // Check if this is the first login
+        bool isFirstLogin = user.FirstLoginAt == null;
+
+        // Update FirstLoginAt on first successful login (after 2FA)
+        if (isFirstLogin)
+        {
+            user.FirstLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+
+        // Determine if user should be prompted to set up 2FA (should be false since they just used 2FA)
+        bool shouldSetupTwoFactor = ShouldPromptFor2FASetup(user, roles);
+
         return new AuthResultDto
         {
             IsSuccess = true,
+            AuthStage = "COMPLETED",
             Token = GenerateJwtToken(user),
             Message = "Login successful.",
+            IsFirstLogin = isFirstLogin,
+            IsTwoFactorEnabled = user.TwoFactorEnabled,
+            IsTwoFactorRequired = false,
+            TwoFactorType = user.TwoFactorType,
+            ShouldSetupTwoFactor = shouldSetupTwoFactor,
             FullName = user.FullName,
             ParishId = user.ParishId,
             ParishName = user.Parish?.ParishName,

@@ -47,8 +47,14 @@ namespace ChurchDTOs.DTOs.Entities
     public class AuthResultDto
     {
         public bool IsSuccess { get; set; }
-        public string Token { get; set; }
+        public string? Token { get; set; }
         public string Message { get; set; }
+        public string AuthStage { get; set; } // "COMPLETED" | "REQUIRES_2FA"
+        public bool IsFirstLogin { get; set; }
+        public bool IsTwoFactorEnabled { get; set; }
+        public bool IsTwoFactorRequired { get; set; }
+        public string? TwoFactorType { get; set; }
+        public bool ShouldSetupTwoFactor { get; set; }
         public string FullName { get; set; }
         public int? ParishId { get; set; }
         public string ParishName { get; set; }

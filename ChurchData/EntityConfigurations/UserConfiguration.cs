@@ -115,6 +115,10 @@ namespace ChurchData.EntityConfigurations
                    .HasColumnName("two_factor_enabled_at")
                    .HasColumnType("timestamp with time zone");
 
+            builder.Property(u => u.FirstLoginAt)
+                   .HasColumnName("first_login_at")
+                   .HasColumnType("timestamp with time zone");
+
             builder.HasOne(u => u.Family)
                    .WithMany(f => f.Users)
                    .HasForeignKey(u => u.FamilyId)

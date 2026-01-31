@@ -34,6 +34,9 @@ namespace ChurchData
         [Column("two_factor_enabled_at")]
         public DateTime? TwoFactorEnabledAt { get; set; }
 
+        [Column("first_login_at")]
+        public DateTime? FirstLoginAt { get; set; }
+
         public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
         public virtual Family? Family { get; set; }
         public virtual Parish? Parish { get; set; }
