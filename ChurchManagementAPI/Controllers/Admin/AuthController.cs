@@ -51,7 +51,8 @@ namespace ChurchManagementAPI.Controllers.Admin
                 return Ok(twoFactorResult);
             }
 
-            return StatusCode(500, new ErrorResponseDto { Message = "An unexpected error occurred." });
+            // Verification required responses are returned as anonymous objects. Return them as-is.
+            return Ok(result);
         }
 
         [HttpPost("verify-2fa")]
