@@ -421,21 +421,13 @@ namespace ChurchServices.Verification
                     };
                 }
 
-                // Reset password using UserManager
-                var removeResult = await _userManager.RemovePasswordAsync(user);
-                if (!removeResult.Succeeded)
+                // Set password hash directly to avoid writing null to the database
+                var hashed = _userManager.PasswordHasher.HashPassword(user, newPassword);
+                user.PasswordHash = hashed;
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
                 {
-                    return new ResetPasswordResponseDto
-                    {
-                        IsSuccess = false,
-                        Message = "Failed to reset password."
-                    };
-                }
-
-                var addResult = await _userManager.AddPasswordAsync(user, newPassword);
-                if (!addResult.Succeeded)
-                {
-                    var errors = string.Join(", ", addResult.Errors.Select(e => e.Description));
+                    var errors = string.Join(", ", updateResult.Errors.Select(e => e.Description));
                     return new ResetPasswordResponseDto
                     {
                         IsSuccess = false,
