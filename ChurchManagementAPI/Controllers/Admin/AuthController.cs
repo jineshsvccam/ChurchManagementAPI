@@ -1,4 +1,5 @@
 using ChurchContracts;
+using ChurchContracts.Interfaces.Services;
 using ChurchDTOs.DTOs.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace ChurchManagementAPI.Controllers.Admin
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IRegistrationRequestService _registrationRequestService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IRegistrationRequestService registrationRequestService)
         {
             _authService = authService;
+            _registrationRequestService = registrationRequestService;
         }
 
         [HttpPost("login")]
@@ -149,41 +152,33 @@ namespace ChurchManagementAPI.Controllers.Admin
                 return BadRequest(new ErrorResponseDto { Message = errorMessage });
             }
 
-            try
+            var roleName = "FamilyMember";
+            if (registerDto.RoleIds != null && registerDto.RoleIds.Count > 0)
             {
-                var user = await _authService.RegisterUserAsync(registerDto);
-                if (user == null)
-                {
-                    return BadRequest(new ErrorResponseDto { Message = "User registration failed." });
-                }
+                // Preserve legacy behavior: take first role id and translate to role name for staging.
+                var role = await HttpContext.RequestServices
+                    .GetRequiredService<ChurchContracts.IRoleService>()
+                    .GetRoleByIdAsync(registerDto.RoleIds[0]);
 
-                return Ok(new { Message = "User registered successfully.", UserId = user.Id });
+                if (!string.IsNullOrWhiteSpace(role?.Name))
+                {
+                    roleName = role.Name;
+                }
             }
-            catch (Exception ex)
+
+            var request = new RegisterRequestDto
             {
-                if (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
-                {
-                    if (pgEx.ConstraintName == "users_email_key")
-                    {
-                        return Conflict(new ErrorResponseDto { Message = "A user with this email address already exists." });
-                    }
-                    else if (pgEx.ConstraintName?.Contains("username") == true)
-                    {
-                        return Conflict(new ErrorResponseDto { Message = "A user with this username already exists." });
-                    }
-                    else
-                    {
-                        return Conflict(new ErrorResponseDto { Message = "A user with these details already exists." });
-                    }
-                }
+                FullName = registerDto.FullName,
+                Email = registerDto.Email,
+                ParishId = registerDto.ParishId,
+                FamilyId = registerDto.FamilyId,
+                Role = roleName
+            };
 
-                if (ex.Message.StartsWith("User creation failed:"))
-                {
-                    return BadRequest(new ErrorResponseDto { Message = ex.Message });
-                }
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var result = await _registrationRequestService.CreateRegisterRequestAsync(request, ip);
 
-                return StatusCode(500, new ErrorResponseDto { Message = "An error occurred during registration. Please try again later." });
-            }
+            return Ok(new { result.IsSuccess, result.Message });
         }
     }
 }

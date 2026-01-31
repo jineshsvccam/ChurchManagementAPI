@@ -38,6 +38,10 @@ namespace ChurchData
         public DbSet<User2FASession> User2FASessions { get; set; }
         public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
         public DbSet<MobileViewRequest> MobileViewRequests { get; set; }
+        public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+        public DbSet<PhoneVerificationToken> PhoneVerificationTokens { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<RegistrationRequest> RegistrationRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,7 +52,11 @@ namespace ChurchData
 
             // Additionally, apply the consolidated FamilyMember-related mappings
             modelBuilder.ConfigureFamilyMemberMappings();
-           
+
+            // Map verification token entities to existing DB tables (PostgreSQL)
+            modelBuilder.Entity<EmailVerificationToken>().ToTable("email_verification_tokens");
+            modelBuilder.Entity<PhoneVerificationToken>().ToTable("phone_verification_tokens");
+            modelBuilder.Entity<PasswordResetToken>().ToTable("password_reset_tokens");
         }
     }
 }

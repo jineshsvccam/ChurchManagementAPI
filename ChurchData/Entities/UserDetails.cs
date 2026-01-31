@@ -43,6 +43,107 @@ namespace ChurchData
         public virtual ICollection<UserAuthenticator> Authenticators { get; set; } = new HashSet<UserAuthenticator>();
         public virtual ICollection<User2FARecoveryCode> RecoveryCodes { get; set; } = new HashSet<User2FARecoveryCode>();
         public virtual ICollection<User2FASession> TwoFactorSessions { get; set; } = new HashSet<User2FASession>();
+        public virtual ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new HashSet<EmailVerificationToken>();
+        public virtual ICollection<PhoneVerificationToken> PhoneVerificationTokens { get; set; } = new HashSet<PhoneVerificationToken>();
+        public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new HashSet<PasswordResetToken>();
+    }
+
+    // Email Verification Token
+    public class EmailVerificationToken
+    {
+        [Key]
+        [Column("token_id")]
+        public Guid TokenId { get; set; } = Guid.NewGuid();
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("token")]
+        [MaxLength(512)]
+        public string Token { get; set; }
+
+        [Column("email")]
+        [MaxLength(255)]
+        public string Email { get; set; }
+
+        [Column("is_used")]
+        public bool IsUsed { get; set; } = false;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("expires_at")]
+        public DateTime ExpiresAt { get; set; }
+
+        [Column("verified_at")]
+        public DateTime? VerifiedAt { get; set; }
+
+        public virtual User? User { get; set; }
+    }
+
+    // Phone Verification Token
+    public class PhoneVerificationToken
+    {
+        [Key]
+        [Column("token_id")]
+        public Guid TokenId { get; set; } = Guid.NewGuid();
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("phone_number")]
+        [MaxLength(20)]
+        public string PhoneNumber { get; set; }
+
+        [Column("otp")]
+        [MaxLength(6)]
+        public string Otp { get; set; }
+
+        [Column("is_used")]
+        public bool IsUsed { get; set; } = false;
+
+        [Column("attempts")]
+        public int Attempts { get; set; } = 0;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("expires_at")]
+        public DateTime ExpiresAt { get; set; }
+
+        [Column("verified_at")]
+        public DateTime? VerifiedAt { get; set; }
+
+        public virtual User? User { get; set; }
+    }
+
+    // Password Reset Token
+    public class PasswordResetToken
+    {
+        [Key]
+        [Column("token_id")]
+        public Guid TokenId { get; set; } = Guid.NewGuid();
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("token")]
+        [MaxLength(512)]
+        public string Token { get; set; }
+
+        [Column("is_used")]
+        public bool IsUsed { get; set; } = false;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("expires_at")]
+        public DateTime ExpiresAt { get; set; }
+
+        [Column("used_at")]
+        public DateTime? UsedAt { get; set; }
+
+        public virtual User? User { get; set; }
     }
 
     public class UserRole : IdentityUserRole<Guid>

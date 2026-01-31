@@ -30,6 +30,7 @@ public class AuthService : IAuthService
     private readonly TwoFactorSettings _twoFactorSettings;
     private readonly ITotpSecretEncryptionService _totpEncryption;
     private readonly ISecurityAuditService _auditService;
+    private readonly IVerificationService _verificationService;
 
     private const int TwoFactorSessionExpiryMinutes = 5;
     private const int MaxSessionAttempts = 5;
@@ -38,15 +39,20 @@ public class AuthService : IAuthService
     private const string FamilyMemberRole = "FamilyMember";
 
     // Constructor: Sets up dependencies
-    public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
-        RoleManager<Role> roleManager, IConfiguration configuration,
-        ILogger<AuthService> logger, ApplicationDbContext context,
+    public AuthService(
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
+        RoleManager<Role> roleManager,
+        IConfiguration configuration,
+        ILogger<AuthService> logger,
+        ApplicationDbContext context,
         IUser2FASessionRepository sessionRepository,
         IUserAuthenticatorRepository authenticatorRepository,
         IUser2FARecoveryCodeRepository recoveryCodeRepository,
         IOptions<TwoFactorSettings> twoFactorSettings,
         ITotpSecretEncryptionService totpEncryption,
-        ISecurityAuditService auditService)
+        ISecurityAuditService auditService,
+        IVerificationService verificationService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -60,6 +66,7 @@ public class AuthService : IAuthService
         _twoFactorSettings = twoFactorSettings.Value;
         _totpEncryption = totpEncryption;
         _auditService = auditService;
+        _verificationService = verificationService;
     }
 
     // AuthenticateUserAsync: Checks login and returns token
@@ -108,6 +115,55 @@ public class AuthService : IAuthService
             };
         }
 
+        // Mandatory verification gates before any login
+        if (!user.EmailConfirmed)
+        {
+            _auditService.LogFireAndForget(
+                SecurityEventType.LoginFailed,
+                user.Id,
+                "Login blocked: email not verified",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
+
+            return new
+            {
+                isSuccess = false,
+                authStage = "VERIFICATION_REQUIRED",
+                emailVerified = false,
+                phoneVerified = user.PhoneNumberConfirmed,
+                message = "Email verification is required."
+            };
+        }
+
+        // Phone verification should be required for privileged roles only.
+        var rolesForVerification = await _userManager.GetRolesAsync(user);
+        var requiresPhoneVerification = rolesForVerification.Any(r =>
+            r.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+            r.Equals("Trustee", StringComparison.OrdinalIgnoreCase) ||
+            r.Equals("Secretary", StringComparison.OrdinalIgnoreCase));
+
+        if (requiresPhoneVerification && !user.PhoneNumberConfirmed)
+        {
+            _auditService.LogFireAndForget(
+                SecurityEventType.LoginFailed,
+                user.Id,
+                "Login blocked: phone not verified",
+                ipAddress,
+                userAgent,
+                AuditSeverity.Warning);
+
+            return new
+            {
+                isSuccess = false,
+                authStage = "VERIFICATION_REQUIRED",
+                emailVerified = true,
+                phoneVerified = false,
+                message = "Phone verification is required."
+            };
+        }
+
+        // Account must be active
         if (user.Status != UserStatus.Active)
         {
             // Audit log: Login failed - account not active
@@ -128,7 +184,7 @@ public class AuthService : IAuthService
         }
 
         // Get roles early to use for both 2FA check and response
-        var roles = await _userManager.GetRolesAsync(user);
+        var roles = rolesForVerification;
 
         // Check if 2FA should be enforced for this user
         bool requires2FA = ShouldRequire2FA(user, roles);
@@ -703,59 +759,9 @@ public class AuthService : IAuthService
     // RegisterUserAsync: Creates user and assigns roles
     public async Task<User?> RegisterUserAsync(RegisterDto model)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
-        {
-            var user = new User
-            {
-                UserName = model.Username,
-                Email = model.Email,
-                EmailConfirmed = true,
-                ParishId = model.ParishId,
-                FamilyId = model.FamilyId,
-                FullName = model.FullName,
-                PhoneNumber = model.PhoneNumber,
-                Status = UserStatus.Pending
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-            {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new Exception($"User creation failed: {errors}");
-            }
-
-            foreach (var roleId in model.RoleIds)
-            {
-                var role = await _roleManager.FindByIdAsync(roleId.ToString());
-                if (role == null)
-                    throw new Exception($"Role with ID {roleId} not found.");
-
-                var isInRole = await _userManager.IsInRoleAsync(user, role.Name);
-                if (!isInRole)
-                {
-                    var userRole = new UserRole
-                    {
-                        UserId = user.Id,
-                        RoleId = roleId,
-                        Status = RoleStatus.Pending,
-                        ApprovedBy = null,
-                        ApprovedAt = null
-                    };
-                    _context.UserRoles.Add(userRole);
-                }
-            }
-
-            await _context.SaveChangesAsync(); // Save all UserRoles at once
-            await transaction.CommitAsync();
-            return user;
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            _logger.LogError(ex, "Error during user registration for {Username}", model.Username);
-            throw;
-        }
+        throw new InvalidOperationException(
+            "Direct user creation is disabled. Use RegistrationRequestService (register-request -> verify-registration-email -> complete-registration)."
+        );
     }
     // GenerateJwtToken: Creates JWT for user
     private string GenerateJwtToken(User user)

@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 using ChurchCommon.Settings;
 using ChurchCommon.Utils;
 using ChurchContracts;
@@ -17,6 +18,7 @@ using ChurchRepositories.Settings;
 using ChurchRepositories.Reports;
 using ChurchRepositories.Transactions;
 using ChurchRepositories.TwoFactorAuth;
+using ChurchRepositories.Repositories;
 using ChurchServices;
 using ChurchServices.Admin;
 using ChurchServices.Settings;
@@ -25,6 +27,9 @@ using ChurchServices.Transactions;
 using ChurchServices.TwoFactorAuth;
 using ChurchServices.Security;
 using ChurchServices.Storage;
+using ChurchServices.Email;
+using ChurchServices.Verification;
+using ChurchServices.Registration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -78,6 +83,8 @@ builder.Services.AddScoped<SignInManager<User>>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<AuthService>());
 
+builder.Services.AddHostedService<RegistrationRequestCleanupHostedService>();
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
@@ -118,6 +125,15 @@ builder.Services.AddScoped<IUserAuthenticatorRepository, UserAuthenticatorReposi
 builder.Services.AddScoped<IUser2FARecoveryCodeRepository, User2FARecoveryCodeRepository>();
 builder.Services.AddScoped<IUser2FASessionRepository, User2FASessionRepository>();
 builder.Services.AddScoped<ITwoFactorAuthenticationService, TwoFactorAuthenticationService>();
+
+builder.Services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
+builder.Services.AddScoped<IPhoneVerificationTokenRepository, PhoneVerificationTokenRepository>();
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IVerificationService, VerificationService>();
+
+// Split registration (staged registration_requests)
+builder.Services.AddScoped<IRegistrationRequestService, RegistrationRequestService>();
 
 builder.Services.AddScoped<IParishService, ParishService>();
 builder.Services.AddScoped<IParishRepository, ParishRepository>();
@@ -198,9 +214,42 @@ builder.Services.AddScoped<IFamilyQueryRepository, FamilyQueryRepository>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IUserStateService, InMemoryUserStateService>();
 
-//builder.Services.AddStackExchangeRedisCache(...);
-//builder.Services.AddScoped<IUserStateService, RedisUserStateService>();
+// Rate limiting (used to protect anonymous verification endpoints)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
+    options.AddPolicy("verification-send", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(10),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+
+    options.AddPolicy("register-request-email", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromHours(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+});
+
+// Remove duplicate memory cache registration later (keep existing ones if used)
 
 // Register configuration settings
 builder.Services.Configure<LoggingSettings>(builder.Configuration.GetSection("Logging"));
@@ -367,6 +416,8 @@ var app = builder.Build();
 // Use forwarded headers before authentication
 app.UseForwardedHeaders();
 
+// Enable rate limiting middleware
+app.UseRateLimiter();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
