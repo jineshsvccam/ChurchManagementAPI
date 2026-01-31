@@ -181,5 +181,63 @@ namespace ChurchManagementAPI.Controllers.Admin
 
             return Ok(new { result.IsSuccess, result.Message });
         }
+
+        [Authorize]
+        [HttpPost("2fa/disable")]
+        public async Task<IActionResult> DisableTwoFactor([FromBody] DisableTwoFactorRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = string.Join("; ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+                return BadRequest(new ErrorResponseDto { Message = errorMessage });
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+            {
+                return Unauthorized(new ErrorResponseDto { Message = "User ID not found in token." });
+            }
+
+            try
+            {
+                var result = await _authService.DisableTwoFactorAsync(userId, request.Code);
+                return Ok(new { isSuccess = result });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { Message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ErrorResponseDto { Message = "An error occurred while disabling 2FA." });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("2fa/status")]
+        public async Task<IActionResult> GetTwoFactorStatus()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+            {
+                return Unauthorized(new ErrorResponseDto { Message = "User ID not found in token." });
+            }
+
+            try
+            {
+                var status = await _authService.GetTwoFactorStatusAsync(userId);
+                return Ok(status);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { Message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ErrorResponseDto { Message = "An error occurred while retrieving 2FA status." });
+            }
+        }
     }
 }

@@ -331,11 +331,11 @@ public class AuthService : IAuthService
         if (!_twoFactorSettings.Enabled)
             return false;
 
-        // If user hasn't enabled 2FA, don't require it
-        if (!user.TwoFactorEnabled)
-            return false;
+        // If user has enabled 2FA, require it regardless of role
+        if (user.TwoFactorEnabled)
+            return true;
 
-        // Check if user has ONLY the FamilyMember role (exempt from 2FA)
+        // If user has ONLY FamilyMember role and has NOT enabled 2FA, don't require
         if (IsOnlyFamilyMember(roles))
             return false;
 
@@ -1067,5 +1067,60 @@ public class AuthService : IAuthService
         
         // Constant-time comparison to prevent timing attacks
         return CryptographicOperations.FixedTimeEquals(storedBytes, currentBytes);
+    }
+
+    // Disables 2FA for a user after verifying the TOTP code
+    public async Task<bool> DisableTwoFactorAsync(Guid userId, string code)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+            throw new InvalidOperationException("User not found.");
+
+        var authenticator = await _authenticatorRepository.GetActiveByUserIdAsync(userId);
+        if (authenticator == null || authenticator.VerifiedAt == null)
+            throw new InvalidOperationException("2FA is not enabled for this user.");
+
+        // Decrypt secret for verification
+        var decryptedSecret = _totpEncryption.Decrypt(authenticator.SecretKey);
+        if (decryptedSecret == null)
+            throw new InvalidOperationException("2FA secret could not be decrypted.");
+
+        // Verify TOTP code
+        var (isValid, _, _) = VerifyTotpCodeWithReplayProtection(
+            decryptedSecret,
+            code,
+            authenticator.LastUsedTimeStep,
+            userId,
+            null,
+            null);
+
+        if (!isValid)
+            throw new InvalidOperationException("Invalid verification code.");
+
+        // Disable 2FA
+        user.TwoFactorEnabled = false;
+        user.TwoFactorType = null;
+        user.TwoFactorEnabledAt = null;
+        await _context.SaveChangesAsync();
+        await _authenticatorRepository.RevokeAllByUserIdAsync(userId);
+        await _recoveryCodeRepository.DeleteAllByUserIdAsync(userId);
+
+        // Audit log: 2FA disabled
+        _auditService.LogFireAndForget(
+            SecurityEventType.TwoFactorDisabled,
+            userId,
+            "2FA disabled by user",
+            severity: AuditSeverity.Info);
+
+        return true;
+    }
+
+    // Returns the current 2FA status for a user
+    public async Task<TwoFactorStatusDto> GetTwoFactorStatusAsync(Guid userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+            throw new InvalidOperationException("User not found.");
+        return new TwoFactorStatusDto { Enabled = user.TwoFactorEnabled, Type = user.TwoFactorType };
     }
 }
