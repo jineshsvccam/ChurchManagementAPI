@@ -95,7 +95,7 @@ namespace ChurchDTOs.DTOs.Entities
         public string SignedUrl { get; set; } = null!;
         public DateTime UploadedAt { get; set; }
     }
-    public class FamilyFileUpdateDto
+    public class FamilyFileUpdateDto : IValidatableObject
     {
         [Required(ErrorMessage = "FileType is required.")]
         [StringLength(50, MinimumLength = 1, ErrorMessage = "FileType must be between 1 and 50 characters.")]
@@ -105,5 +105,26 @@ namespace ChurchDTOs.DTOs.Entities
         public string? FileCategory { get; set; }
 
         public bool? IsPrimary { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "MemberId must be a positive integer when provided.")]
+        public int? MemberId { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            // If the file type is ProfilePhoto, MemberId must be provided
+            if (!string.IsNullOrWhiteSpace(FileType) &&
+                string.Equals(FileType, "ProfilePhoto", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!MemberId.HasValue || MemberId.Value <= 0)
+                {
+                    yield return new ValidationResult(
+                        "MemberId is required when FileType is 'ProfilePhoto'.",
+                        new[] { nameof(MemberId) }
+                    );
+                }
+            }
+
+            yield break;
+        }
     }
 }

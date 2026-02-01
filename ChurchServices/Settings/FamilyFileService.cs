@@ -213,6 +213,12 @@ namespace ChurchServices.Settings
                 file.IsPrimary = updateDto.IsPrimary.Value;
             }
 
+            // Save MemberId when provided in update
+            if (updateDto.MemberId.HasValue)
+            {
+                file.MemberId = updateDto.MemberId;
+            }
+
             await _repository.UpdateAsync(file);
             return _mapper.Map<FamilyFileDto>(file);
         }

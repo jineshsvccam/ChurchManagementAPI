@@ -325,7 +325,17 @@ namespace ChurchManagementAPI.Controllers.Settings
                     return NotFound();
                 }
 
-                var (canAccess, errorMessage) = await CanAccessFamilyFilesAsync(file.FamilyId);
+                // If update specifies MemberId, validate the member exists
+                if (updateDto.MemberId.HasValue)
+                {
+                    var memberValidation = await ValidateMemberExistsAsync(updateDto.MemberId.Value);
+                    if (memberValidation != null)
+                    {
+                        return memberValidation;
+                    }
+                }
+
+                var (canAccess, errorMessage) = await CanAccessFamilyFilesAsync(file.FamilyId, updateDto.MemberId);
                 if (!canAccess)
                 {
                     return Forbid(errorMessage);
