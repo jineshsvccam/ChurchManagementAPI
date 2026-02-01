@@ -117,7 +117,7 @@ namespace ChurchServices.Registration
                 _context.RegistrationRequests.Add(rr);
                 await _context.SaveChangesAsync();
 
-                var verificationLink = $"{_configuration["Frontend:Url"]}//auth/verify-registration-email?token={Uri.EscapeDataString(token)}";
+                var verificationLink = $"{_configuration["Frontend:Url"]}/auth/verify-registration-email?token={Uri.EscapeDataString(token)}";
                 var sent = await _emailService.SendEmailVerificationAsync(request.Email, verificationLink);
 
                 if (!sent)
