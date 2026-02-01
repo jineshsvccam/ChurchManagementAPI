@@ -12,19 +12,19 @@ using Microsoft.Extensions.Logging;
 namespace ChurchManagementAPI.Controllers.Settings
 {
     [Authorize(Policy = "FamilyMemberPolicy")]
-    public class FamilyFilesController : ManagementAuthorizedTrialController
+    public class FamilyFilesController : FamilyMemberAuthorizedController
     {
         private readonly IFamilyFileService _familyFileService;
         private readonly ApplicationDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ILogger<ManagementAuthorizedTrialController> _logger;
+        private readonly ILogger<FamilyFilesController> _logger;
 
         public FamilyFilesController(
             IFamilyFileService familyFileService,
             IHttpContextAccessor httpContextAccessor,
             ApplicationDbContext context,
-            ILogger<ManagementAuthorizedTrialController> logger)
-            : base(httpContextAccessor, context, logger)
+            ILogger<FamilyFilesController> logger)
+            : base()
         {
             _familyFileService = familyFileService ?? throw new ArgumentNullException(nameof(familyFileService));
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -328,6 +328,11 @@ namespace ChurchManagementAPI.Controllers.Settings
                 // If update specifies MemberId, validate the member exists
                 if (updateDto.MemberId.HasValue)
                 {
+                    if (updateDto.MemberId.Value <= 0)
+                    {
+                        return BadRequest(new { Error = "Invalid MemberId", Message = "MemberId must be a positive integer." });
+                    }
+
                     var memberValidation = await ValidateMemberExistsAsync(updateDto.MemberId.Value);
                     if (memberValidation != null)
                     {
