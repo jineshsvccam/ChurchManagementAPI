@@ -58,6 +58,26 @@ namespace ChurchManagementAPI.Controllers.Auth
             return Ok(result);
         }
 
+        // Add a GET endpoint to allow verifying registration via a query token (e.g., from email link)
+        [HttpGet("verify-registration-email")]
+        [ProducesResponseType(typeof(VerifyRegistrationEmailResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyRegistrationEmail([FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return BadRequest(new ErrorResponseDto { Message = "Token is required." });
+            }
+
+            var result = await _registrationService.VerifyRegistrationEmailAsync(token);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new ErrorResponseDto { Message = result.Message });
+            }
+
+            return Ok(result);
+        }
+
         [HttpPost("complete-registration")]
         [ProducesResponseType(typeof(CompleteRegistrationResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
