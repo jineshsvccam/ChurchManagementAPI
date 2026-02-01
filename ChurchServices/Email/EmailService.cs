@@ -70,12 +70,46 @@ namespace ChurchServices.Email
         public Task<bool> SendEmailVerificationAsync(string to, string verificationLink)
         {
             var subject = "Email Verification - FinChurch";
+
+            // Attempt to extract token from the verification link so it can be displayed in the email body
+            string token = string.Empty;
+            try
+            {
+                var uri = new Uri(verificationLink);
+                // Use QueryHelpers to parse query string in a robust way
+                var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+                if (query.TryGetValue("token", out var tokenValues))
+                {
+                    token = tokenValues.FirstOrDefault() ?? string.Empty;
+                }
+            }
+            catch
+            {
+                // If parsing fails, fall back to a simple extraction
+                var marker = "token=";
+                var idx = verificationLink.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0)
+                {
+                    token = verificationLink.Substring(idx + marker.Length);
+                    // remove any other query params that might follow
+                    var amp = token.IndexOf('&');
+                    if (amp >= 0)
+                    {
+                        token = token.Substring(0, amp);
+                    }
+                }
+            }
+
+            var displayToken = Uri.UnescapeDataString(token ?? string.Empty);
+
             var body = $@"
                 <h2>Email Verification</h2>
-                <p>Thank you for registering with FinChurch. Please verify your email address by clicking the link below:</p>
+                <p>Thank you for registering with FinChurch. To complete your account verification, you may either click the verification link below or copy the verification token and paste it into the verification screen in the application.</p>
                 <p><a href='{verificationLink}'>Verify Email</a></p>
-                <p>This link will expire in 24 hours.</p>
-                <p>If you did not register for this account, please ignore this email.</p>
+                <p><strong>Verification Token:</strong></p>
+                <pre style='background:#f6f8fa;padding:10px;border-radius:4px;font-size:14px'>{displayToken}</pre>
+                <p>This token will expire in 24 hours. For security, do not share this token with anyone.</p>
+                <p>If you did not register for this account, please disregard this email.</p>
             ";
 
             return SendEmailAsync(to, subject, body, true);
