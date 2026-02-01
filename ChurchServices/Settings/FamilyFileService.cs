@@ -14,6 +14,7 @@ namespace ChurchServices.Settings
         private readonly IMapper _mapper;
         private readonly IFamilyRepository _familyRepository;
         private readonly IFileStorageService _storageService;
+        private const int MaxFilesPerFamily = 12;
 
         public FamilyFileService(
             IFamilyFileRepository repository,
@@ -64,6 +65,13 @@ namespace ChurchServices.Settings
         public async Task<FamilyFileDto> AddAsync(FamilyFileCreateDto createDto)
         {
             _logger.LogInformation("Adding family file for FamilyId: {FamilyId}", createDto.FamilyId);
+
+            // Validate max files per family
+            var existingFiles = await _repository.GetByFamilyAsync(createDto.FamilyId);
+            if (existingFiles.Count() >= MaxFilesPerFamily)
+            {
+                throw new InvalidOperationException($"Family cannot have more than {MaxFilesPerFamily} files.");
+            }
 
             var entity = _mapper.Map<FamilyFile>(createDto);
             entity.Status = "Approved";
@@ -139,6 +147,74 @@ namespace ChurchServices.Settings
                 SignedUrl = signedUrl,
                 ExpiryMinutes = 10
             };
+        }
+
+        public async Task<BulkPresignDownloadResponseDto> GenerateBulkDownloadUrlsAsync(int familyId, int? memberId = null)
+        {
+            _logger.LogInformation("Generating bulk signed download URLs for FamilyId: {FamilyId}, MemberId: {MemberId}", familyId, memberId);
+
+            IEnumerable<FamilyFile> files;
+            if (memberId.HasValue)
+            {
+                files = await _repository.GetByMemberAsync(familyId, memberId.Value);
+            }
+            else
+            {
+                files = await _repository.GetByFamilyAsync(familyId);
+            }
+
+            var fileSignedUrls = new List<FileSignedUrlDto>();
+
+            foreach (var file in files)
+            {
+                var signedUrl = await _storageService.GenerateDownloadUrlAsync(file.FileKey);
+                fileSignedUrls.Add(new FileSignedUrlDto
+                {
+                    FileId = file.FileId,
+                    FileName = Path.GetFileName(file.FileKey),
+                    FileType = file.FileType,
+                    SignedUrl = signedUrl,
+                    UploadedAt = file.UploadedAt
+                });
+            }
+
+            return new BulkPresignDownloadResponseDto
+            {
+                Files = fileSignedUrls,
+                ExpiryMinutes = 10
+            };
+        }
+
+        public async Task<FamilyFileDto> UpdateAsync(Guid fileId, FamilyFileUpdateDto updateDto)
+        {
+            _logger.LogInformation("Updating family file FileId: {FileId}", fileId);
+
+            var file = await _repository.GetByIdAsync(fileId)
+                ?? throw new KeyNotFoundException("Family file not found");
+
+            // If setting IsPrimary to true, unset other primary files for this family
+            if (updateDto.IsPrimary.HasValue && updateDto.IsPrimary.Value)
+            {
+                var familyFiles = await _repository.GetByFamilyAsync(file.FamilyId);
+                foreach (var existingFile in familyFiles.Where(f => f.FileId != fileId && f.IsPrimary))
+                {
+                    existingFile.IsPrimary = false;
+                    await _repository.UpdateAsync(existingFile);
+                }
+            }
+
+            file.FileType = updateDto.FileType;
+            if (updateDto.FileCategory != null)
+            {
+                file.FileCategory = updateDto.FileCategory;
+            }
+            if (updateDto.IsPrimary.HasValue)
+            {
+                file.IsPrimary = updateDto.IsPrimary.Value;
+            }
+
+            await _repository.UpdateAsync(file);
+            return _mapper.Map<FamilyFileDto>(file);
         }
 
         private string BuildFileKey(

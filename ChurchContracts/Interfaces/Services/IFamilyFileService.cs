@@ -30,5 +30,10 @@ namespace ChurchContracts
         Task<PresignUploadResponseDto> GenerateUploadUrlAsync(PresignUploadRequestDto request);
         Task<PresignDownloadResponseDto> GenerateDownloadUrlAsync(Guid fileId);
 
+        // 🔹 Bulk Presigned Download URLs
+        Task<BulkPresignDownloadResponseDto> GenerateBulkDownloadUrlsAsync(int familyId, int? memberId = null);
+
+        // 🔹 Update file metadata
+        Task<FamilyFileDto> UpdateAsync(Guid fileId, FamilyFileUpdateDto updateDto);
     }
 }

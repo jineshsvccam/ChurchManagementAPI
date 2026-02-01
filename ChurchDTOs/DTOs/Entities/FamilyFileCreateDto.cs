@@ -82,4 +82,28 @@ namespace ChurchDTOs.DTOs.Entities
         public string SignedUrl { get; set; } = null!;
         public int ExpiryMinutes { get; set; }
     }
+    public class BulkPresignDownloadResponseDto
+    {
+        public IEnumerable<FileSignedUrlDto> Files { get; set; } = new List<FileSignedUrlDto>();
+        public int ExpiryMinutes { get; set; }
+    }
+    public class FileSignedUrlDto
+    {
+        public Guid FileId { get; set; }
+        public string FileName { get; set; } = null!;
+        public string FileType { get; set; } = null!;
+        public string SignedUrl { get; set; } = null!;
+        public DateTime UploadedAt { get; set; }
+    }
+    public class FamilyFileUpdateDto
+    {
+        [Required(ErrorMessage = "FileType is required.")]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "FileType must be between 1 and 50 characters.")]
+        public string FileType { get; set; } = null!;
+
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "FileCategory must be between 1 and 50 characters.")]
+        public string? FileCategory { get; set; }
+
+        public bool? IsPrimary { get; set; }
+    }
 }
