@@ -27,7 +27,10 @@ namespace ChurchRepositories.Admin
 
         public async Task<IEnumerable<RoleDto>> GetAllRolesAsync()
         {
-            var roles = await _context.Roles.ToListAsync();
+            // Exclude the built-in Admin role from the returned list
+            var roles = await _context.Roles
+                .Where(r => r.NormalizedName != "ADMIN")
+                .ToListAsync();
             return _mapper.Map<IEnumerable<RoleDto>>(roles);
         }
 
