@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 
 namespace ChurchServices.Verification
 {
@@ -293,12 +294,26 @@ namespace ChurchServices.Verification
                 phoneToken.VerifiedAt = DateTime.UtcNow;
                 await _phoneTokenRepository.UpdateAsync(phoneToken);
 
-                // Update user
-                var user = await _context.Users.FindAsync(userId);
-                if (user != null)
+                // Update user using UserManager to ensure Identity store consistency
+                var identityUser = await _userManager.FindByIdAsync(userId.ToString());
+                if (identityUser != null)
                 {
-                    user.PhoneNumberConfirmed = true;
-                    await _context.SaveChangesAsync();
+                    if (!string.IsNullOrWhiteSpace(phoneToken.PhoneNumber))
+                    {
+                        identityUser.PhoneNumber = phoneToken.PhoneNumber;
+                        identityUser.PhoneNumberConfirmed = true; // mark confirmed
+                    }
+                    else
+                    {
+                        // Even if phone number wasn't stored on the token, still mark confirmed
+                        identityUser.PhoneNumberConfirmed = true;
+                    }
+
+                    var updateResult = await _userManager.UpdateAsync(identityUser);
+                    if (!updateResult.Succeeded)
+                    {
+                        _logger.LogWarning("Failed to update user phone confirmation for {UserId}: {Errors}", userId, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                    }
                 }
 
                 return new PhoneVerificationResponseDto
