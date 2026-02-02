@@ -12,5 +12,7 @@ namespace ChurchContracts
         Task<User?> RegisterUserAsync(RegisterDto model);
         Task<bool> DisableTwoFactorAsync(Guid userId, string code);
         Task<TwoFactorStatusDto> GetTwoFactorStatusAsync(Guid userId);
+        Task<EnableAuthenticatorResponseDto> SetupTwoFactorWithTempTokenAsync(string tempToken, string ipAddress, string userAgent);
+        Task<EnableAuthenticatorResponseDto> VerifySetupTwoFactorWithTempTokenAsync(string tempToken, string code, string ipAddress, string userAgent);
     }
 }

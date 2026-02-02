@@ -763,6 +763,134 @@ public class AuthService : IAuthService
         };
     }
 
+    // New: Setup using temp token (bootstrap flow)
+    public async Task<EnableAuthenticatorResponseDto> SetupTwoFactorWithTempTokenAsync(string tempToken, string ipAddress, string userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(tempToken))
+            throw new InvalidOperationException("Temp token is required.");
+
+        var session = await _sessionRepository.GetByTempTokenAsync(tempToken);
+        if (session == null || session.ExpiresAt < DateTime.UtcNow)
+            throw new InvalidOperationException("Invalid or expired temp token.");
+
+        // Validate fingerprint
+        if (!ValidateClientFingerprint(session.ClientFingerprint, ipAddress, userAgent))
+            throw new InvalidOperationException("Client fingerprint mismatch.");
+
+        // Get user
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+        if (user == null)
+            throw new InvalidOperationException("User not found.");
+
+        // Revoke existing and create new authenticator record with encrypted secret
+        await _authenticatorRepository.RevokeAllByUserIdAsync(user.Id);
+
+        var plaintextSecret = GenerateSecretKey();
+        var encryptedSecret = _totpEncryption.Encrypt(plaintextSecret);
+
+        var authenticator = new UserAuthenticator
+        {
+            UserId = user.Id,
+            SecretKey = encryptedSecret,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _authenticatorRepository.AddAsync(authenticator);
+
+        // Audit
+        _auditService.LogFireAndForget(
+            SecurityEventType.TwoFactorSetupInitiated,
+            user.Id,
+            "2FA setup (temp) initiated",
+            ipAddress,
+            userAgent,
+            AuditSeverity.Info);
+
+        var qrCodeUri = GenerateQrCodeUri(user.Email ?? user.UserName, plaintextSecret);
+
+        return new EnableAuthenticatorResponseDto
+        {
+            SecretKey = FormatSecretKey(plaintextSecret),
+            QrCodeUri = qrCodeUri,
+            RecoveryCodes = new List<string>()
+        };
+    }
+
+    // New: Verify setup using temp token
+    public async Task<EnableAuthenticatorResponseDto> VerifySetupTwoFactorWithTempTokenAsync(string tempToken, string code, string ipAddress, string userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(tempToken))
+            throw new InvalidOperationException("Temp token is required.");
+
+        var session = await _sessionRepository.GetByTempTokenAsync(tempToken);
+        if (session == null || session.ExpiresAt < DateTime.UtcNow)
+            throw new InvalidOperationException("Invalid or expired temp token.");
+
+        // Validate fingerprint
+        if (!ValidateClientFingerprint(session.ClientFingerprint, ipAddress, userAgent))
+            throw new InvalidOperationException("Client fingerprint mismatch.");
+
+        var authenticator = await _authenticatorRepository.GetActiveByUserIdAsync(session.UserId);
+        if (authenticator == null)
+            throw new InvalidOperationException("No active authenticator found. Please setup 2FA first.");
+
+        if (authenticator.VerifiedAt != null)
+            throw new InvalidOperationException("Authenticator is already verified.");
+
+        var decryptedSecret = _totpEncryption.Decrypt(authenticator.SecretKey);
+        if (decryptedSecret == null)
+            throw new InvalidOperationException("2FA setup verification failed. Please try again.");
+
+        var (isValid, usedTimeStep, _) = VerifyTotpCodeWithReplayProtection(decryptedSecret, code, authenticator.LastUsedTimeStep, session.UserId, ipAddress, userAgent);
+
+        if (!isValid)
+            throw new InvalidOperationException("Invalid verification code.");
+
+        // Update authenticator and enable 2FA
+        authenticator.VerifiedAt = DateTime.UtcNow;
+        authenticator.LastUsedTimeStep = usedTimeStep;
+        await _authenticatorRepository.UpdateAsync(authenticator);
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+        if (user == null)
+            throw new InvalidOperationException("User not found.");
+
+        user.TwoFactorEnabled = true;
+        user.TwoFactorType = "AUTHENTICATOR";
+        user.TwoFactorEnabledAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var recoveryCodes = await GenerateRecoveryCodesAsync(user.Id);
+
+        // Audit logs
+        _auditService.LogFireAndForget(
+            SecurityEventType.TwoFactorSetupVerified,
+            user.Id,
+            "2FA setup (temp) verified and enabled",
+            ipAddress,
+            userAgent,
+            AuditSeverity.Info);
+
+        _auditService.LogFireAndForget(
+            SecurityEventType.RecoveryCodesGenerated,
+            user.Id,
+            $"{recoveryCodes.Count} recovery codes generated",
+            ipAddress,
+            userAgent,
+            AuditSeverity.Info);
+
+        // Delete the temp session to prevent reuse
+        await _sessionRepository.DeleteAsync(session.SessionId);
+
+        return new EnableAuthenticatorResponseDto
+        {
+            SecretKey = string.Empty,
+            QrCodeUri = string.Empty,
+            RecoveryCodes = recoveryCodes
+        };
+    }
+
     // RegisterUserAsync: Creates user and assigns roles
     public async Task<User?> RegisterUserAsync(RegisterDto model)
     {

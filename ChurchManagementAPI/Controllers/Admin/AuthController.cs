@@ -142,6 +142,69 @@ namespace ChurchManagementAPI.Controllers.Admin
             }
         }
 
+        // New endpoints: setup & verify setup using temp token for initial 2FA bootstrap
+        [HttpPost("2fa/setup-temp")]
+        [ProducesResponseType(typeof(EnableAuthenticatorResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SetupTwoFactorWithTempToken([FromBody] TempTokenRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = string.Join("; ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+                return BadRequest(new ErrorResponseDto { Message = errorMessage });
+            }
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString() ?? "Unknown";
+
+            try
+            {
+                var result = await _authService.SetupTwoFactorWithTempTokenAsync(request.TempToken, ipAddress, userAgent);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { Message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ErrorResponseDto { Message = "An error occurred while setting up 2FA." });
+            }
+        }
+
+        [HttpPost("2fa/verify-setup-temp")]
+        [ProducesResponseType(typeof(EnableAuthenticatorResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifySetupTwoFactorWithTempToken([FromBody] VerifySetupWithTempTokenDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = string.Join("; ", ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage));
+                return BadRequest(new ErrorResponseDto { Message = errorMessage });
+            }
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString() ?? "Unknown";
+
+            try
+            {
+                var result = await _authService.VerifySetupTwoFactorWithTempTokenAsync(request.TempToken, request.Code, ipAddress, userAgent);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ErrorResponseDto { Message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ErrorResponseDto { Message = "An error occurred while verifying 2FA setup." });
+            }
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
