@@ -244,6 +244,10 @@ public class AuthService : IAuthService
                 userAgent,
                 AuditSeverity.Info);
 
+            // Determine if user already has an authenticator configured
+            var authenticator = await _authenticatorRepository.GetActiveByUserIdAsync(user.Id);
+            var isTwoFactorConfigured = authenticator != null && authenticator.VerifiedAt != null;
+
             return new TwoFactorRequiredResponseDto
             {
                 IsSuccess = true,
@@ -251,7 +255,9 @@ public class AuthService : IAuthService
                 TempToken = tempToken,
                 IsTwoFactorRequired = true,
                 TwoFactorType = user.TwoFactorType ?? "AUTHENTICATOR",
-                Message = "Two-factor authentication is required."
+                Message = "Two-factor authentication is required.",
+                IsFirstLogin = user.FirstLoginAt == null,
+                IsTwoFactorConfigured = isTwoFactorConfigured
             };
         }
 

@@ -222,7 +222,8 @@ namespace ChurchServices.Registration
                     Email = rr.Email,
                     EmailConfirmed = true,
                     PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? rr.PhoneNumber : request.PhoneNumber,
-                    PhoneNumberConfirmed = false,
+                    // If the staged registration already had a verified phone, carry that over to the created user
+                    PhoneNumberConfirmed = rr.PhoneVerified,
                     ParishId = rr.ParishId,
                     FamilyId = rr.FamilyId,
                     FullName = rr.FullName,
@@ -466,6 +467,39 @@ namespace ChurchServices.Registration
                 rr.PhoneOtpAttempts = 0;
 
                 await _context.SaveChangesAsync();
+
+                // If a user was already created for this email (unlikely but possible in some flows),
+                // update the user's PhoneNumber and mark it confirmed to keep Identity store consistent.
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == rr.Email);
+                if (existingUser != null)
+                {
+                    try
+                    {
+                        var identityUser = await _userManager.FindByIdAsync(existingUser.Id.ToString());
+                        if (identityUser != null)
+                        {
+                            if (!string.IsNullOrWhiteSpace(rr.PhoneNumber))
+                            {
+                                identityUser.PhoneNumber = rr.PhoneNumber;
+                                identityUser.PhoneNumberConfirmed = true;
+                            }
+                            else
+                            {
+                                identityUser.PhoneNumberConfirmed = true;
+                            }
+
+                            var updateResult = await _userManager.UpdateAsync(identityUser);
+                            if (!updateResult.Succeeded)
+                            {
+                                _logger.LogWarning("Failed to update existing user phone confirmation for {Email}: {Errors}", rr.Email, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error updating existing user phone confirmation for {Email}", rr.Email);
+                    }
+                }
 
                 return new RegistrationPhoneVerificationResponseDto
                 {
