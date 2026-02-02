@@ -374,6 +374,13 @@ namespace ChurchManagementAPI.Controllers.Settings
                     return NotFound();
                 }
 
+                // Prevent FamilyMember role from approving files
+                var (roleName, _, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+                if (string.Equals(roleName, "FamilyMember", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid("Only management roles can approve files.");
+                }
+
                 var (canAccess, errorMessage) = await CanAccessFamilyFilesAsync(file.FamilyId);
                 if (!canAccess)
                 {
@@ -406,6 +413,13 @@ namespace ChurchManagementAPI.Controllers.Settings
                 if (file == null)
                 {
                     return NotFound();
+                }
+
+                // Prevent FamilyMember role from rejecting files
+                var (roleName, _, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+                if (string.Equals(roleName, "FamilyMember", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid("Only management roles can reject files.");
                 }
 
                 var (canAccess, errorMessage) = await CanAccessFamilyFilesAsync(file.FamilyId);

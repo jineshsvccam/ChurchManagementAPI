@@ -4,6 +4,9 @@ using ChurchData.Entities;
 using ChurchDTOs.DTOs.Entities;
 using ChurchServices.Storage;
 using Microsoft.Extensions.Logging;
+using ChurchCommon.Utils;
+using ChurchData;
+using Microsoft.AspNetCore.Http;
 
 namespace ChurchServices.Settings
 {
@@ -13,7 +16,9 @@ namespace ChurchServices.Settings
         private readonly ILogger<FamilyFileService> _logger;
         private readonly IMapper _mapper;
         private readonly IFamilyRepository _familyRepository;
-        private readonly IFileStorageService _storageService;
+        private readonly IFileStorageService _storage_service;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApplicationDbContext _context;
         private const int MaxFilesPerFamily = 12;
 
         public FamilyFileService(
@@ -21,13 +26,17 @@ namespace ChurchServices.Settings
             ILogger<FamilyFileService> logger,
             IMapper mapper,
             IFamilyRepository familyRepository,
-            IFileStorageService storageService)
+            IFileStorageService storageService,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext context)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
             _familyRepository = familyRepository;
-            _storageService = storageService;
+            _storage_service = storageService;
+            _httpContextAccessor = httpContextAccessor;
+            _context = context;
         }
 
         public async Task<IEnumerable<FamilyFileDto>> GetByFamilyAsync(int familyId)
@@ -74,7 +83,25 @@ namespace ChurchServices.Settings
             }
 
             var entity = _mapper.Map<FamilyFile>(createDto);
-            entity.Status = "Approved";
+
+            // Determine status based on current user's role
+            try
+            {
+                var (roleName, _, _) = await UserHelper.GetCurrentUserRoleAsync(_httpContextAccessor, _context, _logger);
+                if (string.Equals(roleName, "FamilyMember", StringComparison.OrdinalIgnoreCase))
+                {
+                    entity.Status = "Pending";
+                }
+                else
+                {
+                    entity.Status = "Approved";
+                }
+            }
+            catch
+            {
+                // If role can't be determined default to Pending for safety
+                entity.Status = "Pending";
+            }
 
             await _repository.AddAsync(entity);
             return _mapper.Map<FamilyFileDto>(entity);
@@ -121,7 +148,7 @@ namespace ChurchServices.Settings
                 request.FileName
             );
 
-            var uploadUrl = await _storageService.GenerateUploadUrlAsync(
+            var uploadUrl = await _storage_service.GenerateUploadUrlAsync(
                 fileKey,
                 request.ContentType
             );
@@ -140,7 +167,7 @@ namespace ChurchServices.Settings
             var file = await _repository.GetByIdAsync(fileId)
                 ?? throw new KeyNotFoundException("Family file not found");
 
-            var signedUrl = await _storageService.GenerateDownloadUrlAsync(file.FileKey);
+            var signedUrl = await _storage_service.GenerateDownloadUrlAsync(file.FileKey);
 
             return new PresignDownloadResponseDto
             {
@@ -167,7 +194,7 @@ namespace ChurchServices.Settings
 
             foreach (var file in files)
             {
-                var signedUrl = await _storageService.GenerateDownloadUrlAsync(file.FileKey);
+                var signedUrl = await _storage_service.GenerateDownloadUrlAsync(file.FileKey);
                 fileSignedUrls.Add(new FileSignedUrlDto
                 {
                     FileId = file.FileId,
