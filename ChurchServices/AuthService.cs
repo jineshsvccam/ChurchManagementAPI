@@ -132,6 +132,7 @@ public class AuthService : IAuthService
                 authStage = "VERIFICATION_REQUIRED",
                 emailVerified = false,
                 phoneVerified = user.PhoneNumberConfirmed,
+                userId = user.Id,
                 message = "Email verification is required."
             };
         }
@@ -159,6 +160,7 @@ public class AuthService : IAuthService
                 authStage = "VERIFICATION_REQUIRED",
                 emailVerified = true,
                 phoneVerified = false,
+                userId = user.Id,
                 message = "Phone verification is required."
             };
         }
