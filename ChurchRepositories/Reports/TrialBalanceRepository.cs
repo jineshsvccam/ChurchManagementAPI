@@ -52,7 +52,7 @@ namespace ChurchRepositories.Reports
 
             // Compute overall opening and closing balances by summing the closing balances of each call.
             // (When called with startDate as both parameters, the "closing_balance" reflects the balance as of startDate.)
-            decimal openingBalance = openingBankStatement.Banks.Sum(b => b.ClosingBalance);
+            decimal openingBalance = openingBankStatement.Banks.Sum(b => b.OpeningBalance);
             decimal closingBalance = closingBankStatement.Banks.Sum(b => b.ClosingBalance);
 
             // Reuse the ledger service to get ledger details (heads and transactions)
