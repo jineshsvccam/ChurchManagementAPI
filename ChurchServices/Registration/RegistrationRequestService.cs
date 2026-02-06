@@ -18,6 +18,7 @@ namespace ChurchServices.Registration
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<RegistrationRequestService> _logger;
+        private readonly IPhoneOtpSender _phoneOtpSender;
 
         // Keep token TTL short to reduce theft/replay window (15–30 minutes as required).
         private static readonly TimeSpan TokenTtl = TimeSpan.FromMinutes(30);
@@ -35,13 +36,15 @@ namespace ChurchServices.Registration
             UserManager<User> userManager,
             IEmailService emailService,
             IConfiguration configuration,
-            ILogger<RegistrationRequestService> logger)
+            ILogger<RegistrationRequestService> logger,
+            IPhoneOtpSender phoneOtpSender)
         {
             _context = context;
             _userManager = userManager;
             _emailService = emailService;
             _configuration = configuration;
             _logger = logger;
+            _phoneOtpSender = phoneOtpSender;
         }
 
         public async Task<RegisterRequestResponseDto> CreateRegisterRequestAsync(RegisterRequestDto request, string ipAddress)
@@ -349,10 +352,10 @@ namespace ChurchServices.Registration
 
                 // Existing SMS provider isn't wired; use existing email sender as the OTP delivery mechanism.
                 // Security: do not return OTP in API response.
-                var sent = await _emailService.SendPhoneVerificationAsync(rr.Email, otp);
+                var sent = await _phoneOtpSender.SendOtpAsync(rr.PhoneNumber, otp);
                 if (!sent)
                 {
-                    _logger.LogWarning("Failed to send staged phone OTP for registration email {Email}", rr.Email);
+                    _logger.LogWarning("Failed to send staged phone OTP via SNS for registration phone {Phone}", rr.PhoneNumber);
                 }
 
                 return new RegistrationPhoneVerificationResponseDto

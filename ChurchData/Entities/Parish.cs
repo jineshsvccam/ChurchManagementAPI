@@ -30,8 +30,7 @@ namespace ChurchData
         public ICollection<Bank> Banks { get; set; } = new List<Bank>();
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
         public ICollection<FinancialYear> FinancialYears { get; set; } = new List<FinancialYear>();
-        [JsonIgnore]
         public ICollection<User> Users { get; set; } = new List<User>();
+        public ICollection<ParishPaymentMethod> PaymentMethods { get; set; } = new List<ParishPaymentMethod>();
     }
-
 }

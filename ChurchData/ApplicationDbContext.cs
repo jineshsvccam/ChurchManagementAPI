@@ -42,6 +42,8 @@ namespace ChurchData
         public DbSet<PhoneVerificationToken> PhoneVerificationTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<RegistrationRequest> RegistrationRequests { get; set; }
+        public DbSet<ParishPaymentMethod> ParishPaymentMethods { get; set; }
+        public DbSet<MemberPayment> MemberPayments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

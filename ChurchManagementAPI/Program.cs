@@ -24,12 +24,14 @@ using ChurchServices.Admin;
 using ChurchServices.Settings;
 using ChurchServices.Reports;
 using ChurchServices.Transactions;
+using ChurchServices.Payments;
 using ChurchServices.TwoFactorAuth;
 using ChurchServices.Security;
 using ChurchServices.Storage;
 using ChurchServices.Email;
 using ChurchServices.Verification;
 using ChurchServices.Registration;
+using ChurchRepositories.Payments;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -39,6 +41,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -133,6 +137,12 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IVerificationService, VerificationService>();
 
 // Split registration (staged registration_requests)
+// Register AWS SNS client and phone OTP sender before registration request service so DI can resolve IPhoneOtpSender
+builder.Services.AddSingleton<Amazon.SimpleNotificationService.AmazonSimpleNotificationServiceClient>(sp => new Amazon.SimpleNotificationService.AmazonSimpleNotificationServiceClient());
+// Map the interface to the same concrete instance without using the interface as a generic type argument
+builder.Services.AddSingleton(typeof(Amazon.SimpleNotificationService.IAmazonSimpleNotificationService), sp => sp.GetRequiredService<Amazon.SimpleNotificationService.AmazonSimpleNotificationServiceClient>());
+builder.Services.AddScoped<IPhoneOtpSender, SnsPhoneOtpSender>();
+
 builder.Services.AddScoped<IRegistrationRequestService, RegistrationRequestService>();
 
 builder.Services.AddScoped<IParishService, ParishService>();
@@ -149,6 +159,10 @@ builder.Services.AddScoped<ITransactionHeadRepository, TransactionHeadRepository
 builder.Services.AddScoped<ITransactionHeadService, TransactionHeadService>();
 builder.Services.AddScoped<IBankRepository, BankRepository>();
 builder.Services.AddScoped<IBankService, BankService>();
+builder.Services.AddScoped<IParishPaymentMethodRepository, ParishPaymentMethodRepository>();
+builder.Services.AddScoped<IParishPaymentMethodService, ParishPaymentMethodService>();
+builder.Services.AddScoped<IMemberPaymentRepository, MemberPaymentRepository>();
+builder.Services.AddScoped<IMemberPaymentService, MemberPaymentService>();
 builder.Services.AddScoped<IFamilyMemberRepository, FamilyMemberRepository>();
 builder.Services.AddScoped<IFamilyMemberService, FamilyMemberService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
