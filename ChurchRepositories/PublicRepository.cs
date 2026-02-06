@@ -62,5 +62,22 @@ namespace ChurchRepositories
             return result;
         }
 
+        public async Task<IEnumerable<TransactionHeadBasicDto>> GetTransactionHeadsByParishIdAsync(int parishId)
+        {
+            return await _context.TransactionHeads
+                .Where(th => th.ParishId == parishId)
+                .Select(th => new TransactionHeadBasicDto
+                {
+                    HeadId = th.HeadId,
+                    HeadName = th.HeadName,
+                    Type = th.Type,
+                    Aramanapct = th.Aramanapct,
+                    Ordr = th.Ordr,
+                    IsMandatory = th.IsMandatory
+                })
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
     }
 }

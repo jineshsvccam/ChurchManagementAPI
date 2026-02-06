@@ -32,5 +32,12 @@ namespace ChurchManagementAPI.Controllers
             return Ok(roles);
         }
 
+        [HttpGet("transaction-heads")]
+        public async Task<ActionResult<IEnumerable<TransactionHeadBasicDto>>> GetTransactionHeads([FromQuery] int parishId)
+        {
+            var heads = await _publicService.GetTransactionHeadsByParishIdAsync(parishId);
+            return Ok(heads);
+        }
+
     }
 }

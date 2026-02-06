@@ -352,7 +352,8 @@ namespace ChurchServices.Registration
 
                 // Existing SMS provider isn't wired; use existing email sender as the OTP delivery mechanism.
                 // Security: do not return OTP in API response.
-                var sent = await _phoneOtpSender.SendOtpAsync(rr.PhoneNumber, otp);
+             // var sent = await _phoneOtpSender.SendOtpAsync(rr.PhoneNumber, otp);
+                var sent = await _emailService.SendPhoneVerificationAsync(rr.Email, otp);
                 if (!sent)
                 {
                     _logger.LogWarning("Failed to send staged phone OTP via SNS for registration phone {Phone}", rr.PhoneNumber);

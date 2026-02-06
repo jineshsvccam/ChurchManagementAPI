@@ -18,5 +18,10 @@ namespace ChurchServices
             var parishes = await _publicRepository.GetAllParishesAsync();
             return parishes;
         }
+
+        public async Task<IEnumerable<TransactionHeadBasicDto>> GetTransactionHeadsByParishIdAsync(int parishId)
+        {
+            return await _publicRepository.GetTransactionHeadsByParishIdAsync(parishId);
+        }
     }
 }

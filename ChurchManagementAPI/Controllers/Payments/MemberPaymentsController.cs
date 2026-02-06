@@ -9,17 +9,16 @@ using Microsoft.Extensions.Logging;
 
 namespace ChurchManagementAPI.Controllers.Payments
 {
-    public class MemberPaymentsController : ManagementAuthorizedTrialController
+    public class MemberPaymentsController : FamilyMemberAuthorizedController
     {
         private readonly IMemberPaymentService _service;
+        private readonly ILogger<MemberPaymentsController> _logger;
 
         public MemberPaymentsController(IMemberPaymentService service,
-                                      IHttpContextAccessor httpContextAccessor,
-                                      ApplicationDbContext context,
-                                      ILogger<ManagementAuthorizedTrialController> logger)
-            : base(httpContextAccessor, context, logger)
+                                      ILogger<MemberPaymentsController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         [HttpGet]
