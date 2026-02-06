@@ -5,7 +5,8 @@ namespace ChurchData
 {
     public class MemberPayment
     {
-        public int PaymentId { get; set; }
+        public Guid PaymentId { get; set; }
+        public string ReceiptId { get; set; } = string.Empty;
         public int ParishId { get; set; }
         public int FamilyId { get; set; }
         public int? MemberId { get; set; }
@@ -17,9 +18,12 @@ namespace ChurchData
         public string? UtrNumber { get; set; }
         public string? ReferenceNumber { get; set; }
         public DateTime PaymentDate { get; set; }
-        public DateTime ReceivedAt { get; set; }
+        public DateTimeOffset ReceivedAt { get; set; }
+        public string Status { get; set; } = "PENDING";
+        public DateTimeOffset? ApprovedAt { get; set; }
+        public Guid? ApprovedBy { get; set; }
         public string? Remarks { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
         public Guid CreatedBy { get; set; }
 
         [JsonIgnore]
@@ -42,5 +46,8 @@ namespace ChurchData
 
         [JsonIgnore]
         public User? CreatedByUser { get; set; }
+
+        [JsonIgnore]
+        public User? ApprovedByUser { get; set; }
     }
 }

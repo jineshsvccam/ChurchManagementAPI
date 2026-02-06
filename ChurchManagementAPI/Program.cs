@@ -163,6 +163,7 @@ builder.Services.AddScoped<IParishPaymentMethodRepository, ParishPaymentMethodRe
 builder.Services.AddScoped<IParishPaymentMethodService, ParishPaymentMethodService>();
 builder.Services.AddScoped<IMemberPaymentRepository, MemberPaymentRepository>();
 builder.Services.AddScoped<IMemberPaymentService, MemberPaymentService>();
+builder.Services.AddSingleton<IReceiptIdGenerator, ReceiptIdGenerator>();
 builder.Services.AddScoped<IFamilyMemberRepository, FamilyMemberRepository>();
 builder.Services.AddScoped<IFamilyMemberService, FamilyMemberService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();

@@ -18,9 +18,16 @@ namespace ChurchData.Mappings
             CreateMap<Diocese, DioceseDto>().ReverseMap();
             CreateMap<District, DistrictDto>().ReverseMap();
             CreateMap<ParishPaymentMethod, ParishPaymentMethodDto>().ReverseMap();
-            CreateMap<MemberPayment, MemberPaymentDto>().ReverseMap();
-            CreateMap<MemberPaymentCreateDto, MemberPayment>().ReverseMap();
-            CreateMap<MemberPaymentUpdateDto, MemberPayment>().ReverseMap();
+            CreateMap<MemberPayment, MemberPaymentDto>();
+            CreateMap<MemberPaymentCreateDto, MemberPayment>()
+                .ForMember(dest => dest.PaymentId, opt => opt.Ignore())
+                .ForMember(dest => dest.ReceiptId, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.ReceivedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ApprovedBy, opt => opt.Ignore());
           
             CreateMap<FamilyContribution, FamilyContributionDto>().ReverseMap();
             CreateMap<FamilyDue, FamilyDueDto>().ReverseMap();
