@@ -7,19 +7,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace ChurchManagementAPI.Controllers.Admin
+namespace ChurchManagementAPI.Controllers.Payments
 {
-    public class ParishPaymentMethodController : ManagementAuthorizedTrialController
+    public class ParishPaymentMethodController : FamilyMemberAuthorizedController
     {
         private readonly IParishPaymentMethodService _service;
+        private readonly ILogger<ParishPaymentMethodController> _logger;
 
         public ParishPaymentMethodController(IParishPaymentMethodService service,
-                                           IHttpContextAccessor httpContextAccessor,
-                                           ApplicationDbContext context,
-                                           ILogger<ManagementAuthorizedTrialController> logger)
-            : base(httpContextAccessor, context, logger)
+                                           ILogger<ParishPaymentMethodController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         [HttpGet]
